@@ -1,29 +1,147 @@
 "use client"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { Minus, Plus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { useUpdateCartItemQuantity, useRemoveFromCart } from "@/lib/hooks"
+import { 
+  useUpdateCartItemQuantity, 
+  useRemoveFromCart 
+} from "@/lib/hooks"
 import type { CartItem, CartTranslations } from "./types"
 
 interface CartItemCardProps {
   item: CartItem
   translations: CartTranslations
+  onUpdate?: () => void
 }
 
-export default function CartItemCard({ item, translations: t }: CartItemCardProps) {
-  const { mutate: updateQuantity, isPending: isUpdating } = useUpdateCartItemQuantity()
+export default function CartItemCard({ 
+  item, 
+  translations: t,
+  onUpdate 
+}: CartItemCardProps) {
+  const [localQuantity, setLocalQuantity] = useState(item.quantity)
+  const [pendingQuantity, setPendingQuantity] = useState(item.quantity)
+  const [isLoading, setIsLoading] = useState(false)
+  const updateTimeoutRef = useRef<NodeJS.Timeout>()
+
+  const { mutate: updateQuantity } = useUpdateCartItemQuantity()
   const { mutate: removeItem, isPending: isRemoving } = useRemoveFromCart()
 
-  const handleQuantityChange = (delta: number) => {
-    const newQuantity = item.quantity + delta
-    if (newQuantity >= 1) {
-      updateQuantity({ itemId: item.id, quantity: newQuantity })
+  // Sync local quantity with server quantity
+  useEffect(() => {
+    setLocalQuantity(item.quantity)
+    setPendingQuantity(item.quantity)
+  }, [item.quantity])
+
+  // Debounced update effect
+  useEffect(() => {
+    if (pendingQuantity === item.quantity) {
+      return
     }
+
+    // Clear previous timeout
+    if (updateTimeoutRef.current) {
+      clearTimeout(updateTimeoutRef.current)
+    }
+
+    // Set new timeout for update
+    updateTimeoutRef.current = setTimeout(() => {
+      setIsLoading(true)
+
+      if (pendingQuantity <= 0) {
+        removeItem(item.id, {
+          onSuccess: () => {
+            onUpdate?.()
+          },
+          onError: (error) => {
+            console.error("Failed to remove item:", error)
+            // Revert on error
+            setLocalQuantity(item.quantity)
+            setPendingQuantity(item.quantity)
+          },
+          onSettled: () => {
+            setIsLoading(false)
+          },
+        })
+      } else {
+        updateQuantity(
+          { itemId: item.id, quantity: pendingQuantity },
+          {
+            onSuccess: () => {
+              onUpdate?.()
+            },
+            onError: (error) => {
+              console.error("Failed to update quantity:", error)
+              // Revert on error
+              setLocalQuantity(item.quantity)
+              setPendingQuantity(item.quantity)
+            },
+            onSettled: () => {
+              setIsLoading(false)
+            },
+          }
+        )
+      }
+    }, 300)
+
+    return () => {
+      if (updateTimeoutRef.current) {
+        clearTimeout(updateTimeoutRef.current)
+      }
+    }
+  }, [pendingQuantity, item.quantity, item.id, updateQuantity, removeItem, onUpdate])
+
+  const handleQuantityIncrease = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (isLoading) return
+
+    const newQuantity = localQuantity + 1
+    setLocalQuantity(newQuantity)
+    setPendingQuantity(newQuantity)
+  }
+
+  const handleQuantityDecrease = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (isLoading) return
+
+    const newQuantity = localQuantity - 1
+
+    if (newQuantity < 1) {
+      handleDelete()
+      return
+    }
+
+    setLocalQuantity(newQuantity)
+    setPendingQuantity(newQuantity)
   }
 
   const handleDelete = () => {
-    removeItem(item.id)
+    setIsLoading(true)
+    removeItem(item.id, {
+      onSuccess: () => {
+        onUpdate?.()
+      },
+      onError: (error) => {
+        console.error("Failed to remove item:", error)
+      },
+      onSettled: () => {
+        setIsLoading(false)
+      },
+    })
+  }
+
+  const getImageSrc = () => {
+    if (item.product.image) return item.product.image
+    if (item.product.images && item.product.images.length > 0) {
+      return item.product.images[0]
+    }
+    return "/placeholder.svg"
   }
 
   return (
@@ -33,7 +151,7 @@ export default function CartItemCard({ item, translations: t }: CartItemCardProp
         <div className="flex gap-4 flex-1">
           <div className="relative w-[88px] h-[117px] rounded-xl border overflow-hidden flex-shrink-0">
             <Image
-              src={item.product.image || item.product.images[0] || "/placeholder.svg"}
+              src={getImageSrc()}
               alt={item.product.name}
               fill
               className="object-contain"
@@ -46,7 +164,7 @@ export default function CartItemCard({ item, translations: t }: CartItemCardProp
               variant="ghost"
               size="sm"
               onClick={handleDelete}
-              disabled={isRemoving}
+              disabled={isRemoving || isLoading}
               className="w-fit p-0 h-auto hover:bg-transparent hover:text-red-500"
             >
               <Trash2 className="h-5 w-5" />
@@ -58,10 +176,14 @@ export default function CartItemCard({ item, translations: t }: CartItemCardProp
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 justify-between">
           <div className="space-y-1">
             <p className="text-sm font-semibold">
-              {t.pricePerUnit} <span className="text-primary">{item.price_formatted || `${item.price} TMT`}</span>
+              {t.pricePerUnit}{" "}
+              <span className="text-primary">
+                {item.price_formatted || `${item.price} TMT`}
+              </span>
             </p>
             <p className="text-sm font-semibold">
-              {t.additionalPrice} {item.sub_total_formatted || `${item.total} TMT`}
+              {t.additionalPrice}{" "}
+              {item.sub_total_formatted || `${item.total} TMT`}
             </p>
             {item.discount_formatted && item.discount_formatted !== "0 TMT" && (
               <p className="text-sm font-semibold">
@@ -81,18 +203,20 @@ export default function CartItemCard({ item, translations: t }: CartItemCardProp
             <Button
               variant="outline"
               size="icon"
-              onClick={() => handleQuantityChange(-1)}
-              disabled={item.quantity === 1 || isUpdating}
+              onClick={handleQuantityDecrease}
+              disabled={isLoading || isRemoving}
               className="rounded-xl bg-blue-50"
             >
               <Minus className="h-4 w-4" />
             </Button>
-            <div className="w-12 text-center font-semibold">{item.quantity}</div>
+            <div className="w-12 text-center font-semibold">
+              {localQuantity}
+            </div>
             <Button
               variant="outline"
               size="icon"
-              onClick={() => handleQuantityChange(1)}
-              disabled={isUpdating}
+              onClick={handleQuantityIncrease}
+              disabled={isLoading || isRemoving}
               className="rounded-xl bg-blue-50"
             >
               <Plus className="h-4 w-4" />

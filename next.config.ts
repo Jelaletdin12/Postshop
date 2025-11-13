@@ -12,8 +12,13 @@ const nextConfig: NextConfig = {
   },
   images: {
     unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "shop.post.tm",
+      },
+    ],
   },
-  /* config options here */
 }
 
 export default withNextIntl(nextConfig)

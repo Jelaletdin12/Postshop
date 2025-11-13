@@ -92,6 +92,8 @@ export function useAllCategoryProducts(
   })
 }
 
+
+
 // Get products from category and children WITH pagination (mimics RTK getAllCategoryProductsPaginated)
 export function useAllCategoryProductsPaginated(
   category: Category | undefined,
@@ -156,3 +158,4 @@ export function useAllCategoryProductsPaginated(
     enabled: options?.enabled !== false && !!category,
   })
 }
+

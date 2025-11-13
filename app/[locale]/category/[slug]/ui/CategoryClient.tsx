@@ -1,262 +1,577 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { useRouter, useSearchParams } from "next/navigation"
-import { ChevronLeft, SlidersHorizontal, X } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import CategoryPageContent from "./CategoryContent"
-import { notFound } from "next/navigation"
-
-interface FilterItem {
-  key: string
-  value: number
-  name: string
-  hex?: string
-  image?: string
-  selected?: boolean
-  slug?: string
-  children?: FilterItem[]
-}
-
-interface Filter {
-  uuid: string
-  title: string
-  type: "TREE" | "SELECTABLE" | "VOLUME" | "TAB" | "COLOR"
-  items: FilterItem | FilterItem[]
-}
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronLeft, SlidersHorizontal, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import InfiniteScroll from "react-infinite-scroll-component";
+import ProductCard from "@/components/ProductCard";
+import Loader from "@/components/Loader";
+import {
+  useCategories,
+  useAllCategoryProducts,
+  useAllCategoryProductsPaginated,
+  useCategoryProducts,
+} from "@/lib/hooks/useCategories";
+import { notFound } from "next/navigation";
+import type { Category, Product } from "@/lib/types/api";
 
 interface CategoryPageClientProps {
-  params: { locale: string; slug: string }
+  params: { locale: string; slug: string };
 }
 
-export default function CategoryPageClient({ params }: CategoryPageClientProps) {
-  const { slug, locale } = params
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [isOpen, setIsOpen] = useState(false)
-  
+export default function CategoryPageClient({
+  params,
+}: CategoryPageClientProps) {
+  const { slug, locale } = params;
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isOpen, setIsOpen] = useState(false);
+
+  // Fetch all categories first
+  const { data: categoriesData, isLoading: categoriesLoading } =
+    useCategories();
+
+  // Find category from slug
+  const selectedCategory = useMemo(() => {
+    if (!categoriesData || !slug) return null;
+
+    const findBySlug = (categories: Category[]): Category | null => {
+      for (const category of categories) {
+        if (category.slug === slug) return category;
+        if (category.children) {
+          const found = findBySlug(category.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    return findBySlug(categoriesData);
+  }, [categoriesData, slug]);
+
+  // Track subcategories
+  const [hasSubcategories, setHasSubcategories] = useState(false);
+  const [subcategoriesToShow, setSubcategoriesToShow] = useState<Category[]>(
+    []
+  );
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+
+  // Price sorting state
+  const [priceSort, setPriceSort] = useState<
+    "none" | "lowToHigh" | "highToLow"
+  >("none");
+
   // Price filter state
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000])
-  
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
+
   // Selected filters state
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, Set<number>>>({
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, Set<number>>
+  >({
     brand: new Set(),
     color: new Set(),
     tag: new Set(),
-  })
+  });
+
+  // Determine if category is a subcategory
+  const isSubCategory = useMemo(() => {
+    if (!categoriesData || !selectedCategory) return false;
+
+    const checkIsSubCategory = (
+      categories: Category[],
+      targetId: number
+    ): boolean => {
+      for (const category of categories) {
+        if (category.children) {
+          for (const subCategory of category.children) {
+            if (subCategory.id === targetId) return true;
+            if (subCategory.children) {
+              const foundInNested = checkIsSubCategory([subCategory], targetId);
+              if (foundInNested) return true;
+            }
+          }
+        }
+      }
+      return false;
+    };
+
+    return checkIsSubCategory(categoriesData, selectedCategory.id);
+  }, [categoriesData, selectedCategory]);
+
+  // Fetch initial products for subcategories (first page only)
+  const { data: subcategoryProducts = [], isLoading: subcategoryLoading } =
+    useAllCategoryProducts(selectedCategory || undefined, {
+      enabled: !!selectedCategory && isSubCategory && currentPage === 1,
+    });
+
+  // Fetch paginated subcategory products (page 2+)
+  const {
+    data: paginatedSubcategoryData,
+    isLoading: subcategoryPaginatedLoading,
+  } = useAllCategoryProductsPaginated(selectedCategory || undefined, {
+    enabled: !!selectedCategory && isSubCategory && currentPage > 1,
+    page: currentPage,
+    limit: 6,
+  });
+
+  // Fetch paginated category products (for non-subcategories)
+  const {
+    data: paginatedCategoryData,
+    isLoading: categoryPaginatedLoading,
+    isFetching: categoryPaginatedFetching,
+  } = useCategoryProducts(selectedCategory?.id?.toString() || "", {
+    enabled: !!selectedCategory && !isSubCategory,
+    page: currentPage,
+    limit: 6,
+  });
 
   const t = {
-    filter: "Filters",
-    from: "From",
-    to: "To",
-    reset: "Reset",
-  }
+    filter: "Filtreler",
+    from: "Min",
+    to: "Max",
+    reset: "Sıfırla",
+    total: "Toplam",
+    items: "ürün",
+    subCategories: "Alt Kategoriler",
+    composition: "Sıralama",
+    neverMind: "Varsayılan",
+    From_cheap_to_expensive: "Ucuzdan Pahalıya",
+    From_expensive_to_cheap: "Pahalıdan Ucuza",
+    brands: "Markalar",
+    noResults: "Ürün bulunamadı",
+  };
 
   if (!slug) {
-    notFound()
+    notFound();
   }
 
-  const filters: Filter[] = [
-    {
-      uuid: "1",
-      title: "Category",
-      type: "TREE",
-      items: {
-        key: "category",
-        value: 1,
-        name: "All",
-        slug: slug,
-        selected: true,
-        children: [
-          { key: "category", value: 2, name: "Electronics", slug: "electronics", selected: false },
-          { key: "category", value: 3, name: "Clothing", slug: "clothing", selected: false },
-        ],
-      },
-    },
-    {
-      uuid: "2",
-      title: "Brand",
-      type: "SELECTABLE",
-      items: [
-        { key: "brand", value: 10, name: "Brand A", image: "/brand-a.png", selected: false },
-        { key: "brand", value: 11, name: "Brand B", image: "/brand-b.png", selected: false },
-      ],
-    },
-    {
-      uuid: "3",
-      title: "Price",
-      type: "VOLUME",
-      items: {} as FilterItem,
-    },
-    {
-      uuid: "4",
-      title: "Color",
-      type: "COLOR",
-      items: [
-        { key: "color", value: 100, name: "Red", hex: "#FF0000", selected: false },
-        { key: "color", value: 101, name: "Blue", hex: "#0000FF", selected: false },
-      ],
-    },
-    {
-      uuid: "5",
-      title: "Tags",
-      type: "TAB",
-      items: [
-        { key: "tag", value: 200, name: "New Arrival", selected: false },
-        { key: "tag", value: 201, name: "Sale", selected: false },
-      ],
-    },
-  ]
+  // Helper function to find category by ID
+  const findCategoryById = (
+    categories: Category[] | undefined,
+    id: number
+  ): Category | null => {
+    if (!categories) return null;
+
+    for (const category of categories) {
+      if (category.id === id) return category;
+      if (category.children) {
+        const found = findCategoryById(category.children, id);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // Helper to check if product already exists in list
+  const isProductInList = (list: Product[], newProduct: Product) => {
+    return list.some((product) => product.id === newProduct.id);
+  };
+
+  // Setup subcategories when category changes
+  useEffect(() => {
+    if (selectedCategory) {
+      // Reset states
+      setAllProducts([]);
+      setHasMore(true);
+      setCurrentPage(1);
+
+      // Set subcategories
+      if (selectedCategory.children && selectedCategory.children.length > 0) {
+        setHasSubcategories(true);
+        setSubcategoriesToShow(selectedCategory.children);
+      } else {
+        setHasSubcategories(false);
+        setSubcategoriesToShow([]);
+      }
+    }
+  }, [selectedCategory?.id]);
+
+  // Handle first page products for subcategories
+  useEffect(() => {
+    if (
+      selectedCategory &&
+      isSubCategory &&
+      subcategoryProducts.length > 0 &&
+      currentPage === 1
+    ) {
+      console.log("Setting subcategory products:", subcategoryProducts.length);
+      setAllProducts(subcategoryProducts);
+      setHasMore(true);
+    }
+  }, [selectedCategory, subcategoryProducts, currentPage, isSubCategory]);
+
+  // Handle paginated category products (non-subcategories)
+  useEffect(() => {
+    if (paginatedCategoryData && selectedCategory && !isSubCategory) {
+      console.log("Paginated category data:", paginatedCategoryData);
+
+      if (paginatedCategoryData.data && paginatedCategoryData.data.length > 0) {
+        setAllProducts((prevProducts) => {
+          if (currentPage === 1) {
+            return [...paginatedCategoryData.data];
+          }
+
+          const newProducts = paginatedCategoryData.data.filter(
+            (newProduct: Product) => !isProductInList(prevProducts, newProduct)
+          );
+
+          return [...prevProducts, ...newProducts];
+        });
+
+        setHasMore(!!paginatedCategoryData.pagination?.next_page_url);
+      } else if (currentPage === 1) {
+        setAllProducts([]);
+        setHasMore(false);
+      }
+    }
+  }, [paginatedCategoryData, currentPage, selectedCategory, isSubCategory]);
+
+  // Handle paginated subcategory products
+  useEffect(() => {
+    if (
+      paginatedSubcategoryData &&
+      selectedCategory &&
+      isSubCategory &&
+      currentPage > 1
+    ) {
+      console.log("Paginated subcategory data:", paginatedSubcategoryData);
+
+      if (
+        paginatedSubcategoryData.data &&
+        paginatedSubcategoryData.data.length > 0
+      ) {
+        setAllProducts((prevProducts) => {
+          const newProducts = paginatedSubcategoryData.data.filter(
+            (newProduct: Product) => !isProductInList(prevProducts, newProduct)
+          );
+
+          return [...prevProducts, ...newProducts];
+        });
+
+        setHasMore(paginatedSubcategoryData.pagination?.hasMorePages || false);
+      } else {
+        setHasMore(false);
+      }
+    }
+  }, [paginatedSubcategoryData, currentPage, selectedCategory, isSubCategory]);
+
+  const loadMoreData = useCallback(() => {
+    if (!hasMore || categoryPaginatedFetching || subcategoryPaginatedLoading)
+      return;
+    console.log("Loading more, page:", currentPage + 1);
+    setCurrentPage((prevPage) => prevPage + 1);
+  }, [
+    hasMore,
+    categoryPaginatedFetching,
+    subcategoryPaginatedLoading,
+    currentPage,
+  ]);
+
+  const isLoading =
+    categoriesLoading ||
+    (subcategoryLoading && currentPage === 1) ||
+    (categoryPaginatedLoading && currentPage === 1);
+
+  const products = useMemo(() => {
+    let productsList = [...allProducts];
+
+    if (priceSort === "lowToHigh") {
+      return [...productsList].sort(
+        (a, b) =>
+          parseFloat(a.price_amount || "0") - parseFloat(b.price_amount || "0")
+      );
+    } else if (priceSort === "highToLow") {
+      return [...productsList].sort(
+        (a, b) =>
+          parseFloat(b.price_amount || "0") - parseFloat(a.price_amount || "0")
+      );
+    }
+
+    return productsList;
+  }, [priceSort, allProducts]);
+
+  const totalItems = useMemo(() => {
+    if (
+      paginatedCategoryData?.pagination &&
+      !isSubCategory &&
+      selectedCategory
+    ) {
+      return paginatedCategoryData.pagination.total || products.length || 0;
+    }
+    return products.length || 0;
+  }, [paginatedCategoryData, products, isSubCategory, selectedCategory]);
+
+  const handlePriceSortChange = (
+    sortType: "none" | "lowToHigh" | "highToLow"
+  ) => {
+    setPriceSort(sortType);
+  };
+
+  const handleSubCategorySelect = (subCategory: Category) => {
+    setAllProducts([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    setPriceSort("none");
+
+    router.push(`/${locale}/category/${subCategory.slug}`, { scroll: false });
+  };
+
+  const handleCategoryClick = (category: Category) => {
+    setAllProducts([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    router.push(`/${locale}/category/${category.slug}`);
+  };
+
+  const renderBreadcrumbs = () => {
+    if (!categoriesData || !selectedCategory) return null;
+
+    const breadcrumbs: Category[] = [];
+    let currentCategory = selectedCategory;
+    let parentId = currentCategory.parent_id;
+
+    breadcrumbs.unshift(currentCategory);
+
+    while (parentId) {
+      const parentCategory = findCategoryById(categoriesData, parentId);
+      if (parentCategory) {
+        breadcrumbs.unshift(parentCategory);
+        parentId = parentCategory.parent_id;
+      } else {
+        break;
+      }
+    }
+
+    return (
+      <div className="flex items-center gap-2 mb-4 text-sm">
+        {breadcrumbs.map((category, index) => (
+          <div key={category.id} className="flex items-center gap-2">
+            <button
+              onClick={() => handleCategoryClick(category)}
+              className="hover:text-primary transition-colors"
+            >
+              {category.name}
+            </button>
+            {index < breadcrumbs.length - 1 && <span>/</span>}
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const pageTitle = selectedCategory?.name || "Kategori";
 
   const handleFilterChange = (key: string, value: number) => {
     setSelectedFilters((prev) => {
-      const newFilters = { ...prev }
+      const newFilters = { ...prev };
       if (!newFilters[key]) {
-        newFilters[key] = new Set()
+        newFilters[key] = new Set();
       }
-      
+
       if (newFilters[key].has(value)) {
-        newFilters[key].delete(value)
+        newFilters[key].delete(value);
       } else {
-        newFilters[key].add(value)
+        newFilters[key].add(value);
       }
-      
-      return newFilters
-    })
-    
-    updateURLParams(key, Array.from(selectedFilters[key] || []))
-  }
+
+      return newFilters;
+    });
+  };
 
   const handlePriceChange = (values: number[]) => {
-    setPriceRange([values[0], values[1]])
-    updateURLParams("price_min", values[0])
-    updateURLParams("price_max", values[1])
-  }
+    setPriceRange([values[0], values[1]]);
+  };
 
   const handlePriceInputChange = (type: "from" | "to", value: string) => {
-    const numValue = parseInt(value) || 0
+    const numValue = parseInt(value) || 0;
     if (type === "from") {
-      setPriceRange([numValue, priceRange[1]])
-      updateURLParams("price_min", numValue)
+      setPriceRange([numValue, priceRange[1]]);
     } else {
-      setPriceRange([priceRange[0], numValue])
-      updateURLParams("price_max", numValue)
+      setPriceRange([priceRange[0], numValue]);
     }
-  }
-
-  const updateURLParams = (key: string, value: number | number[]) => {
-    const params = new URLSearchParams(searchParams.toString())
-    
-    if (Array.isArray(value)) {
-      params.delete(key)
-      value.forEach((v) => params.append(key, v.toString()))
-    } else {
-      params.set(key, value.toString())
-    }
-    
-    router.push(`/${locale}/category/${slug}?${params.toString()}`, { scroll: false })
-  }
+  };
 
   const resetFilters = () => {
     setSelectedFilters({
       brand: new Set(),
       color: new Set(),
       tag: new Set(),
-    })
-    setPriceRange([0, 10000])
-    router.push(`/${locale}/category/${slug}`)
-  }
+    });
+    setPriceRange([0, 10000]);
+    setPriceSort("none");
+  };
 
   const FiltersContent = () => (
     <div className="space-y-6">
-      {filters.map((filter) => {
-        switch (filter.type) {
-          case "TREE":
-            return (
-              <CategoryFilter
-                key={filter.uuid}
-                data={filter.items as FilterItem}
-                title={filter.title}
-                locale={locale}
-              />
-            )
-          case "SELECTABLE":
-            return (
-              <BrandFilter
-                key={filter.uuid}
-                data={filter.items as FilterItem[]}
-                title={filter.title}
-                selectedValues={selectedFilters.brand}
-                onFilterChange={handleFilterChange}
-              />
-            )
-          case "VOLUME":
-            return (
-              <PriceFilter
-                key={filter.uuid}
-                title={filter.title}
-                priceRange={priceRange}
-                onPriceChange={handlePriceChange}
-                onInputChange={handlePriceInputChange}
-                translations={{ from: t.from, to: t.to }}
-              />
-            )
-          case "COLOR":
-            return (
-              <ColorFilter
-                key={filter.uuid}
-                data={filter.items as FilterItem[]}
-                title={filter.title}
-                selectedValues={selectedFilters.color}
-                onFilterChange={handleFilterChange}
-              />
-            )
-          case "TAB":
-            return (
-              <TagFilter
-                key={filter.uuid}
-                data={filter.items as FilterItem[]}
-                title={filter.title}
-                selectedValues={selectedFilters.tag}
-                onFilterChange={handleFilterChange}
-              />
-            )
-          default:
-            return null
-        }
-      })}
-      <Button variant="outline" className="w-full rounded-xl bg-transparent" onClick={resetFilters}>
+      {hasSubcategories && subcategoriesToShow.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3">{t.subCategories}</h3>
+          <div className="space-y-1">
+            {subcategoriesToShow.map((subCategory) => (
+              <button
+                key={subCategory.id}
+                onClick={() => handleSubCategorySelect(subCategory)}
+                className={`w-full text-left py-2 px-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                  slug === subCategory.slug
+                    ? "text-primary font-medium bg-gray-50"
+                    : ""
+                }`}
+              >
+                {subCategory.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h3 className="text-lg font-semibold mb-3">{t.composition}</h3>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="sort"
+              checked={priceSort === "none"}
+              onChange={() => handlePriceSortChange("none")}
+              className="w-4 h-4"
+            />
+            <span>{t.neverMind}</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="sort"
+              checked={priceSort === "lowToHigh"}
+              onChange={() => handlePriceSortChange("lowToHigh")}
+              className="w-4 h-4"
+            />
+            <span>{t.From_cheap_to_expensive}</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="radio"
+              name="sort"
+              checked={priceSort === "highToLow"}
+              onChange={() => handlePriceSortChange("highToLow")}
+              className="w-4 h-4"
+            />
+            <span>{t.From_expensive_to_cheap}</span>
+          </label>
+        </div>
+      </div>
+
+      <PriceFilter
+        title="Fiyat"
+        priceRange={priceRange}
+        onPriceChange={handlePriceChange}
+        onInputChange={handlePriceInputChange}
+        translations={{ from: t.from, to: t.to }}
+      />
+
+      <Button
+        variant="outline"
+        className="w-full rounded-xl bg-transparent"
+        onClick={resetFilters}
+      >
         {t.reset}
       </Button>
     </div>
-  )
+  );
+
+  if (isLoading) return <div>Loading...</div>;
+
+  if (!selectedCategory && !categoriesLoading) {
+    return <div className="text-center py-8">Kategori bulunamadı</div>;
+  }
+
+  console.log(
+    "Current products:",
+    products.length,
+    "Has more:",
+    hasMore,
+    "Page:",
+    currentPage
+  );
 
   return (
-    <div className="flex gap-4">
-      {/* Desktop Filters - LEFT SIDE */}
-      <div className="hidden sm:block w-[280px] flex-shrink-0 border-r pr-4">
-        <ScrollArea className="h-[calc(100vh-120px)]">
-          <FiltersContent />
-        </ScrollArea>
-      </div>
+    <div className="flex flex-col gap-4">
+      {selectedCategory && renderBreadcrumbs()}
+      <h2 className="text-3xl font-bold">{pageTitle}</h2>
+      <p className="text-gray-600">
+        {t.total}: {totalItems} {t.items}
+      </p>
 
-      {/* Content - RIGHT SIDE */}
-      <div className="flex-1">
-        <CategoryPageContent slug={slug} filters={selectedFilters} priceRange={priceRange} />
+      <div className="flex gap-4">
+        {/* Desktop Filters - LEFT SIDE */}
+        <div className="hidden sm:block w-[280px] flex-shrink-0 border-r pr-4">
+          <ScrollArea className="h-[calc(100vh-200px)]">
+            <FiltersContent />
+          </ScrollArea>
+        </div>
+
+        {/* Content - RIGHT SIDE */}
+        <div className="flex-1">
+          {products.length > 0 ? (
+            <InfiniteScroll
+              dataLength={products.length}
+              next={loadMoreData}
+              hasMore={hasMore}
+              scrollThreshold={0.8}
+              style={{ overflow: "visible" }}
+              loader={
+                <div className="flex justify-center py-4">
+                  <div>Loading...</div>
+                </div>
+              }
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {products.map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    id={product.id}
+                    name={product.name}
+                    price={
+                      product.price_amount
+                        ? parseFloat(product.price_amount)
+                        : null
+                    }
+                    struct_price_text={`${product.price_amount} TMT`}
+                    images={[product.media?.[0]?.images_400x400]}
+                    is_favorite={false}
+                  />
+                ))}
+              </div>
+            </InfiniteScroll>
+          ) : (
+            <div className="text-center py-8 text-gray-500">{t.noResults}</div>
+          )}
+        </div>
       </div>
 
       {/* Mobile Filter Sheet */}
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
         <SheetTrigger asChild>
-          <Button className="sm:hidden fixed bottom-20 right-4 rounded-xl font-bold gap-2 z-10 shadow-lg" size="lg">
+          <Button
+            className="sm:hidden fixed bottom-20 right-4 rounded-xl font-bold gap-2 z-10 shadow-lg"
+            size="lg"
+          >
             {t.filter}
             <SlidersHorizontal className="h-5 w-5" />
           </Button>
@@ -269,7 +584,7 @@ export default function CategoryPageClient({ params }: CategoryPageClientProps) 
               className="absolute top-4 right-4 rounded-md ring-offset-background transition-opacity hover:opacity-100"
             >
               <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">Kapat</span>
             </button>
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-80px)] p-4">
@@ -278,96 +593,7 @@ export default function CategoryPageClient({ params }: CategoryPageClientProps) 
         </SheetContent>
       </Sheet>
     </div>
-  )
-}
-
-function CategoryFilter({ 
-  data, 
-  title, 
-  locale 
-}: { 
-  data: FilterItem
-  title: string
-  locale: string 
-}) {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
-      <div className="space-y-1">
-        <Link
-          href={`/${locale}/category/${data.slug}?category_id=${data.value}`}
-          className={`flex items-center gap-2 py-2 px-2 rounded-lg hover:bg-gray-100 transition-colors ${
-            data.selected ? "text-primary font-medium" : ""
-          }`}
-        >
-          <ChevronLeft className="h-4 w-4" />
-          {data.name}
-        </Link>
-        {data.children && data.children.length > 0 && (
-          <div className="ml-6 space-y-1">
-            {data.children.map((child) => (
-              <Link
-                key={child.value}
-                href={`/${locale}/category/${child.slug}?category_id=${child.value}`}
-                className={`block py-2 px-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  child.selected ? "text-primary font-medium" : ""
-                }`}
-              >
-                {child.name}
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function BrandFilter({
-  data,
-  title,
-  selectedValues,
-  onFilterChange,
-}: {
-  data: FilterItem[]
-  title: string
-  selectedValues: Set<number>
-  onFilterChange: (key: string, value: number) => void
-}) {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
-      <ScrollArea className="max-h-[410px]">
-        <div className="space-y-1">
-          {data.map((item) => {
-            const isSelected = selectedValues.has(item.value)
-            return (
-              <button
-                key={item.value}
-                onClick={() => onFilterChange(item.key, item.value)}
-                className={`w-full flex items-center gap-3 py-2 px-2 rounded-lg hover:bg-gray-100 transition-colors group ${
-                  isSelected ? "text-primary" : ""
-                }`}
-              >
-                {item.image && (
-                  <div
-                    className={`flex items-center justify-center w-[50px] h-[50px] bg-gray-50 rounded-lg border-2 transition-colors ${
-                      isSelected ? "border-primary" : "border-transparent group-hover:border-primary"
-                    }`}
-                  >
-                    <div className="relative w-8 h-8">
-                      <Image src={item.image || "/placeholder.svg"} alt={item.name} fill className="object-contain" />
-                    </div>
-                  </div>
-                )}
-                <span className="text-left">{item.name}</span>
-              </button>
-            )
-          })}
-        </div>
-      </ScrollArea>
-    </div>
-  )
+  );
 }
 
 function PriceFilter({
@@ -377,11 +603,11 @@ function PriceFilter({
   onInputChange,
   translations,
 }: {
-  title: string
-  priceRange: [number, number]
-  onPriceChange: (values: number[]) => void
-  onInputChange: (type: "from" | "to", value: string) => void
-  translations: { from: string; to: string }
+  title: string;
+  priceRange: [number, number];
+  onPriceChange: (values: number[]) => void;
+  onInputChange: (type: "from" | "to", value: string) => void;
+  translations: { from: string; to: string };
 }) {
   return (
     <div>
@@ -413,78 +639,15 @@ function PriceFilter({
             />
           </div>
         </div>
-        <Slider min={0} max={99999} step={100} value={priceRange} onValueChange={onPriceChange} className="mt-2" />
+        <Slider
+          min={0}
+          max={99999}
+          step={100}
+          value={priceRange}
+          onValueChange={onPriceChange}
+          className="mt-2"
+        />
       </div>
     </div>
-  )
-}
-
-function TagFilter({
-  data,
-  title,
-  selectedValues,
-  onFilterChange,
-}: {
-  data: FilterItem[]
-  title: string
-  selectedValues: Set<number>
-  onFilterChange: (key: string, value: number) => void
-}) {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
-      <div className="space-y-2">
-        {data.map((item) => {
-          const isSelected = selectedValues.has(item.value)
-          return (
-            <div key={item.value} className="flex items-center space-x-2">
-              <Checkbox
-                id={`tag-${item.value}`}
-                checked={isSelected}
-                onCheckedChange={() => onFilterChange(item.key, item.value)}
-              />
-              <Label htmlFor={`tag-${item.value}`} className="text-sm font-normal cursor-pointer">
-                {item.name}
-              </Label>
-            </div>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
-function ColorFilter({
-  data,
-  title,
-  selectedValues,
-  onFilterChange,
-}: {
-  data: FilterItem[]
-  title: string
-  selectedValues: Set<number>
-  onFilterChange: (key: string, value: number) => void
-}) {
-  return (
-    <div>
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
-      <div className="grid grid-cols-5 gap-2">
-        {data.map((item) => {
-          const isSelected = selectedValues.has(item.value)
-          return (
-            <button
-              key={item.value}
-              onClick={() => onFilterChange(item.key, item.value)}
-              className={`w-[36px] h-[36px] rounded-lg border-2 p-1 transition-all hover:scale-110 ${
-                isSelected ? "border-primary shadow-md" : "border-gray-200"
-              }`}
-              title={item.name}
-            >
-              <div className="w-full h-full rounded-md border-2 border-gray-200" style={{ backgroundColor: item.hex }} />
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
+  );
 }

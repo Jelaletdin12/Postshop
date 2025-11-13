@@ -22,7 +22,6 @@ const removeTokenFromCookie = (name: string): void => {
 }
 
 const getToken = (): string | null => {
-  // Check cookies first (more secure)
   const authToken = getTokenFromCookie("authToken")
   if (authToken) return authToken
   
@@ -30,6 +29,17 @@ const getToken = (): string | null => {
   if (guestToken) return guestToken
   
   return null
+}
+
+/**
+ * Map internal locale codes to API language codes
+ */
+const localeToApiLang = (locale: string): string => {
+  const mapping: Record<string, string> = {
+    tm: "tk",
+    ru: "ru",
+  }
+  return mapping[locale] || locale
 }
 
 /**
@@ -68,12 +78,26 @@ class APIClient {
           config.headers.Authorization = `Bearer ${token}`
         }
 
-        // Add language parameter if i18n is available
-        if (typeof window !== "undefined" && (window as any).i18n) {
-          const lang = (window as any).i18n.language || "tm"
-          const url = config.url || ""
-          config.url = `${url}${url.includes("?") ? "&" : "?"}lang=${lang}`
+        // Add language parameter
+        let lang = "tk" // default fallback
+        
+        if (typeof window !== "undefined") {
+          // Try to get from i18n
+          if ((window as any).i18n?.language) {
+            lang = localeToApiLang((window as any).i18n.language)
+          } 
+          // Try to get from pathname as fallback
+          else {
+            const pathLocale = window.location.pathname.split("/")[1]
+            if (pathLocale === "tm" || pathLocale === "ru") {
+              lang = localeToApiLang(pathLocale)
+            }
+          }
         }
+
+        const url = config.url || ""
+        const separator = url.includes("?") ? "&" : "?"
+        config.url = `${url}${separator}lang=${lang}`
 
         return config
       },
@@ -89,7 +113,6 @@ class APIClient {
         // Handle 401 errors
         if (error.response?.status === 401 && !originalRequest._retry) {
           if (this.isRefreshing) {
-            // Queue requests while refreshing
             return new Promise((resolve, reject) => {
               this.failedQueue.push({ resolve, reject })
             })
@@ -101,7 +124,6 @@ class APIClient {
           this.isRefreshing = true
 
           try {
-            // Attempt to get guest token
             const guestTokenResponse = await axios.post(
               `${this.baseUrl}/api/v1/auth/guest-token`,
               {},
@@ -203,10 +225,7 @@ class APIClient {
   }
 }
 
-// Export singleton instance
 export const apiClient = new APIClient()
-
-// Export helper functions
 export const setAuthToken = (token: string) => apiClient.setAuthToken(token)
 export const setGuestToken = (token: string) => apiClient.setGuestToken(token)
 export const clearAuthToken = () => apiClient.clearAuthToken()

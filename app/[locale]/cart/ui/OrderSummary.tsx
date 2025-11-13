@@ -6,9 +6,22 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Textarea } from "@/components/ui/textarea"
 import { Separator } from "@/components/ui/separator"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select"
 import DeliveryTypeSelector from "./DeliveryTypeSelector"
-import type { Order, Region, Address, DeliveryType, CartTranslations, PaymentTypeOption } from "./types"
+import type { 
+  Order, 
+  Region, 
+  Address, 
+  DeliveryType, 
+  CartTranslations, 
+  PaymentTypeOption 
+} from "./types"
 
 interface OrderSummaryProps {
   order: Order
@@ -51,6 +64,7 @@ export default function OrderSummary({
   onCompleteOrder,
   isLoading,
 }: OrderSummaryProps) {
+  // Filter addresses based on selected region
   const filteredAddresses = selectedRegion
     ? addresses.filter((addr) => {
         const region = regions.find((r) => r.code === selectedRegion)
@@ -58,11 +72,12 @@ export default function OrderSummary({
       })
     : []
 
+  // Validate form completion
   const isFormValid = selectedRegion && selectedAddress && paymentType
 
   return (
     <Card className="w-full md:w-[380px] p-6 rounded-xl h-fit sticky top-20">
-      {/* Payment Type */}
+      {/* Payment Type Selection */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3">{t.paymentType}</h3>
         <div className="flex gap-2">
@@ -70,7 +85,9 @@ export default function OrderSummary({
             <Card
               key={type.id}
               className={`flex-1 cursor-pointer transition-all ${
-                paymentType?.id === type.id ? "border-2 border-[#005bff]" : "border-2 border-gray-200"
+                paymentType?.id === type.id 
+                  ? "border-2 border-[#005bff]" 
+                  : "border-2 border-gray-200"
               }`}
               onClick={() => onPaymentTypeChange(type)}
             >
@@ -82,13 +99,23 @@ export default function OrderSummary({
         </div>
       </div>
 
-      {/* Delivery Type */}
-      <DeliveryTypeSelector selectedType={deliveryType} onSelect={onDeliveryTypeChange} translations={t} />
+      {/* Delivery Type Selection */}
+      <DeliveryTypeSelector 
+        selectedType={deliveryType} 
+        onSelect={onDeliveryTypeChange} 
+        translations={t} 
+      />
 
       {/* Region Selection */}
       <div className="mb-6">
-        <Label className="text-lg font-semibold mb-3 block">{t.selectRegion}</Label>
-        <RadioGroup value={selectedRegion || ""} onValueChange={onRegionChange} className="flex flex-wrap gap-4">
+        <Label className="text-lg font-semibold mb-3 block">
+          {t.selectRegion}
+        </Label>
+        <RadioGroup 
+          value={selectedRegion || ""} 
+          onValueChange={onRegionChange} 
+          className="flex flex-wrap gap-4"
+        >
           {regions.map((region) => (
             <div key={region.id} className="flex items-center space-x-2">
               <RadioGroupItem
@@ -96,7 +123,10 @@ export default function OrderSummary({
                 id={`region-${region.id}`}
                 className="border-2 border-gray-400 data-[state=checked]:border-[#005bff] data-[state=checked]:bg-white data-[state=checked]:[&_svg]:fill-[#005bff] data-[state=checked]:[&_svg]:stroke-[#005bff]"
               />
-              <Label htmlFor={`region-${region.id}`} className="cursor-pointer">
+              <Label 
+                htmlFor={`region-${region.id}`} 
+                className="cursor-pointer"
+              >
                 {region.name}
               </Label>
             </div>
@@ -104,10 +134,12 @@ export default function OrderSummary({
         </RadioGroup>
       </div>
 
-      {/* Address Selection */}
-      {filteredAddresses.length > 0 && (
+      {/* Address Selection (only show when region is selected) */}
+      {selectedRegion && filteredAddresses.length > 0 && (
         <div className="mb-6">
-          <Label className="text-lg font-semibold mb-3 block">{t.selectAddress}</Label>
+          <Label className="text-lg font-semibold mb-3 block">
+            {t.selectAddress}
+          </Label>
           <div className="flex gap-2">
             <Select value={selectedAddress} onValueChange={onAddressChange}>
               <SelectTrigger className="rounded-xl">
@@ -133,7 +165,7 @@ export default function OrderSummary({
         </div>
       )}
 
-      {/* Note */}
+      {/* Note Input */}
       <div className="mb-6">
         <Label className="text-lg font-semibold mb-3 block">{t.note}</Label>
         <Textarea
@@ -148,7 +180,10 @@ export default function OrderSummary({
       {/* Billing Summary */}
       <div className="space-y-2 mb-4">
         {order.billing.body.map((item, index) => (
-          <div key={index} className="flex justify-between text-base font-medium">
+          <div 
+            key={index} 
+            className="flex justify-between text-base font-medium"
+          >
             <span>{item.title}:</span>
             <span>{item.value}</span>
           </div>
@@ -157,20 +192,24 @@ export default function OrderSummary({
 
       <Separator className="my-4" />
 
-      {/* Total */}
+      {/* Total Amount */}
       <div className="flex justify-between items-center mb-6">
-        <span className="text-lg font-semibold">{order.billing.footer.title}:</span>
-        <span className="text-lg font-bold text-green-600">{order.billing.footer.value}</span>
+        <span className="text-lg font-semibold">
+          {order.billing.footer.title}:
+        </span>
+        <span className="text-lg font-bold text-green-600">
+          {order.billing.footer.value}
+        </span>
       </div>
 
       {/* Complete Order Button */}
       <Button
         onClick={onCompleteOrder}
         disabled={!isFormValid || isLoading}
-        className="w-full rounded-xl bg-[#005bff] hover:bg-[#005bff] cursor-pointer h-12 text-lg font-bold disabled:opacity-50"
+        className="w-full rounded-xl bg-[#005bff] hover:bg-[#004dcc] cursor-pointer h-12 text-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed"
         size="lg"
       >
-        {isLoading ? t.placeOrder + "..." : t.placeOrder}
+        {isLoading ? `${t.placeOrder}...` : t.placeOrder}
       </Button>
     </Card>
   )

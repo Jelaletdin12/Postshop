@@ -1,27 +1,74 @@
-"use client"
-import { useFavorites, useAddToCart, useRemoveFromFavorites } from "@/lib/hooks"
-import { useState } from "react"
-import Image from "next/image"
-import Link from "next/link"
-import { Heart, ShoppingCart } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import type { Product } from "@/lib/types/api"
+"use client";
+import {
+  useFavorites,
+  useAddToCart,
+  useRemoveFromFavorites,
+} from "@/lib/hooks";
+import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Heart, ShoppingCart } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useToast } from "@/hooks/use-toast";
+import type { Favorite } from "@/lib/types/api";
 
 export default function FavoritesPage() {
-  const [isHovered, setIsHovered] = useState<number | null>(null)
+  const [isHovered, setIsHovered] = useState<number | null>(null);
+  const { toast } = useToast();
 
-  const { data: favorites, isLoading, isError } = useFavorites()
-  const { mutate: removeFromFavorites } = useRemoveFromFavorites()
-  const { mutate: addToCart } = useAddToCart()
+  const { data: favorites, isLoading, isError } = useFavorites();
+  const { mutate: removeFromFavorites, isPending: isRemoving } =
+    useRemoveFromFavorites();
+  const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
 
   const t = {
     favorites: "Избранные",
     addToCart: "В корзину",
     emptyFavorites: "У вас пока нет избранных товаров",
-  }
+    removedFromFavorites: "Товар удален из избранного",
+    addedToCart: "Товар добавлен в корзину",
+    error: "Произошла ошибка",
+  };
+
+  const handleRemoveFromFavorites = (productId: number) => {
+    removeFromFavorites(productId, {
+      onSuccess: () => {
+        toast({
+          title: t.removedFromFavorites,
+        });
+      },
+      onError: (error) => {
+        toast({
+          title: t.error,
+          description: error.message,
+          variant: "destructive",
+        });
+      },
+    });
+  };
+
+  const handleAddToCart = (productId: number) => {
+    addToCart(
+      { productId },
+      {
+        onSuccess: () => {
+          toast({
+            title: t.addedToCart,
+          });
+        },
+        onError: (error) => {
+          toast({
+            title: t.error,
+            description: error.message,
+            variant: "destructive",
+          });
+        },
+      }
+    );
+  };
 
   if (isLoading) {
     return (
@@ -33,7 +80,7 @@ export default function FavoritesPage() {
           ))}
         </div>
       </div>
-    )
+    );
   }
 
   if (isError || !favorites || favorites.length === 0) {
@@ -44,38 +91,58 @@ export default function FavoritesPage() {
           <p className="text-2xl text-gray-400">{t.emptyFavorites}</p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
       <h1 className="text-3xl font-bold mb-6">{t.favorites}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {favorites.map((favorite) => (
+        {favorites.map((favorite: Favorite) => (
           <ProductCard
-            key={favorite.id}
-            productId={favorite.product_id}
+            key={favorite.created_at}
+            productId={favorite.product.id}
             product={favorite.product}
-            onRemove={() => removeFromFavorites(favorite.product_id)}
-            onAddToCart={() => addToCart({ productId: favorite.product_id })}
+            onRemove={() => handleRemoveFromFavorites(favorite.product.id)}
+            onAddToCart={() => handleAddToCart(favorite.product.id)}
             onHover={setIsHovered}
-            isHovered={isHovered === favorite.product_id}
+            isHovered={isHovered === favorite.product.id}
+            isRemoving={isRemoving}
+            isAddingToCart={isAddingToCart}
             translations={t}
           />
         ))}
       </div>
     </div>
-  )
+  );
+}
+
+interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  price_amount: string;
+  old_price_amount?: string | null;
+  media: Array<{
+    thumbnail: string;
+    images_400x400: string;
+    images_720x720: string;
+    images_800x800: string;
+    images_1200x1200: string;
+  }>;
+  stock: number;
 }
 
 interface ProductCardProps {
-  productId: number
-  product?: Product
-  onRemove: () => void
-  onAddToCart: () => void
-  onHover: (id: number | null) => void
-  isHovered: boolean
-  translations: { addToCart: string }
+  productId: number;
+  product: Product;
+  onRemove: () => void;
+  onAddToCart: () => void;
+  onHover: (id: number | null) => void;
+  isHovered: boolean;
+  isRemoving: boolean;
+  isAddingToCart: boolean;
+  translations: { addToCart: string };
 }
 
 function ProductCard({
@@ -85,70 +152,91 @@ function ProductCard({
   onAddToCart,
   onHover,
   isHovered,
+  isRemoving,
+  isAddingToCart,
   translations,
 }: ProductCardProps) {
-  if (!product) return null
+  if (!product) return null;
+
+  // Получаем первое изображение из media
+  const imageUrl =
+    product.media?.[0]?.images_800x800 ||
+    product.media?.[0]?.thumbnail ||
+    "/placeholder.svg";
+
+  // Форматируем цену
+  const price = product.old_price_amount
+    ? `${parseFloat(product.price_amount).toFixed(2)} TMT`
+    : `${parseFloat(product.price_amount).toFixed(2)} TMT`;
+
+  const oldPrice = product.old_price_amount
+    ? `${parseFloat(product.old_price_amount).toFixed(2)} TMT`
+    : null;
 
   return (
     <Card
-      className="group overflow-hidden rounded-xl transition-shadow hover:shadow-lg relative"
+      className="group overflow-hidden rounded-xl transition-shadow hover:shadow-lg relative border-none"
       onMouseEnter={() => onHover(productId)}
       onMouseLeave={() => onHover(null)}
     >
       <Link href={`/product/${product.slug || productId}`} className="block">
         <div className="relative aspect-square bg-gray-50">
-          {/* Labels */}
-          {product.labels && product.labels.length > 0 && (
-            <div className="absolute top-2 left-2 z-10 flex flex-col gap-1">
-              {product.labels.map((label) => (
-                <Badge
-                  key={label.text}
-                  className="text-white text-[10px] font-bold uppercase px-2 py-0.5"
-                  style={{ backgroundColor: label.bg_color }}
-                >
-                  {label.text}
-                </Badge>
-              ))}
-            </div>
-          )}
-
           {/* Favorite Button */}
           <button
             onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              onRemove()
+              e.preventDefault();
+              e.stopPropagation();
+              onRemove();
             }}
-            className="absolute top-2 right-2 z-10 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform"
+            disabled={isRemoving}
+            className="absolute top-2 right-2 z-10 bg-white rounded-full p-2 shadow-md hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Heart className="h-5 w-5 fill-red-500 text-red-500" />
           </button>
 
+          {/* Product Image */}
           <Image
-            src={product.image || product.images?.[0] || "/placeholder.svg"}
+            src={imageUrl}
             alt={product.name}
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
             className="object-contain p-4 group-hover:scale-105 transition-transform"
+            priority={false}
           />
+
+          {/* Out of Stock Badge */}
+          {product.stock === 0 && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <Badge variant="secondary" className="text-sm">
+                Нет в наличии
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Product Info */}
         <div className="p-3">
-          <h3 className="font-medium text-sm line-clamp-2 mb-2 min-h-[40px]">{product.name}</h3>
+          <h3 className="font-medium text-sm line-clamp-2 mb-2 min-h-[40px]">
+            {product.name}
+          </h3>
           <div className="space-y-1">
-            <p className="text-lg font-bold">{product.struct_price_text || `$${product.price}`}</p>
+            {oldPrice && (
+              <p className="text-sm text-gray-400 line-through">{oldPrice}</p>
+            )}
+            <p className="text-lg font-bold text-blue-600">{price}</p>
           </div>
         </div>
       </Link>
 
-      {/* Add to Cart Button */}
-      {isHovered && (
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white to-transparent">
+      {/* Add to Cart Button - показывается при hover */}
+      {isHovered && product.stock > 0 && (
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent">
           <Button
             onClick={(e) => {
-              e.preventDefault()
-              onAddToCart()
+              e.preventDefault();
+              onAddToCart();
             }}
+            disabled={isAddingToCart}
             className="w-full rounded-xl gap-2"
             size="sm"
           >
@@ -158,5 +246,5 @@ function ProductCard({
         </div>
       )}
     </Card>
-  )
+  );
 }

@@ -4,23 +4,65 @@
  */
 
 // Product Types
+export interface ProductMedia {
+  thumbnail: string
+  images_400x400: string
+  images_720x720: string
+  images_800x800: string
+  images_1200x1200: string
+}
+
+export interface ProductProperty {
+  attribute_id: number
+  name: string
+  value: string
+}
+
+export interface ProductReviews {
+  count: number
+  rating: string
+}
+
 export interface Product {
   id: number
+  parent_id: number | null
   name: string
-  slug?: string
-  price: number
+  slug: string
   description: string
-  image: string
-  images?: string[]
-  category: string
-  brand?: string
-  stock?: number
-  rating?: number
-  reviews_count?: number
-  is_favorite?: boolean
-  is_in_cart?: boolean
-  labels?: Array<{ text: string; bg_color: string }>
-  struct_price_text?: string
+  sku: string | null
+  barcode: string
+  stock: number
+  price_amount: string
+  old_price_amount: string | null
+  backorder: string
+  weight_value: number | null
+  weight_unit: string | null
+  height_value: number | null
+  height_unit: string | null
+  media: ProductMedia[]
+  created_at: string
+  seo_title: string | null
+  seo_description: string | null
+  colour: string | null
+  size: string | null
+  available_colors: string[]
+  available_sizes: string[]
+  brand: {
+    id: number | null
+    name: string | null
+  }
+  channel: Array<{
+    id: number
+    name: string
+  }>
+  properties: ProductProperty[]
+  variations: any[]
+  reviews: ProductReviews
+  reviews_resources: any[]
+  categories: Array<{
+    id: number
+    name: string
+  }>
 }
 
 // Category Types
@@ -193,3 +235,5 @@ export interface CreateOrderPayload {
   region: string
   note?: string
 }
+
+

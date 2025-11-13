@@ -6,20 +6,33 @@ export interface CartItem {
   product: {
     id: number
     name: string
+    description?: string
     images: (StaticImageData | string)[]
     image?: StaticImageData | string
+    stock?: number
+    price_amount?: string
   }
   seller: {
     id: number
     name: string
   }
   quantity: number
+  product_quantity?: number // For compatibility with old API
   price: number
   total: number
   price_formatted?: string
   sub_total_formatted?: string
   discount_formatted?: string
   total_formatted?: string
+}
+
+export interface Cart {
+  message: string
+  data: CartItem[]
+  errorDetails?: string
+  total?: number
+  total_formatted?: string
+  items?: CartItem[] // Alternative structure
 }
 
 export interface Order {
@@ -85,3 +98,22 @@ export interface CartTranslations {
 
 export type PaymentType = "CASH" | "CARD"
 export type DeliveryType = "SELECTED_DELIVERY" | "PICK_UP"
+
+// API Response types
+export interface ApiResponse<T> {
+  message: string
+  data: T
+  errorDetails?: string
+}
+
+export interface CreateOrderPayload {
+  customer_name?: string
+  customer_phone?: string
+  customer_address: string
+  shipping_method: string
+  payment_type_id: number
+  delivery_time?: string
+  delivery_at?: string
+  region: string
+  note?: string
+}

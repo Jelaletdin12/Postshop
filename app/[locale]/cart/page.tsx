@@ -20,11 +20,15 @@ export default function CartPage() {
 
   const t = useTranslations()
 
-  const { data: cart, isLoading, isError } = useCart()
+  // useCart dönen data yapısı: { message: "success", data: [...] }
+  const { data: cartResponse, isLoading, isError } = useCart()
   const { data: regions = [] } = useRegions()
   const { data: addresses = [] } = useAddresses()
   const { data: paymentTypes = [] } = usePaymentTypes()
   const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder()
+
+  // Cart items'ı doğru şekilde al
+  const cartItems = cartResponse?.data || []
 
   useEffect(() => {
     setIsClient(true)
@@ -37,11 +41,9 @@ export default function CartPage() {
 
   const handleCompleteOrder = () => {
     if (!selectedRegion || !selectedAddress || !paymentType) {
-      console.warn("[v0] Missing required fields for order")
+      console.warn("Missing required fields for order")
       return
     }
-
-    const selectedRegionObj = regions.find((r) => r.code === selectedRegion)
 
     createOrder(
       {
@@ -53,7 +55,6 @@ export default function CartPage() {
       },
       {
         onSuccess: () => {
-          // Navigate to orders page after successful order creation
           router.push(`/orders`)
         },
       },
@@ -70,7 +71,7 @@ export default function CartPage() {
     )
   }
 
-  if (isError || !cart?.items || cart.items.length === 0) {
+  if (isError || cartItems.length === 0) {
     return (
       <div className="container mx-auto px-4 min-h-[90vh] flex items-center justify-center">
         <h2 className="text-3xl md:text-4xl lg:text-5xl text-gray-400 font-semibold">
@@ -101,17 +102,29 @@ export default function CartPage() {
     map: t("address"),
   }
 
-  const itemsBySeller = cart.items.reduce(
+  // Group items by seller (from channel)
+  const itemsBySeller = cartItems.reduce(
     (acc, item) => {
-      const sellerId = item.seller.id
+      const sellerId = item.product.channel?.[0]?.id || 0
+      const sellerName = item.product.channel?.[0]?.name || "Unknown Seller"
+      
       if (!acc[sellerId]) {
-        acc[sellerId] = { seller: item.seller, items: [] }
+        acc[sellerId] = { 
+          seller: { id: sellerId, name: sellerName }, 
+          items: [] 
+        }
       }
       acc[sellerId].items.push(item)
       return acc
     },
-    {} as Record<number, { seller: any; items: typeof cart.items }>,
+    {} as Record<number, { seller: any; items: typeof cartItems }>
   )
+
+  // Calculate total
+  const totalAmount = cartItems.reduce((sum, item) => {
+    const price = parseFloat(item.product.price_amount || "0")
+    return sum + (price * item.product_quantity)
+  }, 0)
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
@@ -126,9 +139,34 @@ export default function CartPage() {
               <div key={sellerId} className="mb-6">
                 <p className="text-base font-semibold mb-3">{seller.name}</p>
                 <div className="space-y-4">
-                  {items.map((item) => (
-                    <CartItemCard key={item.id} item={item} translations={translations} />
-                  ))}
+                  {items.map((item) => {
+                    const price = parseFloat(item.product.price_amount || "0")
+                    const quantity = item.product_quantity
+                    const total = price * quantity
+                    
+                    return (
+                      <CartItemCard 
+                        key={item.id} 
+                        item={{
+                          ...item,
+                          quantity: quantity,
+                          price: price,
+                          total: total,
+                          seller: seller,
+                          price_formatted: `${item.product.price_amount} TMT`,
+                          sub_total_formatted: `${item.product.price_amount} TMT`,
+                          total_formatted: `${total.toFixed(2)} TMT`,
+                          discount_formatted: "0 TMT",
+                          product: {
+                            ...item.product,
+                            image: item.product.media?.[0]?.images_800x800 || item.product.media?.[0]?.thumbnail,
+                            images: item.product.media?.map(m => m.images_800x800 || m.thumbnail) || []
+                          }
+                        }} 
+                        translations={translations} 
+                      />
+                    )
+                  })}
                 </div>
                 {Object.entries(itemsBySeller).length > 1 && <Separator className="mt-4" />}
               </div>
@@ -141,10 +179,27 @@ export default function CartPage() {
           order={{
             id: 1,
             seller: { id: 1, name: "Store" },
-            items: cart.items,
+            items: cartItems.map(item => ({
+              ...item,
+              quantity: item.product_quantity,
+              price: parseFloat(item.product.price_amount || "0"),
+              total: parseFloat(item.product.price_amount || "0") * item.product_quantity,
+              seller: { 
+                id: item.product.channel?.[0]?.id || 0, 
+                name: item.product.channel?.[0]?.name || "Unknown" 
+              }
+            })),
             billing: {
-              body: [{ title: t("goods"), value: `${cart.total_formatted || `${cart.total} TMT`}` }],
-              footer: { title: t("total"), value: `${cart.total_formatted || `${cart.total} TMT`}` },
+              body: [
+                { 
+                  title: t("goods"), 
+                  value: `${totalAmount.toFixed(2)} TMT`
+                }
+              ],
+              footer: { 
+                title: t("total"), 
+                value: `${totalAmount.toFixed(2)} TMT`
+              },
             },
           }}
           translations={translations}

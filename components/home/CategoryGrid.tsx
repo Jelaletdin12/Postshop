@@ -47,7 +47,13 @@ export default function CategoryGrid({ categories, isLoading, isError, locale, t
           <Link key={cat.id} href={`/${locale}/category/${cat.slug}?category_id=${cat.id}`}>
             <Card className="hover:shadow-md border-none shadow-none p-0 gap-2 transition-all cursor-pointer">
               <div className="relative w-full h-36 overflow-hidden rounded-lg">
-                <Image src={cat.image || "/placeholder.svg"} alt={cat.name} fill className="object-contain" />
+               <Image
+  src={cat.media?.[0]?.images_400x400 || "/placeholder.svg"}
+  alt={cat.name}
+  fill
+  className="object-contain"
+/>
+
               </div>
               <CardContent className="py-2">
                 <p className="text-sm font-medium text-gray-800 truncate text-center">{cat.name}</p>

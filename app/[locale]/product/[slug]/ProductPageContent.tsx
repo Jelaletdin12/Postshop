@@ -7,73 +7,105 @@ import { Minus, Plus, Heart, ShoppingCart, Store } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import placeholder from "@/public/jb.webp"
-import { useProduct, useCategories } from "@/lib/hooks"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useProductsBySlug } from "@/lib/hooks/useProducts"
+import { useAddToCart, useUpdateCartItemQuantity, useCart } from "@/lib/hooks/useCart"
+import { toast } from "sonner"
 
 interface ProductDetailProps {
   slug: string
 }
 
 const ProductPageContent = ({ slug }: ProductDetailProps) => {
-  const [isClient, setIsClient] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
   const [isFavorite, setIsFavorite] = useState(false)
-  const [isInCart, setIsInCart] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
 
-  const { data: product, isLoading: productLoading, error } = useProduct(slug)
-  const { data: categoriesData } = useCategories()
-
-  if (!isClient) {
-    typeof window !== "undefined" && setIsClient(true)
-  }
+  // Get product data
+  const { data: product, isLoading: productLoading, error } = useProductsBySlug(slug)
+  
+  // Get cart data to check if product is already in cart
+  const { data: cartData } = useCart()
+  
+  // Cart mutations
+  const addToCartMutation = useAddToCart()
+  const updateCartMutation = useUpdateCartItemQuantity()
 
   const t = {
-    addToCart: "Add to Cart",
-    goToCart: "Go to Cart",
-    price: "Price:",
-    aboutProduct: "About Product",
-    brand: "Brand",
-    model: "Model",
-    description: "Product Description",
-    recommended: "Recommended Products",
-    store: "Store",
-    writeToStore: "Write to Store",
-    color: "Color:",
+    addToCart: "Sebede goş",
+    goToCart: "Sebede git",
+    price: "Bahasy:",
+    aboutProduct: "Haryt barada",
+    brand: "Marka",
+    stock: "Mukdary",
+    description: "Düşündiriş",
+    store: "Dükan",
+    writeToStore: "Dükana ýaz",
+    color: "Reňk:",
+    category: "Kategoriýa:",
+    barcode: "Barkod:",
+    addedToCart: "Sebede goşuldy",
+    updatedCart: "Sebe täzelendi",
+    error: "Ýalňyşlyk ýüze çykdy",
   }
 
+  // Check if product is in cart
+  const cartItem = cartData?.data?.find((item: any) => item.product?.id === product?.id)
+  const isInCart = !!cartItem
+
   const handleAddToCart = async () => {
-    setIsLoading(true)
+    if (!product?.id) return
+
     try {
-      // TODO: implement cart API call
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setIsInCart(true)
-    } finally {
-      setIsLoading(false)
+      await addToCartMutation.mutateAsync({
+        productId: product.id,
+        quantity: quantity,
+      })
+      
+      toast.success(t.addedToCart, {
+        description: `${product.name} sebede goşuldy`,
+      })
+    } catch (error) {
+      console.error("Add to cart error:", error)
+      toast.error(t.error, {
+        description: "Haryt sebede goşup bolmady",
+      })
     }
   }
 
   const handleQuantityChange = async (newQuantity: number) => {
-    if (newQuantity < 1) return
-    setIsLoading(true)
-    try {
-      setQuantity(newQuantity)
-      // TODO: implement cart quantity update API call
-      await new Promise((resolve) => setTimeout(resolve, 300))
-    } finally {
-      setIsLoading(false)
+    if (newQuantity < 1 || !product?.id) return
+    if (newQuantity > product.stock) return
+
+    setQuantity(newQuantity)
+
+    // If product is already in cart, update it
+    if (isInCart) {
+      try {
+        await updateCartMutation.mutateAsync({
+          productId: product.id,
+          quantity: newQuantity,
+        })
+        
+        toast.success(t.updatedCart, {
+          description: `Mukdar: ${newQuantity}`,
+        })
+      } catch (error) {
+        console.error("Update cart error:", error)
+        toast.error(t.error, {
+          description: "Mukdar täzelenip bolmady",
+        })
+      }
     }
   }
 
   const handleToggleFavorite = () => {
     setIsFavorite(!isFavorite)
-    // TODO: implement favorites API call
+    // TODO: Implement favorites API
   }
 
+  // Loading state
   if (productLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -95,13 +127,20 @@ const ProductPageContent = ({ slug }: ProductDetailProps) => {
     )
   }
 
+  // Error state
   if (error || !product) {
     return (
       <div className="container mx-auto px-4 py-8 text-center">
-        <h2 className="text-2xl font-bold text-red-600">Product not found</h2>
+        <h2 className="text-2xl font-bold text-red-600">Haryt tapylmady</h2>
+        <p className="text-gray-500 mt-2">Bu haryt ýok ýa-da aýryldy</p>
       </div>
     )
   }
+
+  // Extract image URLs from media array
+  const imageUrls = product.media?.map(m => m.images_800x800 || m.images_720x720 || m.thumbnail) || []
+
+  const isLoading = addToCartMutation.isPending || updateCartMutation.isPending
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -110,42 +149,37 @@ const ProductPageContent = ({ slug }: ProductDetailProps) => {
         <div className="flex-1 max-w-2xl">
           <div className="relative">
             <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-gray-50">
-              {product.labels && product.labels.length > 0 && (
-                <div className="absolute top-0 right-0 z-10 flex flex-col gap-1">
-                  {product.labels.map((label) => (
-                    <Badge
-                      key={label.text}
-                      className="rounded-l-md rounded-r-none text-white text-xs font-bold uppercase"
-                      style={{ backgroundColor: label.bg_color }}
-                    >
-                      {label.text}
-                    </Badge>
-                  ))}
+              {imageUrls.length > 0 ? (
+                <Image
+                  src={imageUrls[selectedImage]}
+                  alt={product.name}
+                  fill
+                  className="object-contain"
+                  priority
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-400">
+                  Surat ýok
                 </div>
               )}
-              <Image
-                src={product.images?.[selectedImage] || product.image || placeholder}
-                alt={product.name}
-                fill
-                className="object-contain"
-                priority
-              />
             </div>
 
             {/* Thumbnail Images */}
-            {product.images && product.images.length > 1 && (
+            {imageUrls.length > 1 && (
               <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-                {product.images.map((image, index) => (
+                {imageUrls.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`relative w-16 h-16 rounded overflow-hidden border ${
-                      selectedImage === index ? "border-black" : "border-transparent"
+                    className={`relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
+                      selectedImage === index 
+                        ? "border-primary ring-2 ring-primary/20" 
+                        : "border-gray-200 hover:border-gray-300"
                     }`}
                   >
                     <Image
-                      src={image || "/placeholder.svg"}
-                      alt={`${product.name} thumbnail ${index + 1}`}
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
                       fill
                       className="object-cover"
                     />
@@ -160,33 +194,79 @@ const ProductPageContent = ({ slug }: ProductDetailProps) => {
         <div className="flex-1 space-y-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            {product.category && (
-              <div className="flex gap-2 flex-wrap">
-                <span className="text-sm text-gray-500">Category: {product.category}</span>
+            {product.categories && product.categories.length > 0 && (
+              <div className="flex gap-2 flex-wrap mt-2">
+                {product.categories.map((cat, idx) => (
+                  <span 
+                    key={idx}
+                    className="text-sm px-3 py-1 bg-gray-100 rounded-full text-gray-600"
+                  >
+                    {cat.name}
+                  </span>
+                ))}
               </div>
             )}
           </div>
 
           {/* Product Info Table */}
-          <Card className="p-4 rounded-xl">
+          <Card className="p-4 rounded-xl border-gray-200">
             <h3 className="text-xl font-semibold mb-4">{t.aboutProduct}</h3>
             <div className="space-y-3">
-              {product.brand && (
+              {product.brand?.name && (
                 <>
                   <div className="flex justify-between items-center py-2">
                     <span className="text-gray-500">{t.brand}</span>
-                    <span className="font-medium">{product.brand}</span>
+                    <span className="font-medium">{product.brand.name}</span>
                   </div>
                   <Separator />
                 </>
               )}
+              
               {product.stock !== undefined && (
                 <>
                   <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-500">Stock</span>
-                    <span className="font-medium">{product.stock}</span>
+                    <span className="text-gray-500">{t.stock}</span>
+                    <span className={`font-medium ${product.stock === 0 ? 'text-red-500' : 'text-green-600'}`}>
+                      {product.stock === 0 ? 'Ýok' : product.stock}
+                    </span>
                   </div>
                   <Separator />
+                </>
+              )}
+              
+              {product.barcode && (
+                <>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-500">{t.barcode}</span>
+                    <span className="font-mono text-sm">{product.barcode}</span>
+                  </div>
+                  <Separator />
+                </>
+              )}
+              
+              {product.colour && (
+                <>
+                  <div className="flex justify-between items-center py-2">
+                    <span className="text-gray-500">{t.color}</span>
+                    <span className="font-medium">{product.colour}</span>
+                  </div>
+                  <Separator />
+                </>
+              )}
+              
+              {product.properties && product.properties.length > 0 && (
+                <>
+                  {product.properties.map((prop, idx) => (
+                    prop.value && (
+                      <div key={idx}>
+                        <div className="flex justify-between items-center py-2">
+                          <span className="text-gray-500">{prop.name}</span>
+                          <span className="font-medium">{prop.value}</span>
+                        </div>
+                        {idx < product.properties.length - 1 && <Separator />}
+                      </div>
+                    )
+                  ))}
                 </>
               )}
             </div>
@@ -194,26 +274,41 @@ const ProductPageContent = ({ slug }: ProductDetailProps) => {
 
           {/* Description */}
           {product.description && (
-            <div>
+            <Card className="p-4 rounded-xl border-gray-200">
               <h3 className="text-xl font-semibold mb-3">{t.description}</h3>
-              <p className="text-gray-700 leading-relaxed">{product.description}</p>
-            </div>
+              <div 
+                className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
+            </Card>
           )}
         </div>
 
         {/* Price & Actions Sidebar */}
-        <div className="lg:w-[420px] space-y-4">
-          <Card className="p-6 rounded-xl shadow-lg">
-            <div className="flex justify-between items-center mb-6">
+        <div className="lg:w-[380px] space-y-4">
+          <Card className="p-6 rounded-xl shadow-lg sticky top-4">
+            <div className="flex justify-between items-start mb-6">
               <span className="text-lg text-gray-500">{t.price}</span>
-              <span className="text-3xl font-bold">${product.price}</span>
+              <div className="flex flex-col items-end">
+                <span className="text-3xl font-bold text-primary">
+                  {product.price_amount} TMT
+                </span>
+                {product.old_price_amount && parseFloat(product.old_price_amount) > 0 && (
+                  <span className="text-lg text-gray-400 line-through">
+                    {product.old_price_amount} TMT
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-3">
               {isInCart ? (
-                <div className="space-y-3">
+                <>
                   <Link href="/cart">
-                    <Button size="lg" className="w-full rounded-xl text-lg font-bold bg-green-600 hover:bg-green-700">
+                    <Button 
+                      size="lg" 
+                      className="w-full rounded-xl text-lg font-bold bg-green-600 hover:bg-green-700"
+                    >
                       <ShoppingCart className="mr-2 h-5 w-5" />
                       {t.goToCart}
                     </Button>
@@ -225,31 +320,33 @@ const ProductPageContent = ({ slug }: ProductDetailProps) => {
                       size="icon"
                       onClick={() => handleQuantityChange(quantity - 1)}
                       disabled={quantity === 1 || isLoading}
-                      className="rounded-xl bg-blue-50 flex-shrink-0"
+                      className="rounded-xl h-12 w-12"
                     >
                       <Minus className="h-5 w-5" />
                     </Button>
-                    <div className="flex-1 text-center font-semibold text-lg">{quantity}</div>
+                    <div className="flex-1 text-center font-semibold text-xl border rounded-xl h-12 flex items-center justify-center">
+                      {quantity}
+                    </div>
                     <Button
                       variant="outline"
                       size="icon"
                       onClick={() => handleQuantityChange(quantity + 1)}
-                      disabled={isLoading}
-                      className="rounded-xl bg-blue-50 flex-shrink-0"
+                      disabled={isLoading || quantity >= product.stock}
+                      className="rounded-xl h-12 w-12"
                     >
                       <Plus className="h-5 w-5" />
                     </Button>
                   </div>
-                </div>
+                </>
               ) : (
                 <Button
                   size="lg"
                   onClick={handleAddToCart}
-                  disabled={isLoading}
+                  disabled={isLoading || product.stock === 0}
                   className="w-full rounded-xl text-lg font-bold"
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  {t.addToCart}
+                  {isLoading ? "Goşulýar..." : product.stock === 0 ? "Haryt ýok" : t.addToCart}
                 </Button>
               )}
 
@@ -257,32 +354,44 @@ const ProductPageContent = ({ slug }: ProductDetailProps) => {
                 variant="outline"
                 size="lg"
                 onClick={handleToggleFavorite}
-                className={`w-full rounded-xl ${
-                  isFavorite ? "bg-red-50 border-red-200 hover:bg-red-100" : "bg-blue-50"
+                className={`w-full rounded-xl transition-all ${
+                  isFavorite 
+                    ? "bg-red-50 border-red-300 hover:bg-red-100" 
+                    : "hover:bg-gray-50"
                 }`}
               >
-                <Heart className={`h-6 w-6 ${isFavorite ? "fill-red-500 text-red-500" : ""}`} />
+                <Heart 
+                  className={`h-6 w-6 transition-all ${
+                    isFavorite ? "fill-red-500 text-red-500" : "text-gray-600"
+                  }`} 
+                />
               </Button>
             </div>
           </Card>
 
-          {/* Seller Card */}
-          <Card className="p-6 rounded-xl">
-            <div className="flex items-center gap-4 mb-4">
-              <Avatar className="w-14 h-14">
-                <AvatarFallback>
-                  <Store className="h-6 w-6" />
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-sm text-gray-500">{t.store}</p>
-                <h4 className="text-xl font-bold hover:text-primary cursor-pointer">Official Store</h4>
+          {/* Store/Channel Card */}
+          {product.channel && product.channel.length > 0 && (
+            <Card className="p-6 rounded-xl">
+              <div className="flex items-center gap-4 mb-4">
+                <Avatar className="w-14 h-14 bg-primary/10">
+                  <AvatarFallback className="bg-transparent">
+                    <Store className="h-6 w-6 text-primary" />
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-sm text-gray-500">{t.store}</p>
+                  <h4 className="text-lg font-bold">{product.channel[0].name}</h4>
+                </div>
               </div>
-            </div>
-            <Button variant="outline" size="lg" disabled className="w-full rounded-xl bg-transparent">
-              {t.writeToStore}
-            </Button>
-          </Card>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full rounded-xl"
+              >
+                {t.writeToStore}
+              </Button>
+            </Card>
+          )}
         </div>
       </div>
     </div>
