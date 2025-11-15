@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { notFound } from "next/navigation"
-import ProductPageContent from "./ProductPageContent"
+import ProductPageContent from "../../../../features/products/components/ProductPageContent"
 
 type Props = {
   params: Promise<{ locale: string; slug: string }>

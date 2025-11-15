@@ -1,0 +1,101 @@
+src/
+├── app/                    # Next.js 14 App Router
+│   └── [locale]/
+│       ├── (shop)/        # Route group - ortak layout
+│       │   ├── page.tsx
+│       │   ├── category/[slug]/
+│       │   ├── product/[slug]/
+│       │   └── cart/
+│       └── (account)/     # Route group - kullanıcı sayfaları
+│           ├── me/
+│           ├── orders/
+│           └── favorites/
+│
+├── features/              # Feature-based organization
+│   ├── auth/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── types.ts
+│   ├── cart/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── types.ts
+│   ├── products/
+│   │   ├── components/
+│   │   ├── hooks/
+│   │   └── types.ts
+│   └── orders/
+│       ├── components/
+│       ├── hooks/
+│       └── types.ts
+│
+├── shared/
+│   ├── components/        # Paylaşılan UI bileşenleri
+│   │   ├── ui/           # shadcn/ui
+│   │   ├── layout/
+│   │   └── skeletons/
+│   ├── hooks/            # Generic hooks (use-mobile, use-toast)
+│   ├── lib/
+│   │   ├── api/
+│   │   ├── config/
+│   │   └── utils/
+│   └── types/
+│
+└── i18n/                  # Lokalizasyon
+    ├── messages/
+    ├── config.ts
+    └── middleware.ts
+
+
+
+
+    # Tüm hooks'ları tek yere taşı
+mv hooks/* lib/hooks/
+rm -rf hooks/
+```
+
+### 3. Feature-Based Yapıya Geç
+
+**Şu anki yapın:**
+```
+components/home/HomePage.tsx
+lib/hooks/useProducts.ts
+```
+
+**Olması gereken:**
+```
+features/products/
+  ├── components/
+  │   ├── ProductCard.tsx
+  │   ├── ProductGrid.tsx
+  │   └── ProductDetails.tsx
+  ├── hooks/
+  │   └── useProducts.ts
+  └── types.ts
+
+
+
+  import { ProductCard, useProducts } from '@/features/products'
+```
+
+## Empty States'i Doğru Yerleştir
+
+Şu an:
+```
+components/empty-states/EmptyCart.tsx
+```
+
+Olmalı:
+```
+features/cart/components/EmptyState.tsx
+```
+
+Her feature kendi empty state'ini yönetmeli.
+
+## API Layer'ı Düzenle
+```
+shared/lib/api/
+├── client.ts          # Axios/fetch instance
+├── endpoints.ts       # API endpoint'leri
+├── types.ts          # Genel API tipleri
+└── interceptors.ts   # Auth, error handling

@@ -1,5 +1,5 @@
 import type { Metadata } from "next"
-import ClientProfilePage from "./client-page"
+import ClientProfilePage from "../../../features/profile/components/client-page"
 
 export const metadata: Metadata = {
   title: "My Profile | E-Commerce",

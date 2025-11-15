@@ -179,7 +179,7 @@ function ProductCard({
       onMouseEnter={() => onHover(productId)}
       onMouseLeave={() => onHover(null)}
     >
-      <Link href={`/product/${product.slug || productId}`} className="block">
+      <Link href={`/product/${productId|| product.slug}`} className="block">
         <div className="relative aspect-square bg-gray-50">
           {/* Favorite Button */}
           <button

@@ -31,6 +31,6 @@ export default async function CategoryPage(props: Props) {
   const params = await props.params
   const { slug } = params
 
-  const CategoryPageClient = (await import("./ui/CategoryClient")).default
+  const CategoryPageClient = (await import("../../../../features/category/components/CategoryClient")).default
   return <CategoryPageClient params={params} />
 }
