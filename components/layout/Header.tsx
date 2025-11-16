@@ -1,108 +1,64 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import Image from "next/image"
-import { X, Menu, Search, Store, LogOut, User as UserIcon } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { X, Menu, Search, Store, LogOut, User as UserIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import Logo from "@/public/logo.png"
-import CategoryMenu from "./ui/CategoryMenu"
-import SearchBar from "./ui/SearchBar"
-import AuthDialog from "./ui/AuthDialog"
-import ActionButtons from "./ui/ActionButtons"
-import LanguageSelector from "./ui/LanguageSelector"
-import { useAuthStatus, useLogout } from "@/lib/hooks/useAuth"
+} from "@/components/ui/dropdown-menu";
+import Logo from "@/public/logo.png";
+import CategoryMenu from "./ui/CategoryMenu";
+import SearchBar from "./ui/SearchBar";
+import AuthDialog from "./ui/AuthDialog";
+import ActionButtons from "./ui/ActionButtons";
+import LanguageSelector from "./ui/LanguageSelector";
+import { useAuthStatus, useLogout } from "@/lib/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 interface HeaderProps {
-  locale?: string
-  translations?: {
-    catalog: string
-    search: string
-    orders: string
-    favorites: string
-    cart: string
-    login: string
-    profile: string
-    openStore: string
-    phone: string
-    code: string
-    send: string
-    verify: string
-    sending: string
-    verifying: string
-    enterPhone: string
-    weWillSendCode: string
-    invalidPhone: string
-    invalidCode: string
-    loginSuccess: string
-    codeSent: string
-    logout: string
-    loggingOut: string
-  }
+  locale?: string;
 }
 
-const DEFAULT_TRANSLATIONS = {
-  catalog: "Каталог",
-  search: "Поиск продукта",
-  orders: "Заказы",
-  favorites: "Избранное",
-  cart: "Корзина",
-  login: "Войти",
-  profile: "Профиль",
-  openStore: "Открыть магазин",
-  phone: "Номер телефона",
-  code: "Код",
-  send: "Отправить",
-  verify: "Подтвердить",
-  sending: "Отправка...",
-  verifying: "Проверка...",
-  enterPhone: "Введите свой номер телефона",
-  weWillSendCode: "Мы вышлем вам код",
-  invalidPhone: "Неверный номер телефона",
-  invalidCode: "Неверный код",
-  loginSuccess: "Вход выполнен успешно",
-  codeSent: "Код отправлен на ваш номер",
-  logout: "Выйти",
-  loggingOut: "Выход...",
-}
+export default function Header({ locale = "ru" }: HeaderProps) {
+  const [isClient, setIsClient] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const t = useTranslations();
 
-export default function Header({ locale = "ru", translations }: HeaderProps) {
-  const [isClient, setIsClient] = useState(false)
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false)
-  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false)
-  const [isLoginOpen, setIsLoginOpen] = useState(false)
-
-  const t = { ...DEFAULT_TRANSLATIONS, ...translations }
-
-  const { isAuthenticated, isLoading } = useAuthStatus()
-  const { mutate: logout, isPending: isLoggingOut } = useLogout()
+  const { isAuthenticated, isLoading } = useAuthStatus();
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
 
   useEffect(() => {
-    setIsClient(true)
-  }, [])
+    setIsClient(true);
+  }, []);
 
-  const handleAuthClick = () => {
+  const handleAuthClick = useCallback(() => {
     if (isAuthenticated) {
-      window.location.href = `/${locale}/me`
+      window.location.href = `/${locale}/me`;
     } else {
-      setIsLoginOpen(true)
+      setIsLoginOpen(true);
     }
-  }
+  }, [isAuthenticated, locale]);
 
-  const handleLogout = () => {
-    logout()
-  }
+  const handleLogout = useCallback(() => {
+    logout();
+  }, [logout]);
 
-  const toggleCategoryMenu = () => setIsCategoryOpen(!isCategoryOpen)
-  const closeCategoryMenu = () => setIsCategoryOpen(false)
+  const toggleCategoryMenu = useCallback(() => {
+    setIsCategoryOpen((prev) => !prev);
+  }, []);
 
-  if (!isClient) return null
+  const closeCategoryMenu = useCallback(() => {
+    setIsCategoryOpen(false);
+  }, []);
+
+  if (!isClient) return null;
 
   return (
     <>
@@ -121,7 +77,7 @@ export default function Header({ locale = "ru", translations }: HeaderProps) {
               size="lg"
             >
               {isCategoryOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              {t.catalog}
+              {t("common.catalog")}
             </Button>
 
             <div className="flex items-center gap-2 sm:hidden">
@@ -135,55 +91,25 @@ export default function Header({ locale = "ru", translations }: HeaderProps) {
               <LanguageSelector />
             </div>
 
-            <SearchBar isMobile={false} searchPlaceholder={t.search} className="hidden flex-1 md:flex" />
+            <SearchBar
+              isMobile={false}
+              searchPlaceholder={t("common.search")}
+              className="hidden flex-1 md:flex"
+              locale={locale}
+            />
 
-            <div className="hidden md:flex items-center gap-2">
-              {isLoading ? (
-                <div className="h-10 w-24 animate-pulse bg-gray-200 rounded" />
-              ) : isAuthenticated ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2">
-                      <UserIcon className="h-5 w-5 text-gray-600" />
-                      <span className="text-xs text-gray-700">{t.profile}</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => (window.location.href = `/${locale}/me`)}>
-                      <UserIcon className="mr-2 h-4 w-4" />
-                      {t.profile}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={handleLogout} disabled={isLoggingOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      {isLoggingOut ? t.loggingOut : t.logout}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2" onClick={handleAuthClick}>
-                  <UserIcon className="h-5 w-5 text-gray-600" />
-                  <span className="text-xs text-gray-700">{t.login}</span>
-                </Button>
-              )}
-            </div>
+           
 
             <ActionButtons
               isAuthenticated={isAuthenticated}
               onAuthClick={handleAuthClick}
-              translations={{
-                profile: t.profile,
-                login: t.login,
-                orders: t.orders,
-                favorites: t.favorites,
-                cart: t.cart,
-              }}
             />
           </div>
 
           <Link href="/openStore">
             <Button variant="ghost" size="sm" className="relative flex gap-0.5 h-auto pb-2">
               <Store className="h-5 w-5 text-gray-600" />
-              <span className="text-xs text-gray-700">{t.openStore}</span>
+              <span className="text-xs text-gray-700">{t("common.openStore")}</span>
             </Button>
           </Link>
         </div>
@@ -195,27 +121,14 @@ export default function Header({ locale = "ru", translations }: HeaderProps) {
         isMobile={true}
         isOpen={isMobileSearchOpen}
         onClose={() => setIsMobileSearchOpen(false)}
-        searchPlaceholder={t.search}
+        searchPlaceholder={t("common.search")}
+        locale={locale}
       />
 
       <AuthDialog
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
-        translations={{
-          enterPhone: t.enterPhone,
-          weWillSendCode: t.weWillSendCode,
-          phone: t.phone,
-          code: t.code,
-          send: t.send,
-          verify: t.verify,
-          sending: t.sending,
-          verifying: t.verifying,
-          invalidPhone: t.invalidPhone,
-          invalidCode: t.invalidCode,
-          loginSuccess: t.loginSuccess,
-          codeSent: t.codeSent,
-        }}
       />
     </>
-  )
+  );
 }

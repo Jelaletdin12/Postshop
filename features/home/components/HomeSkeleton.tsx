@@ -1,6 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import ProductGridSkeleton from "./ProductGridSkeleton"
-import CategorySkeleton from "./CategorySkeleton"
+import CategorySkeleton from "../../category/components/CategorySkeleton"
 
 export default function HomeSkeleton() {
   return (

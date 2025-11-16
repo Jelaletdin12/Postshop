@@ -3,7 +3,7 @@ export * from "../../features/category/hooks/useCategories"
 export * from "../../features/cart/hooks/useCart"
 export * from "../../features/favorites/hooks/useFavorites"
 export * from "../../features/orders/hooks/useOrders"
-export * from "./useSearch"
+export * from "../../features/search/hooks/useSearch"
 export * from "../../features/profile/hooks/useUserProfile"
 export * from "./useOpenStore"
 

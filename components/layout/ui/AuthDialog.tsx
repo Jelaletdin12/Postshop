@@ -1,79 +1,67 @@
-"use client"
+"use client";
 
-import React, { useState } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { toast } from "sonner"
-import Logo from "@/public/logo.png"
-import { useLogin, useVerifyToken } from "@/lib/hooks/useAuth"
+import { useState, useCallback } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import Logo from "@/public/logo.png";
+import { useLogin, useVerifyToken } from "@/lib/hooks/useAuth";
+import { useTranslations } from "next-intl";
 
 interface AuthDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  translations: {
-    enterPhone: string
-    weWillSendCode: string
-    phone: string
-    code: string
-    send: string
-    verify: string
-    sending: string
-    verifying: string
-    invalidPhone: string
-    invalidCode: string
-    loginSuccess: string
-    codeSent: string
-  }
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function AuthDialog({ isOpen, onClose, translations: t }: AuthDialogProps) {
-  const [phone, setPhone] = useState("993")
-  const [otp, setOtp] = useState("")
-  const [otpSent, setOtpSent] = useState(false)
-  const [rawPhone, setRawPhone] = useState("")
+export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
+  const [phone, setPhone] = useState("993");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [rawPhone, setRawPhone] = useState("");
+  const t = useTranslations();
 
-  const { mutate: login, isPending: isLoginLoading } = useLogin()
-  const { mutate: verifyToken, isPending: isVerifyLoading } = useVerifyToken()
+  const { mutate: login, isPending: isLoginLoading } = useLogin();
+  const { mutate: verifyToken, isPending: isVerifyLoading } = useVerifyToken();
 
-  const resetDialog = () => {
-    setOtpSent(false)
-    setPhone("993")
-    setOtp("")
-    setRawPhone("")
-    onClose()
-  }
+  const resetDialog = useCallback(() => {
+    setOtpSent(false);
+    setPhone("993");
+    setOtp("");
+    setRawPhone("");
+    onClose();
+  }, [onClose]);
 
-  const handleSendOtp = () => {
-    const cleanPhone = phone.replace(/\D/g, "")
+  const handleSendOtp = useCallback(() => {
+    const cleanPhone = phone.replace(/\D/g, "");
     
     if (cleanPhone.length !== 11 || !cleanPhone.startsWith("993")) {
-      toast.error(t.invalidPhone)
-      return
+      toast.error(t("invalid_phone"));
+      return;
     }
 
-    const phoneNumber = cleanPhone.substring(3)
-    setRawPhone(phoneNumber)
+    const phoneNumber = cleanPhone.substring(3);
+    setRawPhone(phoneNumber);
 
     login(
       { phone_number: phoneNumber },
       {
         onSuccess: () => {
-          toast.success(t.codeSent)
-          setOtpSent(true)
+          toast.success(t("code_sent"));
+          setOtpSent(true);
         },
         onError: (error: any) => {
-          toast.error(error?.response?.data?.message || "Hata oluştu")
+          toast.error(error?.response?.data?.message || t("error_occurred"));
         },
       }
-    )
-  }
+    );
+  }, [phone, login, t]);
 
-  const handleLogin = () => {
+  const handleLogin = useCallback(() => {
     if (otp.length < 4) {
-      toast.error(t.invalidCode)
-      return
+      toast.error(t("invalid_code"));
+      return;
     }
 
     verifyToken(
@@ -83,30 +71,30 @@ export default function AuthDialog({ isOpen, onClose, translations: t }: AuthDia
       },
       {
         onSuccess: () => {
-          toast.success(t.loginSuccess)
-          resetDialog()
-          window.location.reload()
+          toast.success(t("login_success"));
+          resetDialog();
+          window.location.reload();
         },
         onError: (error: any) => {
-          toast.error(error?.response?.data?.message || "Kod yanlış")
+          toast.error(error?.response?.data?.message || t("wrong_code"));
         },
       }
-    )
-  }
+    );
+  }, [otp, rawPhone, verifyToken, resetDialog, t]);
 
-  const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent, action: () => void) => {
     if (e.key === "Enter") {
-      action()
+      action();
     }
-  }
+  }, []);
 
-  const formatPhoneInput = (value: string) => {
-    const cleaned = value.replace(/\D/g, "")
+  const formatPhoneInput = useCallback((value: string) => {
+    const cleaned = value.replace(/\D/g, "");
     if (!cleaned.startsWith("993")) {
-      return "993"
+      return "993";
     }
-    return cleaned.substring(0, 11)
-  }
+    return cleaned.substring(0, 11);
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={resetDialog}>
@@ -117,15 +105,15 @@ export default function AuthDialog({ isOpen, onClose, translations: t }: AuthDia
               <Image src={Logo} alt="Logo" fill className="object-contain" />
             </div>
           </div>
-          <DialogTitle className="text-2xl text-center">{t.enterPhone}</DialogTitle>
-          <p className="text-center text-sm text-gray-600">{t.weWillSendCode}</p>
+          <DialogTitle className="text-2xl text-center">{t("common.enterPhone")}</DialogTitle>
+          <p className="text-center text-sm text-gray-600">{t("common.weWillSendCode")}</p>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
           <div>
             <Input
               type="tel"
-              placeholder={t.phone}
+              placeholder={t("common.phone")}
               value={phone}
               onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
               className="h-12 rounded-xl"
@@ -133,13 +121,13 @@ export default function AuthDialog({ isOpen, onClose, translations: t }: AuthDia
               disabled={otpSent || isLoginLoading}
               maxLength={11}
             />
-            <p className="text-xs text-gray-500 mt-1">Format: 99365123456</p>
+            <p className="text-xs text-gray-500 mt-1">{t("phone_format")}</p>
           </div>
 
           {otpSent && (
             <Input
               type="text"
-              placeholder={t.code}
+              placeholder={t("common.code")}
               value={otp}
               onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").substring(0, 6))}
               className="h-12 rounded-xl"
@@ -157,15 +145,15 @@ export default function AuthDialog({ isOpen, onClose, translations: t }: AuthDia
             disabled={isLoginLoading || isVerifyLoading}
           >
             {isLoginLoading
-              ? t.sending
+              ? t("sending")
               : isVerifyLoading
-                ? t.verifying
+                ? t("verifying")
                 : otpSent
-                  ? t.verify
-                  : t.send}
+                  ? t("verify")
+                  : t("common.send")}
           </Button>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

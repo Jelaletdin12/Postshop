@@ -1,15 +1,15 @@
-import type { Metadata } from "next"
-import { notFound } from "next/navigation"
-import ProductPageContent from "../../../../features/products/components/ProductPageContent"
+import type { Metadata } from "next";
+import { notFound } from "next/navigation";
+import ProductPageContent from "../../../../features/products/components/ProductPageContent";
 
 type Props = {
-  params: Promise<{ locale: string; slug: string }>
-}
+  params: Promise<{ locale: string; slug: string }>;
+};
 
-export const revalidate = 3600 // ISR: Revalidate every hour
+export const revalidate = 3600; // ISR: Revalidate every hour
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { locale, slug } = await params
+  const { locale, slug } = await params;
 
   return {
     title: `Product ${slug} | E-Commerce`,
@@ -20,20 +20,20 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `Product ${slug} | E-Commerce`,
       description: `View details for product ${slug}`,
     },
-  }
+  };
 }
 
 export async function generateStaticParams() {
   // Generate static params for popular products
-  return [{ slug: "nike-air-max" }, { slug: "adidas-ultraboost" }]
+  return [{ slug: "nike-air-max" }, { slug: "adidas-ultraboost" }];
 }
 
 export default async function ProductPage(props: Props) {
-  const params = await props.params
+  const params = await props.params;
 
   if (!params.slug) {
-    notFound()
+    notFound();
   }
 
-  return <ProductPageContent slug={params.slug} />
+  return <ProductPageContent slug={params.slug} />;
 }

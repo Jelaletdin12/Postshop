@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api"
-import type {  CartItem } from "@/lib/types/api"
+import type { CartItem } from "@/lib/types/api"
 
 interface CartResponse {
   message: string
@@ -49,12 +49,13 @@ export function useCart(options?: Partial<UseQueryOptions<CartResponse>>) {
       const response = await apiClient.get("/carts")
       return transformCartResponse(response.data)
     },
-    refetchInterval: 5000, // Poll every 5 seconds like RTK
+    refetchInterval: 10000, // Increased to 10 seconds (less aggressive)
     refetchOnMount: true,
-    refetchOnWindowFocus: false,
+    refetchOnWindowFocus: true, // Enable to catch updates on tab focus
     refetchOnReconnect: true,
-    staleTime: 0,
-    retry: 1,
+    staleTime: 5000, // Data considered fresh for 5 seconds
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
     ...options,
   })
 }
@@ -92,7 +93,8 @@ export function useAddToCart() {
       return { message: "success", data: "Added to cart" }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] })
+      // Invalidate but don't refetch immediately (let polling handle it)
+      queryClient.invalidateQueries({ queryKey: ["cart"], refetchType: 'none' })
     },
     onError: (error: any) => {
       console.error("Add to cart error:", error.response?.data?.message || error.message)
@@ -130,6 +132,7 @@ export function useRemoveFromCart() {
       return []
     },
     onSuccess: () => {
+      // Immediate refetch after removal
       queryClient.invalidateQueries({ queryKey: ["cart"] })
     },
     onError: (error: any) => {
@@ -185,6 +188,7 @@ export function useUpdateCartItemQuantity() {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
         },
+        timeout: 15000, // 15 second timeout
       })
 
       if (typeof response.data === "object" && response.data.data) {
@@ -204,10 +208,12 @@ export function useUpdateCartItemQuantity() {
       return { message: "success", data: "Updated cart" }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["cart"] })
+      // Invalidate but don't refetch immediately (let optimistic update handle it)
+      queryClient.invalidateQueries({ queryKey: ["cart"], refetchType: 'none' })
     },
     onError: (error: any) => {
       console.error("API update failed:", error.response?.data?.message || error.message)
+      throw error // Re-throw to trigger retry mechanism
     },
   })
 }
@@ -239,10 +245,3 @@ export function useCreateOrder() {
     },
   })
 }
-
-
-
-
-
-
-

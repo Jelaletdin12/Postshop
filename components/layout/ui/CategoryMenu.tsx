@@ -5,13 +5,7 @@ import Link from "next/link"
 import { useCategories } from "@/lib/hooks"
 import { Skeleton } from "@/components/ui/skeleton"
 
-interface Category {
-  id: number
-  name: string
-  slug: string
-  icon_class?: string
-  children?: Category[]
-}
+
 
 interface CategoryMenuProps {
   isOpen: boolean

@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronLeft, SlidersHorizontal, X } from "lucide-react";
+import { SlidersHorizontal, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -18,7 +17,6 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import InfiniteScroll from "react-infinite-scroll-component";
 import ProductCard from "@/components/ProductCard";
-import Loader from "@/components/Loader";
 import {
   useCategories,
   useAllCategoryProducts,
@@ -43,7 +41,8 @@ export default function CategoryPageClient({
   const t = useTranslations();
 
   // Fetch all categories first
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+  const { data: categoriesData, isLoading: categoriesLoading } =
+    useCategories();
 
   // Find category from slug
   const selectedCategory = useMemo(() => {
@@ -65,7 +64,9 @@ export default function CategoryPageClient({
 
   // Track subcategories
   const [hasSubcategories, setHasSubcategories] = useState(false);
-  const [subcategoriesToShow, setSubcategoriesToShow] = useState<Category[]>([]);
+  const [subcategoriesToShow, setSubcategoriesToShow] = useState<Category[]>(
+    []
+  );
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -73,13 +74,17 @@ export default function CategoryPageClient({
   const [allProducts, setAllProducts] = useState<Product[]>([]);
 
   // Price sorting state
-  const [priceSort, setPriceSort] = useState<"none" | "lowToHigh" | "highToLow">("none");
+  const [priceSort, setPriceSort] = useState<
+    "none" | "lowToHigh" | "highToLow"
+  >("none");
 
   // Price filter state
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
 
   // Selected filters state
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, Set<number>>>({
+  const [selectedFilters, setSelectedFilters] = useState<
+    Record<string, Set<number>>
+  >({
     brand: new Set(),
     color: new Set(),
     tag: new Set(),
@@ -89,7 +94,10 @@ export default function CategoryPageClient({
   const isSubCategory = useMemo(() => {
     if (!categoriesData || !selectedCategory) return false;
 
-    const checkIsSubCategory = (categories: Category[], targetId: number): boolean => {
+    const checkIsSubCategory = (
+      categories: Category[],
+      targetId: number
+    ): boolean => {
       for (const category of categories) {
         if (category.children) {
           for (const subCategory of category.children) {
@@ -134,43 +142,42 @@ export default function CategoryPageClient({
     limit: 6,
   });
 
- 
-
   if (!slug) {
     notFound();
   }
 
   // Helper function to find category by ID
-  const findCategoryById = (
-    categories: Category[] | undefined,
-    id: number
-  ): Category | null => {
-    if (!categories) return null;
+  const findCategoryById = useCallback(
+    (categories: Category[] | undefined, id: number): Category | null => {
+      if (!categories) return null;
 
-    for (const category of categories) {
-      if (category.id === id) return category;
-      if (category.children) {
-        const found = findCategoryById(category.children, id);
-        if (found) return found;
+      for (const category of categories) {
+        if (category.id === id) return category;
+        if (category.children) {
+          const found = findCategoryById(category.children, id);
+          if (found) return found;
+        }
       }
-    }
-    return null;
-  };
+      return null;
+    },
+    []
+  );
 
   // Helper to check if product already exists in list
-  const isProductInList = (list: Product[], newProduct: Product) => {
-    return list.some((product) => product.id === newProduct.id);
-  };
+  const isProductInList = useCallback(
+    (list: Product[], newProduct: Product) => {
+      return list.some((product) => product.id === newProduct.id);
+    },
+    []
+  );
 
   // Setup subcategories when category changes
   useEffect(() => {
     if (selectedCategory) {
-      // Reset states
       setAllProducts([]);
       setHasMore(true);
       setCurrentPage(1);
 
-      // Set subcategories
       if (selectedCategory.children && selectedCategory.children.length > 0) {
         setHasSubcategories(true);
         setSubcategoriesToShow(selectedCategory.children);
@@ -189,17 +196,14 @@ export default function CategoryPageClient({
       subcategoryProducts.length > 0 &&
       currentPage === 1
     ) {
-      console.log("Setting subcategory products:", subcategoryProducts.length);
       setAllProducts(subcategoryProducts);
       setHasMore(true);
     }
   }, [selectedCategory, subcategoryProducts, currentPage, isSubCategory]);
 
-  // Handle paginated category products (non-subcategories) - FIXED
+  // Handle paginated category products (non-subcategories)
   useEffect(() => {
     if (paginatedCategoryData && selectedCategory && !isSubCategory) {
-      console.log("Paginated category data:", paginatedCategoryData);
-
       if (paginatedCategoryData.data && paginatedCategoryData.data.length > 0) {
         setAllProducts((prevProducts) => {
           if (currentPage === 1) {
@@ -213,14 +217,19 @@ export default function CategoryPageClient({
           return [...prevProducts, ...newProducts];
         });
 
-        // FIXED: Check next_page_url instead of pagination object existence
         setHasMore(!!paginatedCategoryData.pagination?.next_page_url);
       } else if (currentPage === 1) {
         setAllProducts([]);
         setHasMore(false);
       }
     }
-  }, [paginatedCategoryData, currentPage, selectedCategory, isSubCategory]);
+  }, [
+    paginatedCategoryData,
+    currentPage,
+    selectedCategory,
+    isSubCategory,
+    isProductInList,
+  ]);
 
   // Handle paginated subcategory products
   useEffect(() => {
@@ -230,8 +239,6 @@ export default function CategoryPageClient({
       isSubCategory &&
       currentPage > 1
     ) {
-      console.log("Paginated subcategory data:", paginatedSubcategoryData);
-
       if (
         paginatedSubcategoryData.data &&
         paginatedSubcategoryData.data.length > 0
@@ -249,16 +256,20 @@ export default function CategoryPageClient({
         setHasMore(false);
       }
     }
-  }, [paginatedSubcategoryData, currentPage, selectedCategory, isSubCategory]);
+  }, [
+    paginatedSubcategoryData,
+    currentPage,
+    selectedCategory,
+    isSubCategory,
+    isProductInList,
+  ]);
 
   const loadMoreData = useCallback(() => {
     if (!hasMore || categoryPaginatedFetching || subcategoryPaginatedLoading) {
-      console.log("Cannot load more:", { hasMore, categoryPaginatedFetching, subcategoryPaginatedLoading });
       return;
     }
-    console.log("Loading more, current page:", currentPage, "next page:", currentPage + 1);
     setCurrentPage((prevPage) => prevPage + 1);
-  }, [hasMore, categoryPaginatedFetching, subcategoryPaginatedLoading, currentPage]);
+  }, [hasMore, categoryPaginatedFetching, subcategoryPaginatedLoading]);
 
   const isLoading =
     categoriesLoading ||
@@ -294,27 +305,36 @@ export default function CategoryPageClient({
     return products.length || 0;
   }, [paginatedCategoryData, products, isSubCategory, selectedCategory]);
 
-  const handlePriceSortChange = (sortType: "none" | "lowToHigh" | "highToLow") => {
-    setPriceSort(sortType);
-  };
+  const handlePriceSortChange = useCallback(
+    (sortType: "none" | "lowToHigh" | "highToLow") => {
+      setPriceSort(sortType);
+    },
+    []
+  );
 
-  const handleSubCategorySelect = (subCategory: Category) => {
-    setAllProducts([]);
-    setCurrentPage(1);
-    setHasMore(true);
-    setPriceSort("none");
+  const handleSubCategorySelect = useCallback(
+    (subCategory: Category) => {
+      setAllProducts([]);
+      setCurrentPage(1);
+      setHasMore(true);
+      setPriceSort("none");
 
-    router.push(`/${locale}/category/${subCategory.slug}`, { scroll: false });
-  };
+      router.push(`/${locale}/category/${subCategory.slug}`, { scroll: false });
+    },
+    [locale, router]
+  );
 
-  const handleCategoryClick = (category: Category) => {
-    setAllProducts([]);
-    setCurrentPage(1);
-    setHasMore(true);
-    router.push(`/${locale}/category/${category.slug}`);
-  };
+  const handleCategoryClick = useCallback(
+    (category: Category) => {
+      setAllProducts([]);
+      setCurrentPage(1);
+      setHasMore(true);
+      router.push(`/${locale}/category/${category.slug}`);
+    },
+    [locale, router]
+  );
 
-  const renderBreadcrumbs = () => {
+  const renderBreadcrumbs = useCallback(() => {
     if (!categoriesData || !selectedCategory) return null;
 
     const breadcrumbs: Category[] = [];
@@ -348,11 +368,11 @@ export default function CategoryPageClient({
         ))}
       </div>
     );
-  };
+  }, [categoriesData, selectedCategory, findCategoryById, handleCategoryClick]);
 
   const pageTitle = selectedCategory?.name || t("category");
 
-  const handleFilterChange = (key: string, value: number) => {
+  const handleFilterChange = useCallback((key: string, value: number) => {
     setSelectedFilters((prev) => {
       const newFilters = { ...prev };
       if (!newFilters[key]) {
@@ -367,22 +387,25 @@ export default function CategoryPageClient({
 
       return newFilters;
     });
-  };
+  }, []);
 
-  const handlePriceChange = (values: number[]) => {
+  const handlePriceChange = useCallback((values: number[]) => {
     setPriceRange([values[0], values[1]]);
-  };
+  }, []);
 
-  const handlePriceInputChange = (type: "from" | "to", value: string) => {
-    const numValue = parseInt(value) || 0;
-    if (type === "from") {
-      setPriceRange([numValue, priceRange[1]]);
-    } else {
-      setPriceRange([priceRange[0], numValue]);
-    }
-  };
+  const handlePriceInputChange = useCallback(
+    (type: "from" | "to", value: string) => {
+      const numValue = parseInt(value) || 0;
+      if (type === "from") {
+        setPriceRange((prev) => [numValue, prev[1]]);
+      } else {
+        setPriceRange((prev) => [prev[0], numValue]);
+      }
+    },
+    []
+  );
 
-  const resetFilters = () => {
+  const resetFilters = useCallback(() => {
     setSelectedFilters({
       brand: new Set(),
       color: new Set(),
@@ -390,108 +413,112 @@ export default function CategoryPageClient({
     });
     setPriceRange([0, 10000]);
     setPriceSort("none");
-  };
+  }, []);
 
-  const FiltersContent = () => (
-    <div className="space-y-6">
-      {hasSubcategories && subcategoriesToShow.length > 0 && (
+  const FiltersContent = useCallback(
+    () => (
+      <div className="space-y-6">
+        {hasSubcategories && subcategoriesToShow.length > 0 && (
+          <div>
+            <h3 className="text-lg font-semibold mb-3">{t("subcategories")}</h3>
+            <div className="space-y-1">
+              {subcategoriesToShow.map((subCategory) => (
+                <button
+                  key={subCategory.id}
+                  onClick={() => handleSubCategorySelect(subCategory)}
+                  className={`w-full text-left py-2 px-2 rounded-lg hover:bg-gray-100 transition-colors ${
+                    slug === subCategory.slug
+                      ? "text-primary font-medium bg-gray-50"
+                      : ""
+                  }`}
+                >
+                  {subCategory.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div>
-          <h3 className="text-lg font-semibold mb-3">{t("subcategories")}</h3>
-          <div className="space-y-1">
-            {subcategoriesToShow.map((subCategory) => (
-              <button
-                key={subCategory.id}
-                onClick={() => handleSubCategorySelect(subCategory)}
-                className={`w-full text-left py-2 px-2 rounded-lg hover:bg-gray-100 transition-colors ${
-                  slug === subCategory.slug
-                    ? "text-primary font-medium bg-gray-50"
-                    : ""
-                }`}
-              >
-                {subCategory.name}
-              </button>
-            ))}
+          <h3 className="text-lg font-semibold mb-3">{t("sort")}</h3>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="sort"
+                checked={priceSort === "none"}
+                onChange={() => handlePriceSortChange("none")}
+                className="w-4 h-4"
+              />
+              <span>{t("default")}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="sort"
+                checked={priceSort === "lowToHigh"}
+                onChange={() => handlePriceSortChange("lowToHigh")}
+                className="w-4 h-4"
+              />
+              <span>{t("price_low_to_high")}</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="sort"
+                checked={priceSort === "highToLow"}
+                onChange={() => handlePriceSortChange("highToLow")}
+                className="w-4 h-4"
+              />
+              <span>{t("price_high_to_low")}</span>
+            </label>
           </div>
         </div>
-      )}
 
-      <div>
-        <h3 className="text-lg font-semibold mb-3">{t("composition")}</h3>
-        <div className="space-y-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="sort"
-              checked={priceSort === "none"}
-              onChange={() => handlePriceSortChange("none")}
-              className="w-4 h-4"
-            />
-            <span>{t("neverMind")}</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="sort"
-              checked={priceSort === "lowToHigh"}
-              onChange={() => handlePriceSortChange("lowToHigh")}
-              className="w-4 h-4"
-            />
-            <span>{t("fromCheapToExpensive")}</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="sort"
-              checked={priceSort === "highToLow"}
-              onChange={() => handlePriceSortChange("highToLow")}
-              className="w-4 h-4"
-            />
-            <span>{t("fromExpensiveToHigh")}</span>
-          </label>
-        </div>
+        <PriceFilter
+          title={t("price")}
+          priceRange={priceRange}
+          onPriceChange={handlePriceChange}
+          onInputChange={handlePriceInputChange}
+          translations={{ from: t("price_from"), to: t("price_to") }}
+        />
+
+        <Button
+          variant="outline"
+          className="w-full rounded-xl bg-transparent"
+          onClick={resetFilters}
+        >
+          {t("reset")}
+        </Button>
       </div>
-
-      <PriceFilter
-        title={t("price")}
-        priceRange={priceRange}
-        onPriceChange={handlePriceChange}
-        onInputChange={handlePriceInputChange}
-        translations={{ from: t("from"), to: t("to") }}
-      />
-
-      <Button
-        variant="outline"
-        className="w-full rounded-xl bg-transparent"
-        onClick={resetFilters}
-      >
-      {t("reset")}
-      </Button>
-    </div>
+    ),
+    [
+      hasSubcategories,
+      subcategoriesToShow,
+      slug,
+      priceSort,
+      priceRange,
+      t,
+      handleSubCategorySelect,
+      handlePriceSortChange,
+      handlePriceChange,
+      handlePriceInputChange,
+      resetFilters,
+    ]
   );
 
-  if (isLoading) return <div>{t("loading") || "Ýüklenýär..."}</div>;
+  if (isLoading) return <div>{t("common.loading")}</div>;
 
   if (!selectedCategory && !categoriesLoading) {
-    return <div className="text-center py-8">Bölüm tapylmady</div>;
+    return <div className="text-center py-8">{t("category_not_found")}</div>;
   }
-
-  console.log(
-    "Current state - products:",
-    products.length,
-    "hasMore:",
-    hasMore,
-    "page:",
-    currentPage,
-    "isFetching:",
-    categoryPaginatedFetching
-  );
 
   return (
     <div className="flex flex-col gap-4">
       {selectedCategory && renderBreadcrumbs()}
       <h2 className="text-3xl font-bold">{pageTitle}</h2>
       <p className="text-gray-600">
-        {t("total")}: {totalItems} {t("items")}
+        {t("total")}: {totalItems} {t("products")}
       </p>
 
       <div className="flex gap-4">
@@ -513,7 +540,7 @@ export default function CategoryPageClient({
               style={{ overflow: "visible" }}
               loader={
                 <div className="flex justify-center py-4">
-                  <div>Ýüklenýär...</div>
+                  <div>{t("common.loading")}</div>
                 </div>
               }
             >
@@ -536,7 +563,9 @@ export default function CategoryPageClient({
               </div>
             </InfiniteScroll>
           ) : (
-            <div className="text-center py-8 text-gray-500">{t("nResults")}</div>
+            <div className="text-center py-8 text-gray-500">
+              {t("no_results")}
+            </div>
           )}
         </div>
       </div>
@@ -560,7 +589,7 @@ export default function CategoryPageClient({
               className="absolute top-4 right-4 rounded-md ring-offset-background transition-opacity hover:opacity-100"
             >
               <X className="h-4 w-4" />
-              <span className="sr-only">Ýap</span>
+              <span className="sr-only">{t("close")}</span>
             </button>
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-80px)] p-4">

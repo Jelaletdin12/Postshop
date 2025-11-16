@@ -1,31 +1,32 @@
 "use client"
 import { Truck, Warehouse } from "lucide-react"
 import { Card } from "@/components/ui/card"
-import { DeliveryType, CartTranslations } from "../types"
+import { useTranslations } from "next-intl"
+import type { DeliveryType } from "@/lib/types/api"
 
 interface DeliveryTypeSelectorProps {
   selectedType: DeliveryType
   onSelect: (type: DeliveryType) => void
-  translations: CartTranslations
 }
 
 export default function DeliveryTypeSelector({
   selectedType,
   onSelect,
-  translations: t,
 }: DeliveryTypeSelectorProps) {
+  const t = useTranslations()
+  
   const deliveryOptions: {
     type: DeliveryType
     label: string
     icon: typeof Truck
   }[] = [
-    { type: "SELECTED_DELIVERY", label: t.delivery, icon: Truck },
-    { type: "PICK_UP", label: t.pickup, icon: Warehouse },
+    { type: "SELECTED_DELIVERY", label: t("delivery"), icon: Truck },
+    { type: "PICK_UP", label: t("pickup"), icon: Warehouse },
   ]
 
   return (
     <div className="mb-6">
-      <h3 className="text-lg font-semibold mb-3">{t.deliveryType}</h3>
+      <h3 className="text-lg font-semibold mb-3">{t("delivery_type")}</h3>
       <div className="flex gap-2">
         {deliveryOptions.map(({ type, label, icon: Icon }) => (
           <Card

@@ -76,7 +76,7 @@ export default function CollectionSection({ collection, locale }: Props) {
         <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all" />
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {displayProducts.map((product) => {
           // Extract first media image or use placeholder
           const firstImage =

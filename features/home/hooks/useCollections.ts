@@ -101,7 +101,7 @@ export function useCollectionHasProducts(
     queryFn: async () => {
       const response = await apiClient.get<PaginatedResponse<Product>>(
         `/collections/${collectionId}/products`,
-        { params: { perPage: 1 } }
+        { params: { perPage: 20 } }
       );
       return {
         hasProducts: response.data.data && response.data.data.length > 0,

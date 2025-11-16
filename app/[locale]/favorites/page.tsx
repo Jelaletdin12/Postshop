@@ -4,7 +4,7 @@ import {
   useAddToCart,
   useRemoveFromFavorites,
 } from "@/lib/hooks";
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, ShoppingCart } from "lucide-react";
@@ -13,82 +13,77 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslations } from "next-intl";
 import type { Favorite } from "@/lib/types/api";
 
 export default function FavoritesPage() {
   const [isHovered, setIsHovered] = useState<number | null>(null);
   const { toast } = useToast();
+  const t = useTranslations();
 
   const { data: favorites, isLoading, isError } = useFavorites();
   const { mutate: removeFromFavorites, isPending: isRemoving } =
     useRemoveFromFavorites();
   const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
 
-  const t = {
-    favorites: "Избранные",
-    addToCart: "В корзину",
-    emptyFavorites: "У вас пока нет избранных товаров",
-    removedFromFavorites: "Товар удален из избранного",
-    addedToCart: "Товар добавлен в корзину",
-    error: "Произошла ошибка",
-  };
-
-  const handleRemoveFromFavorites = (productId: number) => {
+  const handleRemoveFromFavorites = useCallback((productId: number) => {
     removeFromFavorites(productId, {
       onSuccess: () => {
         toast({
-          title: t.removedFromFavorites,
+          title: t("removed_from_favorites"),
         });
       },
       onError: (error) => {
         toast({
-          title: t.error,
+          title: t("error"),
           description: error.message,
           variant: "destructive",
         });
       },
     });
-  };
+  }, [removeFromFavorites, toast, t]);
 
-  const handleAddToCart = (productId: number) => {
+  const handleAddToCart = useCallback((productId: number) => {
     addToCart(
       { productId },
       {
         onSuccess: () => {
           toast({
-            title: t.addedToCart,
+            title: t("added_to_cart"),
           });
         },
         onError: (error) => {
           toast({
-            title: t.error,
+            title: t("error"),
             description: error.message,
             variant: "destructive",
           });
         },
       }
     );
-  };
+  }, [addToCart, toast, t]);
+
+  const loadingSkeleton = useMemo(() => (
+    <div className="container mx-auto px-4 py-8 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <Skeleton key={i} className="w-full h-64 rounded-lg" />
+        ))}
+      </div>
+    </div>
+  ), [t]);
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 py-8 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t.favorites}</h1>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="w-full h-64 rounded-lg" />
-          ))}
-        </div>
-      </div>
-    );
+    return loadingSkeleton;
   }
 
   if (isError || !favorites || favorites.length === 0) {
     return (
       <div className="container mx-auto px-4 py-8 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t.favorites}</h1>
+        <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-2xl text-gray-400">{t.emptyFavorites}</p>
+          <p className="text-2xl text-gray-400">{t("empty_favorites")}</p>
         </div>
       </div>
     );
@@ -96,7 +91,7 @@ export default function FavoritesPage() {
 
   return (
     <div className="container mx-auto px-4 py-8 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">{t.favorites}</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {favorites.map((favorite: Favorite) => (
           <ProductCard
@@ -109,7 +104,6 @@ export default function FavoritesPage() {
             isHovered={isHovered === favorite.product.id}
             isRemoving={isRemoving}
             isAddingToCart={isAddingToCart}
-            translations={t}
           />
         ))}
       </div>
@@ -142,7 +136,6 @@ interface ProductCardProps {
   isHovered: boolean;
   isRemoving: boolean;
   isAddingToCart: boolean;
-  translations: { addToCart: string };
 }
 
 function ProductCard({
@@ -154,21 +147,17 @@ function ProductCard({
   isHovered,
   isRemoving,
   isAddingToCart,
-  translations,
 }: ProductCardProps) {
+  const t = useTranslations();
+
   if (!product) return null;
 
-  // Получаем первое изображение из media
   const imageUrl =
     product.media?.[0]?.images_800x800 ||
     product.media?.[0]?.thumbnail ||
     "/placeholder.svg";
 
-  // Форматируем цену
-  const price = product.old_price_amount
-    ? `${parseFloat(product.price_amount).toFixed(2)} TMT`
-    : `${parseFloat(product.price_amount).toFixed(2)} TMT`;
-
+  const price = `${parseFloat(product.price_amount).toFixed(2)} TMT`;
   const oldPrice = product.old_price_amount
     ? `${parseFloat(product.old_price_amount).toFixed(2)} TMT`
     : null;
@@ -179,7 +168,7 @@ function ProductCard({
       onMouseEnter={() => onHover(productId)}
       onMouseLeave={() => onHover(null)}
     >
-      <Link href={`/product/${productId|| product.slug}`} className="block">
+      <Link href={`/product/${productId || product.slug}`} className="block">
         <div className="relative aspect-square bg-gray-50">
           {/* Favorite Button */}
           <button
@@ -208,7 +197,7 @@ function ProductCard({
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <Badge variant="secondary" className="text-sm">
-                Нет в наличии
+                {t("out_of_stock")}
               </Badge>
             </div>
           )}
@@ -241,7 +230,7 @@ function ProductCard({
             size="sm"
           >
             <ShoppingCart className="h-4 w-4" />
-            {translations.addToCart}
+            {t("add_to_cart")}
           </Button>
         </div>
       )}

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import type { Order, OrdersResponse, CreateOrderRequest } from "../types";
+import type { Order, OrdersResponse, CreateOrderRequest } from "@/lib/types/api";
 
 export function useOrders(options?: { page?: number; perPage?: number }) {
   return useQuery<Order[]>({

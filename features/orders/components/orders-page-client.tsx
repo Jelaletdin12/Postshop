@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -17,130 +17,111 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useOrders, useCancelOrder } from "@/lib/hooks";
-import type { Order } from "../types";
+import { useTranslations } from "next-intl";
+import type { Order } from "@/lib/types/api";
 
-export default function OrdersPageClient() {
+interface OrdersPageClientProps {
+  locale: string;
+}
+
+export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const { toast } = useToast();
+  const t = useTranslations();
 
   const { data: orders, isLoading, isError, error } = useOrders();
   const { mutate: cancelOrder, isPending: isCancellingOrder } = useCancelOrder();
 
-  const t = {
-    myOrders: "Мои заказы",
-    activeOrders: "Активные заказы",
-    completedOrders: "Завершенные заказы",
-    cancelOrder: "Отменить заказ",
-    keepOrder: "Оставить заказ",
-    cancelConfirmation: "Вы уверены, что хотите отменить этот заказ?",
-    cancelling: "Отмена...",
-    orderNumber: "Заказ №",
-    ordered: "Заказано",
-    completed: "Завершено",
-    estimatedDelivery: "Ожид. доставка",
-    quantity: "Кол-во",
-    total: "Итого",
-    noOrders: "У вас пока нет заказов",
-    noActiveOrders: "У вас нет активных заказов",
-    noCompletedOrders: "У вас нет завершенных заказов",
-    loadError: "Не удалось загрузить заказы",
-    orderCancelled: "Заказ отменен",
-    orderCancelledDescription: "Ваш заказ был успешно отменен",
-    error: "Ошибка",
-    status: "Статус",
-    deliveryTime: "Время доставки",
-    deliveryDate: "Дата доставки",
-    address: "Адрес",
-    paymentMethod: "Способ оплаты",
-  };
-
-  const handleCancelOrder = (order: Order) => {
+  const handleCancelOrder = useCallback((order: Order) => {
     setOrderToCancel(order);
     setIsCancelDialogOpen(true);
-  };
+  }, []);
 
-  const confirmCancelOrder = () => {
+  const confirmCancelOrder = useCallback(() => {
     if (!orderToCancel) return;
 
     cancelOrder(orderToCancel.id, {
       onSuccess: () => {
         toast({
-          title: t.orderCancelled,
-          description: t.orderCancelledDescription,
+          title: t("order_cancelled"),
+          description: t("order_cancelled_description"),
         });
         setIsCancelDialogOpen(false);
         setOrderToCancel(null);
       },
       onError: (error: any) => {
         toast({
-          title: t.error,
-          description: error.message || "Не удалось отменить заказ",
+          title: t("error"),
+          description: error.message || t("cancel_order_failed"),
           variant: "destructive",
         });
       },
     });
-  };
+  }, [orderToCancel, cancelOrder, toast, t]);
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = useCallback((status: string) => {
     const lowerStatus = status.toLowerCase();
     
-    if (lowerStatus.includes("ожидается") || lowerStatus.includes("pending")) {
+    if (lowerStatus.includes("ожидается") || lowerStatus.includes("pending") || lowerStatus.includes("garaşlama")) {
       return <Badge variant="outline">{status}</Badge>;
     }
-    if (lowerStatus.includes("обработка") || lowerStatus.includes("processing")) {
+    if (lowerStatus.includes("обработка") || lowerStatus.includes("processing") || lowerStatus.includes("işlenýär")) {
       return <Badge variant="secondary">{status}</Badge>;
     }
-    if (lowerStatus.includes("отправлен") || lowerStatus.includes("shipped")) {
+    if (lowerStatus.includes("отправлен") || lowerStatus.includes("shipped") || lowerStatus.includes("iberildi")) {
       return <Badge>{status}</Badge>;
     }
-    if (lowerStatus.includes("доставлен") || lowerStatus.includes("delivered")) {
+    if (lowerStatus.includes("доставлен") || lowerStatus.includes("delivered") || lowerStatus.includes("eltildi")) {
       return <Badge className="bg-green-600">{status}</Badge>;
     }
-    if (lowerStatus.includes("отменен") || lowerStatus.includes("cancelled")) {
+    if (lowerStatus.includes("отменен") || lowerStatus.includes("cancelled") || lowerStatus.includes("ýatyryldy")) {
       return <Badge variant="destructive">{status}</Badge>;
     }
     
     return <Badge>{status}</Badge>;
-  };
+  }, []);
 
-  const isActiveOrder = (status: string) => {
+  const isActiveOrder = useCallback((status: string) => {
     const lower = status.toLowerCase();
     return lower.includes("ожидается") || lower.includes("обработка") || lower.includes("отправлен") ||
-           lower.includes("pending") || lower.includes("processing") || lower.includes("shipped");
-  };
+           lower.includes("pending") || lower.includes("processing") || lower.includes("shipped") ||
+           lower.includes("garaşlama") || lower.includes("işlenýär") || lower.includes("iberildi");
+  }, []);
 
-  const activeOrders = orders?.filter((o) => isActiveOrder(o.status)) || [];
-  const completedOrders = orders?.filter((o) => !isActiveOrder(o.status)) || [];
+  const activeOrders = useMemo(() => orders?.filter((o) => isActiveOrder(o.status)) || [], [orders, isActiveOrder]);
+  const completedOrders = useMemo(() => orders?.filter((o) => !isActiveOrder(o.status)) || [], [orders, isActiveOrder]);
 
-  const calculateTotal = (order: Order) => {
+  const calculateTotal = useCallback((order: Order) => {
     return order.orderItems.reduce((sum, item) => {
       return sum + (parseFloat(item.unit_price_amount) * item.quantity);
     }, 0);
-  };
+  }, []);
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto p-4 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t.myOrders}</h1>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-40" />
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 rounded-lg" />
-            ))}
-          </div>
+  const loadingSkeleton = useMemo(() => (
+    <div className="container mx-auto p-4 min-h-screen">
+      <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
+      <div className="space-y-4">
+        <Skeleton className="h-10 w-40" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-64 rounded-lg" />
+          ))}
         </div>
       </div>
-    );
+    </div>
+  ), [t]);
+
+  if (isLoading) {
+    return loadingSkeleton;
   }
 
   if (isError) {
     return (
       <div className="container mx-auto p-4 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t.myOrders}</h1>
+        <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
         <div className="bg-red-50 p-4 rounded-lg border border-red-200">
-          <p className="text-red-600">{t.loadError}</p>
+          <p className="text-red-600">{t("load_orders_error")}</p>
         </div>
       </div>
     );
@@ -149,9 +130,9 @@ export default function OrdersPageClient() {
   if (!orders || orders.length === 0) {
     return (
       <div className="container mx-auto p-4 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t.myOrders}</h1>
+        <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-2xl text-gray-400">{t.noOrders}</p>
+          <p className="text-2xl text-gray-400">{t("no_orders")}</p>
         </div>
       </div>
     );
@@ -159,22 +140,22 @@ export default function OrdersPageClient() {
 
   return (
     <div className="container mx-auto p-4 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">{t.myOrders}</h1>
+      <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
 
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="active">
-            {t.activeOrders} ({activeOrders.length})
+            {t("active_orders")} ({activeOrders.length})
           </TabsTrigger>
           <TabsTrigger value="completed">
-            {t.completedOrders} ({completedOrders.length})
+            {t("completed_orders")} ({completedOrders.length})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
           {activeOrders.length === 0 ? (
             <div className="flex items-center justify-center min-h-[40vh]">
-              <p className="text-xl text-gray-400">{t.noActiveOrders}</p>
+              <p className="text-xl text-gray-400">{t("no_active_orders")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -186,7 +167,6 @@ export default function OrdersPageClient() {
                   isCancelling={isCancellingOrder}
                   getStatusBadge={getStatusBadge}
                   calculateTotal={calculateTotal}
-                  translations={t}
                   showCancelButton
                 />
               ))}
@@ -197,7 +177,7 @@ export default function OrdersPageClient() {
         <TabsContent value="completed">
           {completedOrders.length === 0 ? (
             <div className="flex items-center justify-center min-h-[40vh]">
-              <p className="text-xl text-gray-400">{t.noCompletedOrders}</p>
+              <p className="text-xl text-gray-400">{t("no_completed_orders")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -209,7 +189,6 @@ export default function OrdersPageClient() {
                   isCancelling={isCancellingOrder}
                   getStatusBadge={getStatusBadge}
                   calculateTotal={calculateTotal}
-                  translations={t}
                   showCancelButton={false}
                 />
               ))}
@@ -222,9 +201,9 @@ export default function OrdersPageClient() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {t.cancelOrder} #{orderToCancel?.id}
+              {t("cancel_order")} #{orderToCancel?.id}
             </DialogTitle>
-            <DialogDescription>{t.cancelConfirmation}</DialogDescription>
+            <DialogDescription>{t("cancel_confirmation")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button
@@ -232,10 +211,10 @@ export default function OrdersPageClient() {
               onClick={() => setIsCancelDialogOpen(false)}
               disabled={isCancellingOrder}
             >
-              {t.keepOrder}
+              {t("keep_order")}
             </Button>
             <Button variant="destructive" onClick={confirmCancelOrder} disabled={isCancellingOrder}>
-              {isCancellingOrder ? t.cancelling : t.cancelOrder}
+              {isCancellingOrder ? t("cancelling") : t("cancel_order")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -250,7 +229,6 @@ interface OrderCardProps {
   isCancelling: boolean;
   getStatusBadge: (status: string) => React.ReactNode;
   calculateTotal: (order: Order) => number;
-  translations: any;
   showCancelButton: boolean;
 }
 
@@ -260,34 +238,34 @@ function OrderCard({
   isCancelling,
   getStatusBadge,
   calculateTotal,
-  translations: t,
   showCancelButton,
 }: OrderCardProps) {
-  const total = calculateTotal(order);
+  const t = useTranslations();
+  const total = useMemo(() => calculateTotal(order), [calculateTotal, order]);
 
   return (
     <Card className="p-4 flex flex-col justify-between">
       <div>
         <div className="flex justify-between items-center mb-3">
           <h3 className="text-lg font-semibold">
-            {t.orderNumber}{order.id}
+            {t("order_number")}{order.id}
           </h3>
           {getStatusBadge(order.status)}
         </div>
 
         <div className="mb-3 space-y-1 text-sm">
           <p className="text-gray-600">
-            <span className="font-medium">{t.deliveryTime}:</span> {order.delivery_time}
+            <span className="font-medium">{t("delivery_time")}:</span> {order.delivery_time}
           </p>
           <p className="text-gray-600">
-            <span className="font-medium">{t.deliveryDate}:</span>{" "}
+            <span className="font-medium">{t("delivery_date")}:</span>{" "}
             {new Date(order.delivery_at).toLocaleDateString()}
           </p>
           <p className="text-gray-600">
-            <span className="font-medium">{t.address}:</span> {order.customer_address}
+            <span className="font-medium">{t("address")}:</span> {order.customer_address}
           </p>
           <p className="text-gray-600">
-            <span className="font-medium">{t.paymentMethod}:</span> {order.payment_type}
+            <span className="font-medium">{t("payment_method")}:</span> {order.payment_type}
           </p>
         </div>
 
@@ -304,7 +282,7 @@ function OrderCard({
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium line-clamp-2">{item.product.name}</p>
                 <p className="text-xs text-gray-500">
-                  {t.quantity}: {item.quantity} × {item.unit_price_amount} TMT
+                  {t("product_quantity")}: {item.quantity} × {item.unit_price_amount} TMT
                 </p>
               </div>
             </div>
@@ -313,7 +291,7 @@ function OrderCard({
 
         <div className="border-t pt-3">
           <div className="flex justify-between font-semibold">
-            <span>{t.total}</span>
+            <span>{t("total_price")}</span>
             <span>{total.toFixed(2)} TMT</span>
           </div>
         </div>
@@ -327,7 +305,7 @@ function OrderCard({
             disabled={isCancelling}
             className="w-full"
           >
-            {t.cancelOrder}
+            {t("cancel_order")}
           </Button>
         </div>
       )}
