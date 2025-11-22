@@ -49,7 +49,7 @@ export default function HomePage() {
   const hasMore = collections ? visibleCount < collections.length : false;
 
   return (
-    <div className="px-4 md:px-8 lg:px-12 pt-8 pb-12 space-y-8">
+    <div className="px-2 md:px-4 lg:px-4 pt-4 pb-12 space-y-8 max-w-[1504px] mx-auto">
       {!carouselsLoading && carouselItems.length > 0 && (
         <HeroCarousel items={carouselItems} />
       )}

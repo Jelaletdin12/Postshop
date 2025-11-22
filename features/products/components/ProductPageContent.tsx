@@ -17,7 +17,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useProductsBySlug } from "@/features/products/hooks/useProducts";
-import { useAddToCart, useUpdateCartItemQuantity, useCart } from "@/features/cart/hooks/useCart";
+import { useAddToCart, useUpdateCartItemQuantity, useRemoveFromCart, useCart } from "@/features/cart/hooks/useCart";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -50,11 +50,13 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   const retryTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const syncToServerRef = useRef<((quantity: number) => void) | null>(null);
   const retrySyncRef = useRef<((quantity: number) => void) | null>(null);
+  const autoplayTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const { data: product, isLoading: productLoading, error } = useProductsBySlug(slug);
   const { data: cartData, refetch: refetchCart } = useCart();
   const addToCartMutation = useAddToCart();
   const updateCartMutation = useUpdateCartItemQuantity();
+  const removeFromCartMutation = useRemoveFromCart();
 
   const cartItem = useMemo(() => 
     cartData?.data?.find((item: any) => item.product?.id === product?.id),
@@ -63,6 +65,46 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   const isInCart = !!cartItem;
 
   const availableStock = product?.stock || 0;
+
+  const imageUrls = useMemo(() => 
+    product?.media?.map(m => m.images_800x800 || m.images_720x720 || m.thumbnail) || [],
+    [product]
+  );
+
+  // Auto-play carousel every 3 seconds
+  useEffect(() => {
+    if (imageUrls.length <= 1) return;
+
+    const startAutoplay = () => {
+      autoplayTimerRef.current = setInterval(() => {
+        setSelectedImage(prev => (prev + 1) % imageUrls.length);
+      }, 3000);
+    };
+
+    startAutoplay();
+
+    return () => {
+      if (autoplayTimerRef.current) {
+        clearInterval(autoplayTimerRef.current);
+      }
+    };
+  }, [imageUrls.length]);
+
+  // Reset autoplay timer when user manually selects image
+  const handleImageSelect = useCallback((index: number) => {
+    setSelectedImage(index);
+    
+    // Reset autoplay timer
+    if (autoplayTimerRef.current) {
+      clearInterval(autoplayTimerRef.current);
+    }
+    
+    if (imageUrls.length > 1) {
+      autoplayTimerRef.current = setInterval(() => {
+        setSelectedImage(prev => (prev + 1) % imageUrls.length);
+      }, 3000);
+    }
+  }, [imageUrls.length]);
 
   useEffect(() => {
     if (cartItem?.product_quantity) {
@@ -145,7 +187,11 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     setSyncError(false);
 
     try {
-      if (isInCart) {
+      // If quantity is 0, remove from cart
+      if (quantity === 0) {
+        await removeFromCartMutation.mutateAsync(product.id);
+        toast.success(t("removed_from_cart"));
+      } else if (isInCart) {
         await updateCartMutation.mutateAsync({
           productId: product.id,
           quantity: quantity,
@@ -162,7 +208,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
       retryCountRef.current = 0;
       clearPendingUpdate();
 
-      // Refetch cart to update UI state immediately
       await refetchCart();
 
       if (pendingQuantityRef.current !== null) {
@@ -181,7 +226,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
       
       retrySyncRef.current?.(quantity);
     }
-  }, [product?.id, isInCart, updateCartMutation, addToCartMutation, cartItem, clearPendingUpdate, refetchCart]);
+  }, [product?.id, isInCart, updateCartMutation, addToCartMutation, removeFromCartMutation, cartItem, clearPendingUpdate, refetchCart, t]);
 
   syncToServerRef.current = syncToServer;
 
@@ -239,13 +284,13 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
     };
   }, []);
 
   const handleAddToCart = useCallback(async () => {
     if (!product?.id) return;
 
-    // Set syncing state immediately for UI feedback
     setIsSyncing(true);
 
     try {
@@ -254,7 +299,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
         quantity: localQuantity,
       });
       
-      // Refetch cart immediately to update isInCart state
       await refetchCart();
       
       setIsSyncing(false);
@@ -281,7 +325,8 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   }, [localQuantity, availableStock]);
 
   const handleQuantityDecrease = useCallback(() => {
-    if (localQuantity <= 1) return;
+    // Allow decreasing to 0 to remove from cart
+    if (localQuantity <= 0) return;
     
     setLocalQuantity(prev => prev - 1);
   }, [localQuantity]);
@@ -289,11 +334,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   const handleToggleFavorite = useCallback(() => {
     setIsFavorite(!isFavorite);
   }, [isFavorite]);
-
-  const imageUrls = useMemo(() => 
-    product?.media?.map(m => m.images_800x800 || m.images_720x720 || m.thumbnail) || [],
-    [product]
-  );
 
   const loadingSkeleton = useMemo(() => (
     <div className="container mx-auto px-4 py-8">
@@ -354,7 +394,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
                   {imageUrls.map((image, index) => (
                     <button
                       key={index}
-                      onClick={() => setSelectedImage(index)}
+                      onClick={() => handleImageSelect(index)}
                       className={`relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
                         selectedImage === index 
                           ? "border-primary ring-2 ring-primary/20" 
@@ -499,7 +539,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
                         variant="outline"
                         size="icon"
                         onClick={handleQuantityDecrease}
-                        disabled={localQuantity === 1 || isSyncing}
+                        disabled={isSyncing}
                         className={`rounded-xl h-12 w-12 ${isSyncing ? 'opacity-70' : ''}`}
                       >
                         <Minus className="h-5 w-5" />

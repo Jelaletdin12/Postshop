@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query"
 import { apiClient } from "@/lib/api"
-import type { Category, Product, PaginatedResponse } from "@/lib/types/api"
+import type { Category, Product, PaginatedResponse,  FiltersResponse, ProductFilters } from "@/lib/types/api"
 
 // Get all categories as tree
 export function useCategories(options?: { enabled?: boolean }) {
@@ -89,6 +89,70 @@ export function useAllCategoryProducts(
       return allProducts
     },
     enabled: options?.enabled !== false && !!category,
+  })
+}
+
+export function useCategoryFilters(
+  categoryId: number | string | undefined,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["category-filters", categoryId],
+    queryFn: async () => {
+      const response = await apiClient.get<FiltersResponse>(
+        "/filters",
+        {
+          params: { category_id: categoryId },
+        }
+      )
+      return response.data.data
+    },
+    enabled: options?.enabled !== false && !!categoryId,
+    staleTime: 1000 * 60 * 15,
+  })
+}
+
+// Get filtered category products
+export function useFilteredCategoryProducts(
+  categoryId: number | string,
+  filters: ProductFilters,
+  options?: { enabled?: boolean }
+) {
+  return useQuery({
+    queryKey: ["category", categoryId, "filtered-products", filters],
+    queryFn: async () => {
+      const params: Record<string, any> = {
+        page: filters.page || 1,
+        limit: filters.limit || 6,
+      }
+
+      if (filters.brands && filters.brands.length > 0) {
+        params.brands = filters.brands.join(',')
+      }
+
+      if (filters.categories && filters.categories.length > 0) {
+        params.categories = filters.categories.join(',')
+      }
+
+      if (filters.min_price !== undefined) {
+        params.min_price = filters.min_price
+      }
+
+      if (filters.max_price !== undefined) {
+        params.max_price = filters.max_price
+      }
+
+      const response = await apiClient.get<PaginatedResponse<Product>>(
+        `/categories/${categoryId}/products`,
+        { params }
+      )
+
+      return {
+        data: response.data.data || [],
+        pagination: response.data.pagination || {}
+      }
+    },
+    enabled: options?.enabled !== false && !!categoryId,
   })
 }
 

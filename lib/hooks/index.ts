@@ -5,7 +5,7 @@ export * from "../../features/favorites/hooks/useFavorites"
 export * from "../../features/orders/hooks/useOrders"
 export * from "../../features/search/hooks/useSearch"
 export * from "../../features/profile/hooks/useUserProfile"
-export * from "./useOpenStore"
+export * from "../../features/openStore/hooks/useOpenStore"
 
 export * from "../../features/cart/hooks/useAddresses"
 export * from "../../features/cart/hooks/usePaymentTypes"

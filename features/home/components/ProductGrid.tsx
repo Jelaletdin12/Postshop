@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import ProductCard from "@/components/ProductCard";
+import ProductCard from "@/features/home/components/ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCollectionProducts } from "@/lib/hooks";
 import type { Collection } from "@/lib/types/api";
@@ -22,7 +22,6 @@ export default function CollectionSection({ collection, locale }: Props) {
     isError,
   } = useCollectionProducts(collection.id, { enabled: shouldRender });
 
-  // Determine if section should render based on products
   useEffect(() => {
     if (!isLoading && productsData) {
       const hasProducts = productsData.data && productsData.data.length > 0;
@@ -30,7 +29,6 @@ export default function CollectionSection({ collection, locale }: Props) {
     }
   }, [isLoading, productsData]);
 
-  // Don't render if no products after loading
   if (!isLoading && (!productsData?.data || productsData.data.length === 0)) {
     return null;
   }
@@ -39,7 +37,6 @@ export default function CollectionSection({ collection, locale }: Props) {
     router.push(`/${locale}/collections/${collection.id}`);
   };
 
-  // Show skeleton while loading
   if (isLoading) {
     return (
       <section className="bg-white rounded-2xl shadow-sm p-6">
@@ -56,16 +53,14 @@ export default function CollectionSection({ collection, locale }: Props) {
     );
   }
 
-  // Show error state
   if (isError) {
-    return null; // Silently skip errored collections
+    return null;
   }
 
-  // Slice to show only first 4 products
-  const displayProducts = productsData?.data.slice(0, 4) || [];
+  const displayProducts = productsData?.data.slice(0, 10) || [];
 
   return (
-    <section className="bg-white rounded-2xl shadow-sm p-6">
+    <section className="bg-white rounded-2xl shadow-sm ">
       <div
         className="flex items-center justify-between mb-4 cursor-pointer group"
         onClick={handleTitleClick}
@@ -78,14 +73,15 @@ export default function CollectionSection({ collection, locale }: Props) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {displayProducts.map((product) => {
-          // Extract first media image or use placeholder
-          const firstImage =
-            product.media?.[0]?.images_800x800 ||
-            product.media?.[0]?.images_720x720 ||
-            product.media?.[0]?.thumbnail ||
-            "/placeholder-product.jpg";
+          // 🔥 TÜM RESİMLERİ AL - Burada değişiklik!
+          const allImages = product.media?.map(
+            (media) =>
+              media.images_800x800 ||
+              media.images_720x720 ||
+              media.images_400x400 ||
+              media.thumbnail
+          ).filter(Boolean) || ["/placeholder-product.jpg"];
 
-          // Format price
           const formattedPrice = product.price_amount
             ? `${parseFloat(product.price_amount).toFixed(2)} TMT`
             : "Price not available";
@@ -99,7 +95,7 @@ export default function CollectionSection({ collection, locale }: Props) {
                 product.price_amount ? parseFloat(product.price_amount) : null
               }
               struct_price_text={formattedPrice}
-              images={[firstImage]}
+              images={allImages} // 🔥 Array olarak tüm resimler
               is_favorite={false}
               labels={[]}
               price_color="#111"

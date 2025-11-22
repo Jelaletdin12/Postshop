@@ -472,3 +472,34 @@ export interface UserOrderData {
   customer_phone: string;
   customer_address?: string;
 }
+
+// lib/types/api.ts içine eklenecek tipler
+
+export interface FilterBrand {
+  id: number;
+  name: string;
+}
+
+export interface FilterCategory {
+  id: number;
+  parent_id: number;
+  name: string;
+}
+
+export interface FiltersResponse {
+  message: string;
+  data: {
+    categories: FilterCategory[];
+    brands: FilterBrand[];
+  };
+}
+
+// Existing types'a ekleme
+export interface ProductFilters {
+  brands?: number[];
+  categories?: number[];
+  min_price?: number;
+  max_price?: number;
+  page?: number;
+  limit?: number;
+}

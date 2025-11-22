@@ -53,7 +53,6 @@ export default async function RootLayout({ children, params }: Props) {
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>
           <NextIntlClientProvider locale={locale} messages={messages}>
-            {/* AuthWrapper handles guest token initialization */}
             <AuthWrapper locale={locale}>
               <Header locale={locale} />
               {children}
