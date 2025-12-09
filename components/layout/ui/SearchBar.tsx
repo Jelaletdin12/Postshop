@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useSearchProducts } from "@/features/search/hooks/useSearch";
 import Image from "next/image";
+import { SearchIcon } from "@/components/icons";
 
 interface SearchBarProps {
   isMobile: boolean;
@@ -158,7 +159,7 @@ export default function SearchBar({
         size="icon"
         className="h-auto hover:bg-[#005bff] cursor-pointer bg-transparent flex items-center mr-1.5 text-white"
       >
-        <Search className="h-5 w-5" />
+        <SearchIcon />
       </Button>
       <SearchResults />
     </div>

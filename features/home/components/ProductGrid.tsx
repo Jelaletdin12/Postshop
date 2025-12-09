@@ -60,7 +60,7 @@ export default function CollectionSection({ collection, locale }: Props) {
   const displayProducts = productsData?.data.slice(0, 10) || [];
 
   return (
-    <section className="bg-white rounded-2xl shadow-sm ">
+    <section className="bg-white rounded-2xl shadow-sm p-6">
       <div
         className="flex items-center justify-between mb-4 cursor-pointer group"
         onClick={handleTitleClick}
@@ -73,14 +73,15 @@ export default function CollectionSection({ collection, locale }: Props) {
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {displayProducts.map((product) => {
-          // 🔥 TÜM RESİMLERİ AL - Burada değişiklik!
-          const allImages = product.media?.map(
-            (media) =>
-              media.images_800x800 ||
-              media.images_720x720 ||
-              media.images_400x400 ||
-              media.thumbnail
-          ).filter(Boolean) || ["/placeholder-product.jpg"];
+          const allImages = product.media
+            ?.map(
+              (media) =>
+                media.images_800x800 ||
+                media.images_720x720 ||
+                media.images_400x400 ||
+                media.thumbnail
+            )
+            .filter(Boolean) || ["/placeholder-product.jpg"];
 
           const formattedPrice = product.price_amount
             ? `${parseFloat(product.price_amount).toFixed(2)} TMT`
@@ -95,13 +96,11 @@ export default function CollectionSection({ collection, locale }: Props) {
                 product.price_amount ? parseFloat(product.price_amount) : null
               }
               struct_price_text={formattedPrice}
-              images={allImages} // 🔥 Array olarak tüm resimler
-              is_favorite={false}
+              images={allImages}
               labels={[]}
-              price_color="#111"
+              price_color="#0059ff"
               height={360}
               width={250}
-              button={false}
             />
           );
         })}

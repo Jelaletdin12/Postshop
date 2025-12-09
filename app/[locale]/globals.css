@@ -45,7 +45,7 @@
 
 :root {
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
+  --background: #eff3f6;
   --foreground: oklch(0.141 0.005 285.823);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.141 0.005 285.823);
@@ -119,4 +119,74 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+
+
+
+
+
+
+/* Animasyonları "utilities" katmanına ekliyoruz ki Tailwind sınıfları gibi davranabilsinler */
+@layer utilities {
+  /* Özel Renk Sınıfları (CSS değişkenlerini kullanmak için) */
+  .text-fg { color: var(--fg); }
+  .bg-bg { background-color: var(--bg); }
+  .stroke-primary { stroke: #005bff; }
+  
+  /* Dark mode track rengi için özel sınıf */
+  .stroke-track {
+    stroke: hsla(var(--hue), 10%, 10%, 0.1);
+    transition: stroke var(--trans-dur);
+  }
+  @media (prefers-color-scheme: dark) {
+    .stroke-track {
+      stroke: hsla(var(--hue), 10%, 90%, 0.1);
+    }
+  }
+
+  /* Animasyon Sınıfları */
+  .animate-msg { animation: msg 0.3s 13.7s linear forwards; }
+  .animate-msgLast { animation: msg 0.3s 14s linear reverse forwards; }
+  .animate-cartLines { animation: cartLines 2s ease-in-out infinite; }
+  .animate-cartTop { animation: cartTop 2s ease-in-out infinite; }
+  .animate-cartWheel1 { 
+    animation: cartWheel1 2s ease-in-out infinite;
+    transform: rotate(-0.25turn);
+    transform-origin: 43px 111px;
+  }
+  .animate-cartWheel2 { 
+    animation: cartWheel2 2s ease-in-out infinite;
+    transform: rotate(0.25turn);
+    transform-origin: 102px 111px;
+  }
+  .animate-cartWheelStroke { animation: cartWheelStroke 2s ease-in-out infinite; }
+}
+
+/* Keyframes Tanımları */
+@keyframes msg {
+  from { opacity: 1; visibility: visible; }
+  99.9% { opacity: 0; visibility: visible; }
+  to { opacity: 0; visibility: hidden; }
+}
+@keyframes cartLines {
+  from, to { opacity: 0; }
+  8%, 92% { opacity: 1; }
+}
+@keyframes cartTop {
+  from { stroke-dashoffset: -338; }
+  50% { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 338; }
+}
+@keyframes cartWheel1 {
+  from { transform: rotate(-0.25turn); }
+  to { transform: rotate(2.75turn); }
+}
+@keyframes cartWheel2 {
+  from { transform: rotate(0.25turn); }
+  to { transform: rotate(3.25turn); }
+}
+@keyframes cartWheelStroke {
+  from, to { stroke-dashoffset: 81.68; }
+  50% { stroke-dashoffset: 40.84; }
 }

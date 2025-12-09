@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import Logo from "@/public/logo.png";
+import Logo from "@/public/logo.webp";
 import { useLogin, useVerifyToken } from "@/lib/hooks/useAuth";
 import { useTranslations } from "next-intl";
 

@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuthStatus, useGetGuestToken } from "@/lib/hooks/useAuth";
 import { useUserProfile } from "@/features/profile/hooks/useUserProfile";
+import Preloader from "@/components/PageLoader/PreLoader";
 
 interface AuthWrapperProps {
   children: ReactNode;
@@ -58,12 +59,7 @@ export default function AuthWrapper({
 
   if (isLoading || (requireAuth && !isAuthenticated)) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600" />
-          <p className="text-sm text-gray-600">Yükleniyor...</p>
-        </div>
-      </div>
+      <Preloader/>
     );
   }
 

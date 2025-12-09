@@ -5,8 +5,12 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import HeroCarousel from "./Carousel";
 import CategoryGrid from "./CategoryGrid";
 import CollectionSection from "./ProductGrid";
-import { useCategories, useCarousels, useCollections } from "@/lib/hooks";
-
+import {
+  useCategories,
+  useCarousels,
+  useCollections,
+  useFavorites,
+} from "@/lib/hooks";
 
 export default function HomePage() {
   const locale = useLocale();
@@ -19,14 +23,17 @@ export default function HomePage() {
     isLoading: categoriesLoading,
     isError: categoriesError,
   } = useCategories();
-  
+
   const { data: carousels, isLoading: carouselsLoading } = useCarousels();
-  
+
   const {
     data: collections,
     isLoading: collectionsLoading,
     isError: collectionsError,
   } = useCollections();
+
+  // CRITICAL: Prefetch favorites on mount to avoid loading states
+  const { isLoading: favoritesLoading } = useFavorites();
 
   useEffect(() => setMounted(true), []);
 
@@ -48,8 +55,12 @@ export default function HomePage() {
   const visibleCollections = collections?.slice(0, visibleCount) || [];
   const hasMore = collections ? visibleCount < collections.length : false;
 
+  // Show loading indicator while favorites are being fetched
+  const showFavoritesLoading =
+    favoritesLoading && !categoriesLoading && !collectionsLoading;
+
   return (
-    <div className="px-2 md:px-4 lg:px-4 pt-4 pb-12 space-y-8 max-w-[1504px] mx-auto">
+    <div className="px-2 md:px-4 lg:px-6 pt-4 pb-12 space-y-8 max-w-[1504px] mx-auto">
       {!carouselsLoading && carouselItems.length > 0 && (
         <HeroCarousel items={carouselItems} />
       )}
@@ -61,6 +72,13 @@ export default function HomePage() {
         locale={locale}
         title={t("categories")}
       />
+
+      {showFavoritesLoading && (
+        <div className="text-center py-4">
+          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
+          <p className="text-gray-500 text-sm mt-2">Loading favorites...</p>
+        </div>
+      )}
 
       {collectionsError ? (
         <section className="bg-white rounded-2xl shadow-sm p-6">

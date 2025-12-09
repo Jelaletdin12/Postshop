@@ -16,6 +16,7 @@ import { useCart, useFavorites, useOrders } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import { useLogout } from "@/lib/hooks/useAuth";
+import { CartIcon, FavoriteIcon, OrderIcon, ProfileIcon } from "@/components/icons";
 
 interface ActionButtonsProps {
   isAuthenticated: boolean;
@@ -70,21 +71,21 @@ export default function ActionButtons({
 
   const buttons: ActionButtonData[] = useMemo(() => [
     {
-      icon: <Truck className="h-5 w-5 text-gray-600" />,
+      icon: <OrderIcon />,
       label: t("common.orders"),
       href: "/orders",
       badgeCount: ordersCount,
       isLoading: ordersLoading,
     },
     {
-      icon: <Heart className="h-5 w-5 text-gray-600" />,
+      icon: <FavoriteIcon />,
       label: t("common.favorites"),
       href: "/favorites",
       badgeCount: favoritesCount,
       isLoading: favoritesLoading,
     },
     {
-      icon: <ShoppingCart className="h-5 w-5 text-gray-600" />,
+      icon: <CartIcon   />,
       label: t("common.cart"),
       href: "/cart",
       badgeCount: cartCount,
@@ -101,7 +102,7 @@ export default function ActionButtons({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2">
-              <User className="h-5 w-5 text-gray-600" />
+              <ProfileIcon />
               <span className="text-xs text-gray-700">{t("profile")}</span>
             </Button>
           </DropdownMenuTrigger>
@@ -118,7 +119,7 @@ export default function ActionButtons({
         </DropdownMenu>
       ) : (
         <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2" onClick={onAuthClick}>
-          <User className="h-5 w-5 text-gray-600" />
+          <ProfileIcon />
           <span className="text-xs text-gray-700">{t("common.login")}</span>
         </Button>
       )}

@@ -11,7 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import Logo from "@/public/logo.png";
+import Logo from "@/public/logo.webp";
 import CategoryMenu from "./ui/CategoryMenu";
 import SearchBar from "./ui/SearchBar";
 import AuthDialog from "./ui/AuthDialog";
@@ -19,6 +19,7 @@ import ActionButtons from "./ui/ActionButtons";
 import LanguageSelector from "./ui/LanguageSelector";
 import { useAuthStatus, useLogout } from "@/lib/hooks/useAuth";
 import { useTranslations } from "next-intl";
+import { CategoryIcon } from "../icons";
 
 interface HeaderProps {
   locale?: string;
@@ -76,7 +77,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
               className="hidden gap-2 rounded-xl font-bold sm:flex hover:bg-[#005bff] bg-[#005bff] text-white"
               size="lg"
             >
-              {isCategoryOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isCategoryOpen ? <X className="h-5 w-5" /> : <CategoryIcon  />}
               {t("common.catalog")}
             </Button>
 

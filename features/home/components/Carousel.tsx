@@ -21,7 +21,7 @@ export default function HeroCarousel({ items }: { items: CarouselItem[] }) {
       >
         {items.map((item, i) => (
           <SwiperSlide key={i}>
-            <div className="relative w-full h-[200px] sm:h-[300px] md:h-[420px]">
+            <div className="relative w-full h-[200px] sm:h-[300px] md:h-[496px]">
               <Image 
                 src={item.image} 
                 alt={item.title} 

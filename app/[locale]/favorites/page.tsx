@@ -26,30 +26,12 @@ export default function FavoritesPage() {
     useRemoveFromFavorites();
   const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
 
-  const handleRemoveFromFavorites = useCallback((productId: number) => {
-    removeFromFavorites(productId, {
-      onSuccess: () => {
-        toast({
-          title: t("removed_from_favorites"),
-        });
-      },
-      onError: (error) => {
-        toast({
-          title: t("error"),
-          description: error.message,
-          variant: "destructive",
-        });
-      },
-    });
-  }, [removeFromFavorites, toast, t]);
-
-  const handleAddToCart = useCallback((productId: number) => {
-    addToCart(
-      { productId },
-      {
+  const handleRemoveFromFavorites = useCallback(
+    (productId: number) => {
+      removeFromFavorites(productId, {
         onSuccess: () => {
           toast({
-            title: t("added_to_cart"),
+            title: t("removed_from_favorites"),
           });
         },
         onError: (error) => {
@@ -59,20 +41,47 @@ export default function FavoritesPage() {
             variant: "destructive",
           });
         },
-      }
-    );
-  }, [addToCart, toast, t]);
+      });
+    },
+    [removeFromFavorites, toast, t]
+  );
 
-  const loadingSkeleton = useMemo(() => (
-    <div className="container mx-auto px-4 py-8 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="w-full h-64 rounded-lg" />
-        ))}
+  const handleAddToCart = useCallback(
+    (productId: number) => {
+      addToCart(
+        { productId },
+        {
+          onSuccess: () => {
+            toast({
+              title: t("added_to_cart"),
+            });
+          },
+          onError: (error) => {
+            toast({
+              title: t("error"),
+              description: error.message,
+              variant: "destructive",
+            });
+          },
+        }
+      );
+    },
+    [addToCart, toast, t]
+  );
+
+  const loadingSkeleton = useMemo(
+    () => (
+      <div className="container mx-auto px-4 py-8 min-h-screen">
+        <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <Skeleton key={i} className="w-full h-64 rounded-lg" />
+          ))}
+        </div>
       </div>
-    </div>
-  ), [t]);
+    ),
+    [t]
+  );
 
   if (isLoading) {
     return loadingSkeleton;
@@ -95,7 +104,7 @@ export default function FavoritesPage() {
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
         {favorites.map((favorite: Favorite) => (
           <ProductCard
-            key={favorite.created_at}
+            key={favorite.product.id}
             productId={favorite.product.id}
             product={favorite.product}
             onRemove={() => handleRemoveFromFavorites(favorite.product.id)}
@@ -170,7 +179,6 @@ function ProductCard({
     >
       <Link href={`/product/${productId || product.slug}`} className="block">
         <div className="relative aspect-square bg-gray-50">
-          {/* Favorite Button */}
           <button
             onClick={(e) => {
               e.preventDefault();
@@ -183,7 +191,6 @@ function ProductCard({
             <Heart className="h-5 w-5 fill-red-500 text-red-500" />
           </button>
 
-          {/* Product Image */}
           <Image
             src={imageUrl}
             alt={product.name}
@@ -193,7 +200,6 @@ function ProductCard({
             priority={false}
           />
 
-          {/* Out of Stock Badge */}
           {product.stock === 0 && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
               <Badge variant="secondary" className="text-sm">
@@ -203,7 +209,6 @@ function ProductCard({
           )}
         </div>
 
-        {/* Product Info */}
         <div className="p-3">
           <h3 className="font-medium text-sm line-clamp-2 mb-2 min-h-[40px]">
             {product.name}
@@ -217,7 +222,6 @@ function ProductCard({
         </div>
       </Link>
 
-      {/* Add to Cart Button - показывается при hover */}
       {isHovered && product.stock > 0 && (
         <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-white via-white to-transparent">
           <Button
