@@ -224,7 +224,7 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: async (payload: {
       customer_name?: string
-      customer_phone?: string
+      customer_phone: string
       customer_address: string
       shipping_method: string
       payment_type_id: number

@@ -1,65 +1,74 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Upload } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { useOpenStore } from "@/lib/hooks"
-import { useToast } from "@/hooks/use-toast"
+import type React from "react";
+import { useState } from "react";
+import { Upload } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { useOpenStore } from "@/lib/hooks";
+import { useToast } from "@/hooks/use-toast";
 
 interface OpenStorePageProps {
-  locale?: string
+  locale?: string;
   translations?: {
-    title: string
-    firstName: string
-    lastName: string
-    email: string
-    phone: string
-    uploadPatent: string
-    submit: string
-    selectedFile: string
-    firstNameRequired: string
-    lastNameRequired: string
-    emailInvalid: string
-    phoneInvalid: string
-    fileRequired: string
-    fileSizeError: string
-    fileTypeError: string
-  }
+    title: string;
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone: string;
+    uploadPatent: string;
+    submit: string;
+    selectedFile: string;
+    firstNameRequired: string;
+    lastNameRequired: string;
+    emailInvalid: string;
+    phoneInvalid: string;
+    fileRequired: string;
+    fileSizeError: string;
+    fileTypeError: string;
+  };
 }
 
 interface FormData {
-  firstName: string
-  lastName: string
-  email: string
-  phone: string
-  file: File | null
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  file: File | null;
 }
 
 interface FormErrors {
-  firstName?: string
-  lastName?: string
-  email?: string
-  phone?: string
-  file?: string
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  phone?: string;
+  file?: string;
 }
 
-export default function OpenStorePage({ locale = "ru", translations }: OpenStorePageProps) {
+export default function OpenStorePage({
+  locale = "ru",
+  translations,
+}: OpenStorePageProps) {
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
     email: "",
     phone: "+993",
     file: null,
-  })
-  const [errors, setErrors] = useState<FormErrors>({})
-  const [fileName, setFileName] = useState("")
+  });
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [fileName, setFileName] = useState("");
 
-  const { mutate: submitOpenStore, isPending: loading } = useOpenStore()
-  const { toast } = useToast()
+  const { mutate: submitOpenStore, isPending: loading } = useOpenStore();
+  const { toast } = useToast();
 
   const t = translations || {
     title: "Форма подачи заявления на открытие магазина",
@@ -77,68 +86,68 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
     fileRequired: "Патент обязателен",
     fileSizeError: "Файл слишком большой (макс. 25MB)",
     fileTypeError: "Только PDF и JPG документы",
-  }
+  };
 
   const validateForm = (): boolean => {
-    const newErrors: FormErrors = {}
+    const newErrors: FormErrors = {};
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = t.firstNameRequired
+      newErrors.firstName = t.firstNameRequired;
     }
 
     if (!formData.lastName.trim()) {
-      newErrors.lastName = t.lastNameRequired
+      newErrors.lastName = t.lastNameRequired;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      newErrors.email = t.emailInvalid
+      newErrors.email = t.emailInvalid;
     }
 
-    const phoneRegex = /^\+?[0-9]{6,15}$/
+    const phoneRegex = /^\+?[0-9]{6,15}$/;
     if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = t.phoneInvalid
+      newErrors.phone = t.phoneInvalid;
     }
 
     if (!formData.file) {
-      newErrors.file = t.fileRequired
+      newErrors.file = t.fileRequired;
     } else {
-      const allowedTypes = ["image/jpeg", "image/jpg", "application/pdf"]
+      const allowedTypes = ["image/jpeg", "image/jpg", "application/pdf"];
       if (!allowedTypes.includes(formData.file.type)) {
-        newErrors.file = t.fileTypeError
+        newErrors.file = t.fileTypeError;
       }
       if (formData.file.size > 25 * 1024 * 1024) {
-        newErrors.file = t.fileSizeError
+        newErrors.file = t.fileSizeError;
       }
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name as keyof FormErrors]) {
-      setErrors((prev) => ({ ...prev, [name]: undefined }))
+      setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
-  }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, file }))
-      setFileName(file.name)
+      setFormData((prev) => ({ ...prev, file }));
+      setFileName(file.name);
       if (errors.file) {
-        setErrors((prev) => ({ ...prev, file: undefined }))
+        setErrors((prev) => ({ ...prev, file: undefined }));
       }
     }
-  }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
-    if (!validateForm()) return
+    if (!validateForm()) return;
 
     if (formData.file) {
       submitOpenStore(
@@ -154,34 +163,36 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
             toast({
               title: "Success",
               description: "Your store request has been submitted successfully",
-            })
+            });
             setFormData({
               firstName: "",
               lastName: "",
               email: "",
               phone: "+993",
               file: null,
-            })
-            setFileName("")
+            });
+            setFileName("");
           },
           onError: (error: any) => {
             toast({
               title: "Error",
               description: error?.message || "Failed to submit store request",
               variant: "destructive",
-            })
+            });
           },
-        },
-      )
+        }
+      );
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className=" bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl text-center">{t.title}</CardTitle>
-          <CardDescription className="text-center">Заполните форму для подачи заявления</CardDescription>
+          <CardDescription className="text-center">
+            Заполните форму для подачи заявления
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -195,7 +206,9 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
                 onChange={handleInputChange}
                 className={errors.firstName ? "border-red-500" : ""}
               />
-              {errors.firstName && <p className="text-sm text-red-500">{errors.firstName}</p>}
+              {errors.firstName && (
+                <p className="text-sm text-red-500">{errors.firstName}</p>
+              )}
             </div>
 
             {/* Last Name */}
@@ -208,7 +221,9 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
                 onChange={handleInputChange}
                 className={errors.lastName ? "border-red-500" : ""}
               />
-              {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
+              {errors.lastName && (
+                <p className="text-sm text-red-500">{errors.lastName}</p>
+              )}
             </div>
 
             {/* Email */}
@@ -222,7 +237,9 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
                 onChange={handleInputChange}
                 className={errors.email ? "border-red-500" : ""}
               />
-              {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
+              {errors.email && (
+                <p className="text-sm text-red-500">{errors.email}</p>
+              )}
             </div>
 
             {/* Phone */}
@@ -236,14 +253,22 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
                 placeholder="+99361111111"
                 className={errors.phone ? "border-red-500" : ""}
               />
-              {errors.phone && <p className="text-sm text-red-500">{errors.phone}</p>}
+              {errors.phone && (
+                <p className="text-sm text-red-500">{errors.phone}</p>
+              )}
             </div>
 
             {/* File Upload */}
             <div className="space-y-2">
               <Label htmlFor="file">{t.uploadPatent}</Label>
               <div className="flex flex-col gap-2">
-                <Input id="file" type="file" accept=".pdf,.jpg,.jpeg" onChange={handleFileChange} className="hidden" />
+                <Input
+                  id="file"
+                  type="file"
+                  accept=".pdf,.jpg,.jpeg"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
                 <Button
                   type="button"
                   variant="outline"
@@ -258,17 +283,23 @@ export default function OpenStorePage({ locale = "ru", translations }: OpenStore
                     {t.selectedFile}: {fileName}
                   </p>
                 )}
-                {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
+                {errors.file && (
+                  <p className="text-sm text-red-500">{errors.file}</p>
+                )}
               </div>
             </div>
 
             {/* Submit Button */}
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button
+              type="submit"
+              className="w-full cursor-pointer bg-[#005bff] hover:bg-[#0041c4]"
+              disabled={loading}
+            >
               {loading ? "Загрузка..." : t.submit}
             </Button>
           </form>
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

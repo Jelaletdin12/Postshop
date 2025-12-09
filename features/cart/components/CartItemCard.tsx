@@ -329,15 +329,13 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
               <p className="text-sm font-semibold">
                 {t("unit_price")} <span className="text-primary">{item.price_formatted}</span>
               </p>
-              <p className="text-sm font-semibold">
-                {t("extra_price")} {item.sub_total_formatted}
-              </p>
+              
               {item.discount_formatted && item.discount_formatted !== "0 TMT" && (
                 <p className="text-sm font-semibold">{t("discount")} {item.discount_formatted}</p>
               )}
               <div className="flex items-center gap-2">
                 <span className="text-sm font-semibold">{t("total_price")}</span>
-                <span className="bg-green-500 text-white px-3 py-1 rounded-xl font-semibold text-base">
+                <span className="bg-green-500 text-white px-3 py-1 rounded-lg font-semibold text-base">
                   {(parseFloat(item.product.price_amount || "0") * localQuantity).toFixed(2)} TMT
                 </span>
               </div>
@@ -348,7 +346,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
                 variant="outline"
                 size="icon"
                 onClick={handleQuantityDecrease}
-                className={`rounded-xl bg-blue-50 ${isSyncing ? 'opacity-70' : ''}`}
+                className={` cursor-pointerrounded-xl bg-blue-50 ${isSyncing ? 'opacity-70' : ''}`}
               >
                 <Minus className="h-4 w-4" />
               </Button>
@@ -368,11 +366,11 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
                 size="icon"
                 onClick={handleQuantityIncrease}
                 disabled={localQuantity >= availableStock}
-                className={`rounded-xl bg-blue-50 ${isSyncing ? 'opacity-70' : ''} ${
+                className={`rounded-xl cursor-pointer bg-blue-50 ${isSyncing ? 'opacity-70' : ''} ${
                   localQuantity >= availableStock ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-4 w-4 text-[#007AFF]" />
               </Button>
             </div>
           </div>

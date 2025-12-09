@@ -140,7 +140,7 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
           <Button
             onClick={otpSent ? handleLogin : handleSendOtp}
-            className="w-full h-12 rounded-xl font-bold text-base"
+            className="w-full h-12 rounded-xl font-bold text-base bg-[#005bff] hover:bg-[#0041c4]"
             size="lg"
             disabled={isLoginLoading || isVerifyLoading}
           >

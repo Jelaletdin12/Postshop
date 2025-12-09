@@ -101,6 +101,7 @@ export default function CollectionSection({ collection, locale }: Props) {
               price_color="#0059ff"
               height={360}
               width={250}
+              
             />
           );
         })}

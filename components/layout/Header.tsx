@@ -3,14 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Menu, Search, Store, LogOut, User as UserIcon } from "lucide-react";
+import { X, Search, Store, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import Logo from "@/public/logo.webp";
 import CategoryMenu from "./ui/CategoryMenu";
 import SearchBar from "./ui/SearchBar";
@@ -65,10 +59,16 @@ export default function Header({ locale = "ru" }: HeaderProps) {
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
         <div className="container mx-auto px-4">
-          <div className="flex h-16 items-center justify-between gap-4">
+          <div className="flex h-16 items-center justify-between gap-3">
             <Link href="/" className="shrink-0">
               <div className="relative h-8 w-[180px]">
-                <Image src={Logo} alt="Logo" fill className="object-contain" priority />
+                <Image
+                  src={Logo}
+                  alt="Logo"
+                  fill
+                  className="object-contain"
+                  priority
+                />
               </div>
             </Link>
 
@@ -77,12 +77,16 @@ export default function Header({ locale = "ru" }: HeaderProps) {
               className="hidden gap-2 rounded-xl font-bold sm:flex hover:bg-[#005bff] bg-[#005bff] text-white"
               size="lg"
             >
-              {isCategoryOpen ? <X className="h-5 w-5" /> : <CategoryIcon  />}
+              {isCategoryOpen ? <X className="h-5 w-5" /> : <CategoryIcon />}
               {t("common.catalog")}
             </Button>
 
             <div className="flex items-center gap-2 sm:hidden">
-              <Button variant="ghost" size="icon" onClick={() => setIsMobileSearchOpen(true)}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setIsMobileSearchOpen(true)}
+              >
                 <Search className="h-5 w-5" />
               </Button>
               <LanguageSelector />
@@ -99,20 +103,13 @@ export default function Header({ locale = "ru" }: HeaderProps) {
               locale={locale}
             />
 
-           
+       
 
             <ActionButtons
               isAuthenticated={isAuthenticated}
               onAuthClick={handleAuthClick}
             />
           </div>
-
-          <Link href="/openStore">
-            <Button variant="ghost" size="sm" className="relative flex gap-0.5 h-auto pb-2">
-              <Store className="h-5 w-5 text-gray-600" />
-              <span className="text-xs text-gray-700">{t("common.openStore")}</span>
-            </Button>
-          </Link>
         </div>
       </header>
 
@@ -126,10 +123,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
         locale={locale}
       />
 
-      <AuthDialog
-        isOpen={isLoginOpen}
-        onClose={() => setIsLoginOpen(false)}
-      />
+      <AuthDialog isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 }

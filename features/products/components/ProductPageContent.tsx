@@ -506,7 +506,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
           </div>
 
           <div className="lg:w-[380px] space-y-4">
-            <Card className="p-6 rounded-xl shadow-lg sticky top-4">
+            <Card className="p-6 rounded-xl ">
               <div className="flex justify-between items-start mb-6">
                 <span className="text-lg text-gray-500">{t("price")}:</span>
                 <div className="flex flex-col items-end">

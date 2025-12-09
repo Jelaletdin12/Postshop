@@ -15,6 +15,7 @@ import {
 import DeliveryTypeSelector from "./DeliveryTypeSelector";
 import { useTranslations } from "next-intl";
 import type { DeliveryType, PaymentType, Province } from "@/lib/types/api";
+import { Input } from "@/components/ui/input";
 
 interface OrderBillingItem {
   title: string;
@@ -42,6 +43,8 @@ interface OrderSummaryProps {
   regionGroups: Record<string, Province[]>;
   availableRegions: string[];
   paymentTypes: PaymentType[];
+  phone: string;
+  onPhoneChange: (phone: string) => void;
   onPaymentTypeChange: (type: PaymentType) => void;
   onDeliveryTypeChange: (type: DeliveryType) => void;
   onRegionChange: (regionCode: string) => void;
@@ -61,6 +64,7 @@ export default function OrderSummary({
   regionGroups,
   availableRegions,
   paymentTypes,
+  phone,  onPhoneChange,
   onPaymentTypeChange,
   onDeliveryTypeChange,
   onRegionChange,
@@ -74,7 +78,7 @@ export default function OrderSummary({
   const provincesForSelectedRegion = selectedRegion
     ? regionGroups[selectedRegion] || []
     : [];
-  const isFormValid = selectedRegion && selectedProvince && paymentType;
+  const isFormValid = selectedRegion && selectedProvince && paymentType && phone;
 
   return (
     <Card className="w-full md:w-[380px] p-6 rounded-xl h-fit sticky top-20">
@@ -167,6 +171,17 @@ export default function OrderSummary({
         </div>
       )}
 
+{/* Phone Number */}
+<div className="mb-6">
+  <Label className="text-lg font-semibold mb-3 block">{t("phone")}</Label>
+  <Input
+    type="tel"
+    value={phone}
+    onChange={(e) => onPhoneChange(e.target.value)}
+    placeholder={t("phone")}
+    className="rounded-xl"
+  />
+</div>
       {/* Note */}
       <div className="mb-6">
         <Label className="text-lg font-semibold mb-3 block">{t("note")}</Label>

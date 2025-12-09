@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import type React from "react";
 import Link from "next/link";
-import { User, Truck, Heart, ShoppingCart, LogOut } from "lucide-react";
+import { User, Truck, Heart, Store, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,7 +16,12 @@ import { useCart, useFavorites, useOrders } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import { useLogout } from "@/lib/hooks/useAuth";
-import { CartIcon, FavoriteIcon, OrderIcon, ProfileIcon } from "@/components/icons";
+import {
+  CartIcon,
+  FavoriteIcon,
+  OrderIcon,
+  ProfileIcon,
+} from "@/components/icons";
 
 interface ActionButtonsProps {
   isAuthenticated: boolean;
@@ -34,15 +39,15 @@ interface ActionButtonData {
   isLoading?: boolean;
 }
 
-export default function ActionButtons({ 
-  isAuthenticated, 
-  onAuthClick, 
+export default function ActionButtons({
+  isAuthenticated,
+  onAuthClick,
   isLoading: authLoading,
-  locale = "ru" 
+  locale = "ru",
 }: ActionButtonsProps) {
   const t = useTranslations();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
-  
+
   const { data: cartData, isLoading: cartLoading } = useCart();
   const { data: favoritesData, isLoading: favoritesLoading } = useFavorites();
   const { data: ordersData, isLoading: ordersLoading } = useOrders();
@@ -69,29 +74,46 @@ export default function ActionButtons({
     logout();
   };
 
-  const buttons: ActionButtonData[] = useMemo(() => [
-    {
-      icon: <OrderIcon />,
-      label: t("common.orders"),
-      href: "/orders",
-      badgeCount: ordersCount,
-      isLoading: ordersLoading,
-    },
-    {
-      icon: <FavoriteIcon />,
-      label: t("common.favorites"),
-      href: "/favorites",
-      badgeCount: favoritesCount,
-      isLoading: favoritesLoading,
-    },
-    {
-      icon: <CartIcon   />,
-      label: t("common.cart"),
-      href: "/cart",
-      badgeCount: cartCount,
-      isLoading: cartLoading,
-    },
-  ], [ordersCount, ordersLoading, favoritesCount, favoritesLoading, cartCount, cartLoading, t]);
+  const buttons: ActionButtonData[] = useMemo(
+    () => [
+      {
+        icon: <Store />,
+        label: t("common.openStore"),
+        href: "/openStore",
+      },
+      {
+        icon: <OrderIcon />,
+        label: t("common.orders"),
+        href: "/orders",
+        badgeCount: ordersCount,
+        isLoading: ordersLoading,
+      },
+      {
+        icon: <FavoriteIcon />,
+        label: t("common.favorites"),
+        href: "/favorites",
+        badgeCount: favoritesCount,
+        isLoading: favoritesLoading,
+      },
+      {
+        icon: <CartIcon />,
+        label: t("common.cart"),
+        href: "/cart",
+        badgeCount: cartCount,
+        isLoading: cartLoading,
+      }
+      
+    ],
+    [
+      ordersCount,
+      ordersLoading,
+      favoritesCount,
+      favoritesLoading,
+      cartCount,
+      cartLoading,
+      t,
+    ]
+  );
 
   return (
     <div className="hidden items-center gap-1 md:flex">
@@ -101,13 +123,19 @@ export default function ActionButtons({
       ) : isAuthenticated ? (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-col gap-0.5 h-auto px-2 py-2"
+            >
               <ProfileIcon />
               <span className="text-xs text-gray-700">{t("profile")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => (window.location.href = `/${locale}/me`)}>
+            <DropdownMenuItem
+              onClick={() => (window.location.href = `/${locale}/me`)}
+            >
               <User className="mr-2 h-4 w-4" />
               {t("profile")}
             </DropdownMenuItem>
@@ -118,7 +146,12 @@ export default function ActionButtons({
           </DropdownMenuContent>
         </DropdownMenu>
       ) : (
-        <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2" onClick={onAuthClick}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="flex-col gap-0.5 h-auto px-2 py-2"
+          onClick={onAuthClick}
+        >
           <ProfileIcon />
           <span className="text-xs text-gray-700">{t("common.login")}</span>
         </Button>
@@ -132,9 +165,21 @@ export default function ActionButtons({
   );
 }
 
-function ActionButton({ icon, label, href, onClick, badgeCount, isLoading }: ActionButtonData) {
+function ActionButton({
+  icon,
+  label,
+  href,
+  onClick,
+  badgeCount,
+  isLoading,
+}: ActionButtonData) {
   const buttonContent = (
-    <Button variant="ghost" size="sm" className="relative flex-col gap-0.5 h-auto px-2 py-2" onClick={onClick}>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="relative flex-col gap-0.5 h-auto px-2 py-2"
+      onClick={onClick}
+    >
       <div className="relative">
         {icon}
         {badgeCount !== undefined && badgeCount > 0 && (
@@ -142,7 +187,11 @@ function ActionButton({ icon, label, href, onClick, badgeCount, isLoading }: Act
             variant="destructive"
             className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
           >
-            {isLoading ? <Skeleton className="h-3 w-3 rounded-full" /> : badgeCount}
+            {isLoading ? (
+              <Skeleton className="h-3 w-3 rounded-full" />
+            ) : (
+              badgeCount
+            )}
           </Badge>
         )}
       </div>

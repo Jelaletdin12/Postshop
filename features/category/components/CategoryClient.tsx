@@ -23,7 +23,7 @@ import {
   useCategoryFilters,
   useFilteredCategoryProducts,
 } from "@/features/category/hooks/useCategories";
-import { notFound } from "next/navigation";
+
 import { useTranslations } from "next-intl";
 import type { Category, Product } from "@/lib/types/api";
 
@@ -232,50 +232,14 @@ export default function CategoryPageClient({
     []
   );
 
-  const renderBreadcrumbs = useCallback(() => {
-    if (!categoriesData || !selectedCategory) return null;
-
-    const breadcrumbs: Category[] = [];
-    let currentCategory = selectedCategory;
-    let parentId = currentCategory.parent_id;
-
-    breadcrumbs.unshift(currentCategory);
-
-    while (parentId) {
-      const parentCategory = findCategoryById(categoriesData, parentId);
-      if (parentCategory) {
-        breadcrumbs.unshift(parentCategory);
-        parentId = parentCategory.parent_id;
-      } else {
-        break;
-      }
-    }
-
-    return (
-      <div className="flex items-center gap-2 mb-4 text-sm">
-        {breadcrumbs.map((category, index) => (
-          <div key={category.id} className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                router.push(`/${locale}/category/${category.slug}`)
-              }
-              className="hover:text-primary transition-colors"
-            >
-              {category.name}
-            </button>
-            {index < breadcrumbs.length - 1 && <span>/</span>}
-          </div>
-        ))}
-      </div>
-    );
-  }, [categoriesData, selectedCategory, findCategoryById, locale, router]);
+  
 
   const FiltersContent = useCallback(
     () => (
       <div className="space-y-6">
         {filtersData?.categories && filtersData.categories.length > 0 && (
           <div>
-            <h3 className="text-lg font-semibold mb-3">{t("categories")}</h3>
+            <h3 className="text-lg font-semibold mb-3">{t("category")}</h3>
             <div className="space-y-2">
               {filtersData.categories.map((category) => (
                 <label
@@ -388,21 +352,20 @@ export default function CategoryPageClient({
     productsData?.pagination?.total || sortedProducts.length || 0;
 
   return (
-    <div className="flex flex-col gap-4">
-      {renderBreadcrumbs()}
-      <h2 className="text-3xl font-bold">{selectedCategory.name}</h2>
-      <p className="text-gray-600">
-        {t("total")}: {totalItems} {t("products")}
-      </p>
+    <div className="flex flex-col  mx-auto max-w-[1504px]
+    px-2 md:px-4 lg:px-6  pb-12 
+    ">
+      <h2 className="p-4 text-3xl font-bold pb-6 rounded-lg mb-0 bg-white">{selectedCategory.name}</h2>
+      
 
-      <div className="flex gap-4">
-        <div className="hidden sm:block w-[280px] flex-shrink-0 border-r pr-4">
-          <ScrollArea className="h-[calc(100vh-200px)]">
+      <div className="flex gap-4 bg-white rounded-lg">
+        <div className="hidden sm:block w-[280px] shrink-0 border-r px-4 ">
+          <ScrollArea className="h-[calc(100vh-200px)] ">
             <FiltersContent />
           </ScrollArea>
         </div>
 
-        <div className="flex-1">
+        <div className="flex-1 bg-white rounded-lg">
           {sortedProducts.length > 0 ? (
             <InfiniteScroll
               dataLength={sortedProducts.length}
@@ -416,7 +379,7 @@ export default function CategoryPageClient({
                 </div>
               }
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white rounded-lg grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
                 {sortedProducts.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -429,8 +392,8 @@ export default function CategoryPageClient({
                     }
                     struct_price_text={`${product.price_amount} TMT`}
                     images={[product.media?.[0]?.images_400x400]}
-                    is_favorite={false}
-                  />
+                   
+                    button={true}                 />
                 ))}
               </div>
             </InfiniteScroll>

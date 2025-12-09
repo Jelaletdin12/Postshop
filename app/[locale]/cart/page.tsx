@@ -18,11 +18,12 @@ import type { DeliveryType, PaymentType } from "@/lib/types/api";
 export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
-  const [deliveryType, setDeliveryType] = useState<DeliveryType>("SELECTED_DELIVERY");
+  const [deliveryType, setDeliveryType] =
+    useState<DeliveryType>("SELECTED_DELIVERY");
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [note, setNote] = useState<string>("");
-  
+ const [phone, setPhone] = useState<string>("");
   const router = useRouter();
   const t = useTranslations();
 
@@ -48,7 +49,10 @@ export default function CartPage() {
     }, {} as Record<string, typeof provinces>);
   }, [provinces]);
 
-  const availableRegions = useMemo(() => Object.keys(regionGroups), [regionGroups]);
+  const availableRegions = useMemo(
+    () => Object.keys(regionGroups),
+    [regionGroups]
+  );
 
   // Memoize items grouped by seller
   const itemsBySeller = useMemo(() => {
@@ -86,7 +90,9 @@ export default function CartPage() {
       return;
     }
 
-    const selectedProvinceData = provinces.find((p) => p.id === selectedProvince);
+    const selectedProvinceData = provinces.find(
+      (p) => p.id === selectedProvince
+    );
     if (!selectedProvinceData) return;
 
     const orderData = userStore.getOrderData();
@@ -99,7 +105,7 @@ export default function CartPage() {
     createOrder(
       {
         customer_name: orderData.customer_name,
-        customer_phone: orderData.customer_phone,
+        customer_phone: phone,
         customer_address: selectedProvinceData.name,
         shipping_method: deliveryType === "PICK_UP" ? "pickup" : "standart",
         payment_type_id: paymentType.id,
@@ -141,48 +147,52 @@ export default function CartPage() {
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1">
           <Card className="p-6 rounded-xl">
-            {Object.entries(itemsBySeller).map(([sellerId, { seller, items }]) => (
-              <div key={sellerId} className="mb-6">
-                <p className="text-base font-semibold mb-3">{seller.name}</p>
-                <div className="space-y-4">
-                  {items.map((item) => {
-                    const price = parseFloat(item.product.price_amount || "0");
-                    const quantity = item.product_quantity;
-                    const total = price * quantity;
+            {Object.entries(itemsBySeller).map(
+              ([sellerId, { seller, items }]) => (
+                <div key={sellerId} className="mb-6">
+                  <p className="text-base font-semibold mb-3">{seller.name}</p>
+                  <div className="space-y-4">
+                    {items.map((item) => {
+                      const price = parseFloat(
+                        item.product.price_amount || "0"
+                      );
+                      const quantity = item.product_quantity;
+                      const total = price * quantity;
 
-                    return (
-                      <CartItemCard
-                        key={item.id}
-                        item={{
-                          ...item,
-                          quantity: quantity,
-                          price: price,
-                          total: total,
-                          seller: seller,
-                          price_formatted: `${item.product.price_amount} TMT`,
-                          sub_total_formatted: `${item.product.price_amount} TMT`,
-                          total_formatted: `${total.toFixed(2)} TMT`,
-                          discount_formatted: "0 TMT",
-                          product: {
-                            ...item.product,
-                            image:
-                              item.product.media?.[0]?.images_800x800 ||
-                              item.product.media?.[0]?.thumbnail,
-                            images:
-                              item.product.media?.map(
-                                (m) => m.images_800x800 || m.thumbnail
-                              ) || [],
-                          },
-                        }}
-                      />
-                    );
-                  })}
+                      return (
+                        <CartItemCard
+                          key={item.id}
+                          item={{
+                            ...item,
+                            quantity: quantity,
+                            price: price,
+                            total: total,
+                            seller: seller,
+                            price_formatted: `${item.product.price_amount} TMT`,
+                            sub_total_formatted: `${item.product.price_amount} TMT`,
+                            total_formatted: `${total.toFixed(2)} TMT`,
+                            discount_formatted: "0 TMT",
+                            product: {
+                              ...item.product,
+                              image:
+                                item.product.media?.[0]?.images_800x800 ||
+                                item.product.media?.[0]?.thumbnail,
+                              images:
+                                item.product.media?.map(
+                                  (m) => m.images_800x800 || m.thumbnail
+                                ) || [],
+                            },
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  {Object.entries(itemsBySeller).length > 1 && (
+                    <Separator className="mt-4" />
+                  )}
                 </div>
-                {Object.entries(itemsBySeller).length > 1 && (
-                  <Separator className="mt-4" />
-                )}
-              </div>
-            ))}
+              )
+            )}
           </Card>
         </div>
 
@@ -217,6 +227,8 @@ export default function CartPage() {
           onNoteChange={setNote}
           onCompleteOrder={handleCompleteOrder}
           isLoading={isCreatingOrder}
+          phone={phone}
+          onPhoneChange={setPhone}
         />
       </div>
     </div>
