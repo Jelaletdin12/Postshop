@@ -12,10 +12,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import DeliveryTypeSelector from "./DeliveryTypeSelector";
 import { useTranslations } from "next-intl";
 import type { DeliveryType, PaymentType, Province } from "@/lib/types/api";
-import { Input } from "@/components/ui/input";
 
 interface OrderBillingItem {
   title: string;
@@ -44,7 +44,9 @@ interface OrderSummaryProps {
   availableRegions: string[];
   paymentTypes: PaymentType[];
   phone: string;
+  name: string;
   onPhoneChange: (phone: string) => void;
+  onNameChange: (name: string) => void;
   onPaymentTypeChange: (type: PaymentType) => void;
   onDeliveryTypeChange: (type: DeliveryType) => void;
   onRegionChange: (regionCode: string) => void;
@@ -64,7 +66,10 @@ export default function OrderSummary({
   regionGroups,
   availableRegions,
   paymentTypes,
-  phone,  onPhoneChange,
+  phone,
+  name,
+  onPhoneChange,
+  onNameChange,
   onPaymentTypeChange,
   onDeliveryTypeChange,
   onRegionChange,
@@ -78,10 +83,44 @@ export default function OrderSummary({
   const provincesForSelectedRegion = selectedRegion
     ? regionGroups[selectedRegion] || []
     : [];
-  const isFormValid = selectedRegion && selectedProvince && paymentType && phone;
+  const isFormValid =
+    selectedRegion && selectedProvince && paymentType && phone && name;
 
   return (
     <Card className="w-full md:w-[380px] p-6 rounded-xl h-fit sticky top-20">
+      {/* Customer Information */}
+      <div className="mb-6">
+        <h3 className="text-lg font-semibold mb-3">
+          {t("customer_information")}
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              {t("name")}
+            </Label>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => onNameChange(e.target.value)}
+              placeholder={t("name")}
+              className="rounded-xl"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              {t("phone")}
+            </Label>
+            <Input
+              type="tel"
+              value={phone}
+              onChange={(e) => onPhoneChange(e.target.value)}
+              placeholder={t("phone")}
+              className="rounded-xl"
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Payment Type */}
       <div className="mb-6">
         <h3 className="text-lg font-semibold mb-3">{t("payment_type")}</h3>
@@ -171,17 +210,6 @@ export default function OrderSummary({
         </div>
       )}
 
-{/* Phone Number */}
-<div className="mb-6">
-  <Label className="text-lg font-semibold mb-3 block">{t("phone")}</Label>
-  <Input
-    type="tel"
-    value={phone}
-    onChange={(e) => onPhoneChange(e.target.value)}
-    placeholder={t("phone")}
-    className="rounded-xl"
-  />
-</div>
       {/* Note */}
       <div className="mb-6">
         <Label className="text-lg font-semibold mb-3 block">{t("note")}</Label>

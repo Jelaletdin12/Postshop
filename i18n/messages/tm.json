@@ -109,7 +109,6 @@
   "my_orders": "Meniň sargytlarym",
   "active_orders": "Işjeň sargytlar",
   "completed_orders": "Tamamlanan sargytlar",
-  "cancel_order": "Sargydy ýatyrmak",
   "keep_order": "Sargydy saklamak",
   "cancel_confirmation": "Siz bu sargydy ýatyrmagy hakykatdanam isleýärsiňizmi?",
   "cancelling": "Ýatyrylýar...",
@@ -142,12 +141,12 @@
   "login_success": "Giriş üstünlikli boldy",
   "error_occurred": "Ýalňyşlyk ýüze çykdy",
   "wrong_code": "Kod nädogry",
-  "phone_format": "Format: 99365123456",
+  "phone_format": "Format: 65123456",
   "sending": "Iberilýär...",
   "verifying": "Barlanýar...",
   "verify": "Tassyklamak",
-   "only_left": "Sadece {count} adet kaldı",
-  "stock_limit_title": "Stok Limiti",
-  "stock_limit_message": "{product} ürününden sadece {stock} adet mevcut. Daha fazla ekleyemezsiniz.",
-  "understood": "Anladım"
+   "only_left": "Diňe {count} sany galdy",
+  "stock_limit_title": "Çäkli sanda",
+  "stock_limit_message": "{product} harytdan diňe {stock} sany bar. Mundan köp sebediňize goşup bilmersiňiz.",
+  "understood": "Düşündim"
 }

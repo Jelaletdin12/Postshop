@@ -71,7 +71,7 @@ export default function FavoritesPage() {
               price_color="#0059ff"
               height={360}
               width={250}
-              button={true}
+              button={false}
               stock={product.stock}
             />
           );

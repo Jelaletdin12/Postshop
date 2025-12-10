@@ -109,7 +109,6 @@
   "my_orders": "Мои заказы",
   "active_orders": "Активные заказы",
   "completed_orders": "Завершенные заказы",
-  "cancel_order": "Отменить заказ",
   "keep_order": "Оставить заказ",
   "cancel_confirmation": "Вы уверены, что хотите отменить этот заказ?",
   "cancelling": "Отмена...",
@@ -142,12 +141,12 @@
   "login_success": "Вход выполнен успешно",
   "error_occurred": "Произошла ошибка",
   "wrong_code": "Неверный код",
-  "phone_format": "Формат: 99365123456",
+  "phone_format": "Формат: 65123456",
   "sending": "Отправка...",
   "verifying": "Проверка...",
   "verify": "Подтвердить",
-   "only_left": "Sadece {count} adet kaldı",
-  "stock_limit_title": "Stok Limiti",
-  "stock_limit_message": "{product} ürününden sadece {stock} adet mevcut. Daha fazla ekleyemezsiniz.",
-  "understood": "Anladım"
+   "only_left": "Осталось {count} шт.",
+  "stock_limit_title": "Недостаточно на складе",
+  "stock_limit_message": "{product} закончился. Можно купить только {stock} шт.",
+  "understood": "Понятно"
 }

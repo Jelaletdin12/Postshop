@@ -23,7 +23,8 @@ export default function CartPage() {
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [note, setNote] = useState<string>("");
- const [phone, setPhone] = useState<string>("");
+  const [phone, setPhone] = useState<string>("");
+  const [name, setName] = useState<string>("");
   const router = useRouter();
   const t = useTranslations();
 
@@ -36,9 +37,15 @@ export default function CartPage() {
 
   useEffect(() => {
     setIsClient(true);
+    
+    // Get user data from store if available
+    const orderData = userStore.getOrderData();
+    if (orderData) {
+      if (orderData.customer_name) setName(orderData.customer_name);
+      if (orderData.customer_phone) setPhone(orderData.customer_phone);
+    }
   }, []);
 
-  // Memoize region groups to prevent unnecessary recalculations
   const regionGroups = useMemo(() => {
     return provinces.reduce((acc, province) => {
       if (!acc[province.region]) {
@@ -54,7 +61,6 @@ export default function CartPage() {
     [regionGroups]
   );
 
-  // Memoize items grouped by seller
   const itemsBySeller = useMemo(() => {
     return cartItems.reduce((acc, item) => {
       const sellerId = item.product.channel?.[0]?.id || 0;
@@ -71,7 +77,6 @@ export default function CartPage() {
     }, {} as Record<number, { seller: { id: number; name: string }; items: typeof cartItems }>);
   }, [cartItems]);
 
-  // Memoize total amount
   const totalAmount = useMemo(() => {
     return cartItems.reduce((sum, item) => {
       const price = parseFloat(item.product.price_amount || "0");
@@ -85,7 +90,7 @@ export default function CartPage() {
   };
 
   const handleCompleteOrder = () => {
-    if (!selectedRegion || !selectedProvince || !paymentType) {
+    if (!selectedRegion || !selectedProvince || !paymentType || !phone || !name) {
       console.warn("Missing required fields for order");
       return;
     }
@@ -104,7 +109,7 @@ export default function CartPage() {
 
     createOrder(
       {
-        customer_name: orderData.customer_name,
+        customer_name: name,
         customer_phone: phone,
         customer_address: selectedProvinceData.name,
         shipping_method: deliveryType === "PICK_UP" ? "pickup" : "standart",
@@ -141,8 +146,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">{t("cart")}</h1>
+    <div className="container mx-auto px-6">
+      <h1 className="text-3xl font-bold mb-6 pt-3">{t("cart")}</h1>
 
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1">
@@ -220,6 +225,10 @@ export default function CartPage() {
           regionGroups={regionGroups}
           availableRegions={availableRegions}
           paymentTypes={paymentTypes}
+          phone={phone}
+          name={name}
+          onPhoneChange={setPhone}
+          onNameChange={setName}
           onPaymentTypeChange={setPaymentType}
           onDeliveryTypeChange={handleDeliveryTypeChange}
           onRegionChange={setSelectedRegion}
@@ -227,8 +236,6 @@ export default function CartPage() {
           onNoteChange={setNote}
           onCompleteOrder={handleCompleteOrder}
           isLoading={isCreatingOrder}
-          phone={phone}
-          onPhoneChange={setPhone}
         />
       </div>
     </div>
