@@ -432,8 +432,8 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
 
   return (
     <>
-      <div className="px-2 md:px-4 lg:px-6 rounded-lg pb-12 space-y-8 max-w-[1504px] mx-auto">
-        <div className="flex flex-col lg:flex-row gap-8 bg-white p-4">
+      <div className="px-2 md:px-4 lg:px-6 rounded-lg mb-18 space-y-8 max-w-[1504px] mx-auto">
+        <div className="flex flex-col lg:flex-row gap-8 rounded-b-lg bg-white p-4">
           <div className="flex-1 max-w-2xl">
             <div className="relative">
               <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white">

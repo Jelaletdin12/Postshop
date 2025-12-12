@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import Link from "next/link"
-import { Menu, Heart, Truck, ShoppingCart, User } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { useCategories, useCart, useFavorites, useOrders } from "@/lib/hooks"
-
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Menu, Heart, Truck, ShoppingCart, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useCategories, useCart, useFavorites, useOrders } from "@/lib/hooks";
+import { useRouter } from "next/navigation";
 interface MobileBottomNavProps {
-  locale?: string
-  isAuthenticated?: boolean
+  locale?: string;
+  isAuthenticated?: boolean;
   translations?: {
-    catalog: string
-    favorites: string
-    orders: string
-    cart: string
-    login: string
-    profile: string
-  }
-  onLoginClick?: () => void
+    catalog: string;
+    favorites: string;
+    orders: string;
+    cart: string;
+    login: string;
+    profile: string;
+  };
+  onLoginClick?: () => void;
+  onProfileClick?: () => void;
 }
 
 export default function MobileBottomNav({
@@ -28,15 +34,16 @@ export default function MobileBottomNav({
   isAuthenticated = false,
   translations,
   onLoginClick,
+  onProfileClick, // EKLENEN
 }: MobileBottomNavProps) {
-  const [isClient, setIsClient] = useState(false)
-  const [isCategoryOpen, setIsCategoryOpen] = useState(false)
+  const [isClient, setIsClient] = useState(false);
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
-  const { data: categories = [] } = useCategories()
-  const { data: cartData } = useCart()
-  const { data: favoritesData } = useFavorites()
-  const { data: ordersData } = useOrders()
-
+  const { data: categories = [] } = useCategories();
+  const { data: cartData } = useCart();
+  const { data: favoritesData } = useFavorites();
+  const { data: ordersData } = useOrders();
+  const router = useRouter();
   const t = translations || {
     catalog: "Каталог",
     favorites: "Избранное",
@@ -44,21 +51,26 @@ export default function MobileBottomNav({
     cart: "Корзина",
     login: "Войти",
     profile: "Профиль",
-  }
+  };
 
   useEffect(() => {
-    setIsClient(true)
-  }, [])
+    setIsClient(true);
+  }, []);
 
   const handleAuthClick = () => {
     if (isAuthenticated) {
-      window.location.href = `/${locale}/me`
+      if (onProfileClick) {
+        onProfileClick();
+      } else {
+        router.push(`/${locale}/me`);
+        console.log("hello");
+      }
     } else if (onLoginClick) {
-      onLoginClick()
+      onLoginClick();
     }
-  }
+  };
 
-  if (!isClient) return null
+  if (!isClient) return null;
 
   return (
     <>
@@ -78,7 +90,11 @@ export default function MobileBottomNav({
 
           {/* Favorites Button */}
           <Link href="/favorites">
-            <Button variant="ghost" size="sm" className="relative flex-col gap-0.5 h-auto px-2 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative flex-col gap-0.5 h-auto px-2 py-2"
+            >
               <div className="relative">
                 <Heart className="h-5 w-5 text-gray-600" />
                 <Badge
@@ -94,7 +110,11 @@ export default function MobileBottomNav({
 
           {/* Orders Button */}
           <Link href="/orders">
-            <Button variant="ghost" size="sm" className="relative flex-col gap-0.5 h-auto px-2 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative flex-col gap-0.5 h-auto px-2 py-2"
+            >
               <div className="relative">
                 <Truck className="h-5 w-5 text-gray-600" />
                 <Badge
@@ -110,25 +130,46 @@ export default function MobileBottomNav({
 
           {/* Cart Button */}
           <Link href="/cart">
-            <Button variant="ghost" size="sm" className="relative flex-col gap-0.5 h-auto px-2 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="relative flex-col gap-0.5 h-auto px-2 py-2"
+            >
               <div className="relative">
                 <ShoppingCart className="h-5 w-5 text-gray-600" />
                 <Badge
                   variant="destructive"
                   className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
                 >
-                  {cartData?.count || 0}
+                  {cartData?.data?.length || 0}
                 </Badge>
               </div>
               <span className="text-xs text-gray-700">{t.cart}</span>
             </Button>
           </Link>
 
-          {/* Profile/Login Button */}
-          <Button variant="ghost" size="sm" className="flex-col gap-0.5 h-auto px-2 py-2" onClick={handleAuthClick}>
-            <User className="h-5 w-5 text-gray-600" />
-            <span className="text-xs text-gray-700">{isAuthenticated ? t.profile : t.login}</span>
-          </Button>
+          {isAuthenticated ? (
+            <Link href={`/${locale}/me`}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-col gap-0.5 h-auto px-2 py-2"
+              >
+                <User className="h-5 w-5 text-gray-600" />
+                <span className="text-xs text-gray-700">{t.profile}</span>
+              </Button>
+            </Link>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex-col gap-0.5 h-auto px-2 py-2"
+              onClick={onLoginClick}
+            >
+              <User className="h-5 w-5 text-gray-600" />
+              <span className="text-xs text-gray-700">{t.login}</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -147,7 +188,6 @@ export default function MobileBottomNav({
                     onClick={() => setIsCategoryOpen(false)}
                     className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors font-semibold"
                   >
-                    {category.icon_class && <i className={`${category.icon_class} text-xl`}></i>}
                     <span>{category.name}</span>
                   </Link>
 
@@ -173,5 +213,5 @@ export default function MobileBottomNav({
         </SheetContent>
       </Sheet>
     </>
-  )
+  );
 }

@@ -9,6 +9,7 @@ export interface ProductMedia {
   images_720x720: string;
   images_800x800: string;
   images_1200x1200: string;
+  
 }
 
 export type DeliveryType = "SELECTED_DELIVERY" | "PICK_UP";

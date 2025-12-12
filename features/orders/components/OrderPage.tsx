@@ -191,8 +191,8 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
   }
 
   return (
-    <div className="container mx-auto p-4 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
+    <div className="container mx-auto p-2 lg:p-6 md:p-4 mb-16 min-h-screen">
+      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">{t("my_orders")}</h1>
 
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="mb-6">
@@ -314,10 +314,10 @@ function CompactOrderCard({
   const itemCount = order.orderItems.length;
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
+    <Card className="overflow-hidden transition-all py-2 md:py-4 lg:py-6 hover:shadow-md">
       {/* Compact Header - Always Visible */}
       <div
-        className="p-4 mx-4 rounded-lg cursor-pointer bg-linear-to-r from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 transition-colors"
+        className="p-2 md:p-4 mx-2 md:mx-4 rounded-lg cursor-pointer bg-linear-to-r from-white to-gray-50 hover:from-gray-50 hover:to-gray-100 transition-colors"
         onClick={onToggle}
       >
         <div className="flex items-center justify-between">
@@ -325,7 +325,7 @@ function CompactOrderCard({
             <div className="flex items-center gap-2">
               <Package className="h-5 w-5 text-gray-500" />
               <div>
-                <h3 className="font-semibold text-lg">
+                <h3 className="font-semibold text-base lg:text-lg">
                   {t("order_number")} {order.id}
                 </h3>
                 <p className="text-sm text-gray-500">
@@ -336,11 +336,14 @@ function CompactOrderCard({
           </div>
 
           <div className="flex items-center gap-4">
+            <div className="flex flex-col md:flex-row gap-2 ">
+              
             {getStatusBadge(order.status)}
             <div className="text-right">
               <p className="font-bold text-lg text-green-600">
                 {total.toFixed(2)} TMT
               </p>
+            </div>
             </div>
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-gray-400" />

@@ -16,7 +16,8 @@
     "send": "Ugrat",
     "enterPhone": "Telefon belgisini giriziň",
     "weWillSendCode": "Biz size kod ugradarys",
-    "loading": "Ýüklenýär..."
+    "loading": "Ýüklenýär...",
+    "all_collections_loaded": "Bütüň koleksiyonlar ýüklendi"
   },
   "category": "Bölümler",
   "checkout": "Sargyt et",
@@ -25,6 +26,7 @@
   "discount": "Arzanladyş:",
   "total_price": "Jemi baha:",
   "profile": "Profil",
+  "shipping_method": "Eltip bermek usuly",
   "cart_orders": "Sargyt sebedi",
   "product_description_title": "Haryt barada maglumat",
   "recommended": "Maslahat berilýän harytlar",
@@ -148,5 +150,12 @@
    "only_left": "Diňe {count} sany galdy",
   "stock_limit_title": "Çäkli sanda",
   "stock_limit_message": "{product} harytdan diňe {stock} sany bar. Mundan köp sebediňize goşup bilmersiňiz.",
-  "understood": "Düşündim"
+  "understood": "Düşündim",
+    "loading": "Ýüklenýär...",
+    "customer_information": "Müşteri maglumatlary",
+    "name": "Ady"
+    
+  
+
+  
 }

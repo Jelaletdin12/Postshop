@@ -2,7 +2,6 @@ export const FavoriteIcon = () => (
   <svg
     fill="gray"
     aria-hidden="true"
-    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-1sekacc"
     data-testid="FavoriteBorderIcon"
     viewBox="0 0 24 24"
   >
@@ -13,7 +12,7 @@ export const OrderIcon = () => (
   <svg
     fill="gray"
     aria-hidden="true"
-    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-1sekacc"
+
     data-testid="LocalShippingIcon"
     viewBox="0 0 24 24"
   >
@@ -24,7 +23,7 @@ export const CartIcon = () => (
   <svg
     fill="gray"
     aria-hidden="true"
-    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-1sekacc"
+   
     data-testid="ShoppingBasketIcon"
     viewBox="0 0 24 24"
   >
@@ -35,7 +34,7 @@ export const CategoryIcon = () => (
   <svg
     fill="white"
     aria-hidden="true"
-    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-nfmerv"
+ 
     data-testid="WidgetsIcon"
     viewBox="0 0 24 24"
   >
@@ -46,7 +45,7 @@ export const SearchIcon = () => (
   <svg
     fill="white"
     aria-hidden="true"
-    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-1sekacc"
+   
     data-testid="SearchIcon"
     viewBox="0 0 20 20"
   >
@@ -57,7 +56,7 @@ export const ProfileIcon = () => (
   <svg
     fill="gray"
     aria-hidden="true"
-    class="MuiSvgIcon-root MuiSvgIcon-fontSizeMedium mui-1sekacc"
+   
     data-testid="FaceIcon"
     viewBox="0 0 24 24"
   >

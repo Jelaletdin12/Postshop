@@ -35,11 +35,10 @@ export default function FavoritesPage() {
   }
 
   return (
-    <div className="container mx-auto px-6   
-     md:px-4 lg:px-6  pb-12 space-y-8 max-w-[1504px] 
+    <div className="container mx-auto px-2 md:px-4 lg:px-6  pb-12 space-y-8 max-w-[1504px] 
     ">
       <h1 className="bg-white text-3xl p-4 font-bold mb-0 pb-6">{t("favorite_products")}</h1>
-      <div className="bg-white grid grid-cols-2 sm:grid-cols-3 rounded-lg md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
+      <div className="bg-white grid grid-cols-2 sm:grid-cols-3 rounded-b-lg md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
         {favorites.map((favorite: Favorite) => {
           const product = favorite.product;
 

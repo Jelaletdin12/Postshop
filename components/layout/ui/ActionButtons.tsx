@@ -1,5 +1,5 @@
 "use client";
-
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import type React from "react";
 import Link from "next/link";
@@ -47,7 +47,7 @@ export default function ActionButtons({
 }: ActionButtonsProps) {
   const t = useTranslations();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
-
+  const router = useRouter();
   const { data: cartData, isLoading: cartLoading } = useCart();
   const { data: favoritesData, isLoading: favoritesLoading } = useFavorites();
   const { data: ordersData, isLoading: ordersLoading } = useOrders();
@@ -101,8 +101,7 @@ export default function ActionButtons({
         href: "/cart",
         badgeCount: cartCount,
         isLoading: cartLoading,
-      }
-      
+      },
     ],
     [
       ordersCount,
@@ -133,9 +132,7 @@ export default function ActionButtons({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem
-              onClick={() => (window.location.href = `/${locale}/me`)}
-            >
+            <DropdownMenuItem onClick={() => router.push(`/${locale}/me`)}>
               <User className="mr-2 h-4 w-4" />
               {t("profile")}
             </DropdownMenuItem>

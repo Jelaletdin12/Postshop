@@ -16,7 +16,8 @@
     "send": "Отправить",
     "enterPhone": "Введите свой номер телефона",
     "weWillSendCode": "Мы вышлем вам код",
-    "loading": "Загрузка..."
+    "loading": "Загрузка...",
+     "all_collections_loaded": "Все коллекции загружены"
   },
   "category": "Категория",
   "checkout": "Оформить заказ",
@@ -26,6 +27,7 @@
   "total_price": "Общая цена:",
   "profile": "Профиль",
   "cart_orders": "Корзина заказов",
+   "shipping_method": "Способ доставки",
   "product_description_title": "Описание к товару",
   "recommended": "Рекомендуем также",
   "address_search": "Поиск адреса",
@@ -148,5 +150,9 @@
    "only_left": "Осталось {count} шт.",
   "stock_limit_title": "Недостаточно на складе",
   "stock_limit_message": "{product} закончился. Можно купить только {stock} шт.",
-  "understood": "Понятно"
+  "understood": "Понятно",
+  "loading": "Загрузка...",
+  "customer_information": "Информация о клиенте",
+  "name": "Имя"
+ 
 }

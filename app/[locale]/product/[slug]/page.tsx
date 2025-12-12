@@ -3,9 +3,8 @@ import { notFound } from "next/navigation";
 import ProductPageContent from "../../../../features/products/components/ProductPageContent";
 
 type Props = {
-  params: Promise<{ locale: string; slug: string }>;
+  params: { locale: string; slug: string };
 };
-
 export const revalidate = 3600; // ISR: Revalidate every hour
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

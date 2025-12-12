@@ -2,7 +2,6 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import type { Category } from "@/lib/types/api";
 
 type Props = {
@@ -38,8 +37,8 @@ export default function CategoryGrid({
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="space-y-2">
-              <Skeleton className="w-full h-36 rounded-lg" />
-              <Skeleton className="w-full h-4 rounded" />
+              <div className="w-full h-36 bg-gray-200 rounded-lg animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
             </div>
           ))}
         </div>
@@ -59,7 +58,9 @@ export default function CategoryGrid({
             <Card className="hover:shadow-md border-none shadow-none p-0 gap-2 transition-all cursor-pointer">
               <div className="relative w-full h-36 overflow-hidden rounded-lg">
                 <Image
-                  src={cat.media?.[0]?.images_400x400 || "/placeholder.svg"}
+                  src={
+                    cat.media[0]?.thumbnail || cat.media?.[0]?.images_400x400
+                  }
                   alt={cat.name}
                   fill
                   className="object-contain"

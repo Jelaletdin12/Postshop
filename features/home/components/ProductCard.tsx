@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, MouseEvent, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, MouseEvent } from "react";
+import { useRouter } from "next/navigation";
 import { Heart, ShoppingCart, Loader2, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -21,6 +22,7 @@ import {
   useCart,
 } from "@/features/cart/hooks/useCart";
 import { useTranslations } from "next-intl";
+
 type ProductCardProps = {
   id: number;
   name: string;
@@ -42,8 +44,6 @@ export default function ProductCard({
   name,
   price,
   struct_price_text,
-  discount,
-  discount_text,
   images,
   labels = [],
   price_color = "#005bff",
@@ -52,6 +52,8 @@ export default function ProductCard({
   button = false,
   stock,
 }: ProductCardProps) {
+  const router = useRouter();
+  const t = useTranslations();
   const { isFavorite, isLoading: isFavoriteLoading } = useIsFavorite(id);
   const { mutate: toggleFavorite, isPending: isFavoriteToggling } =
     useToggleFavorite();
@@ -66,54 +68,45 @@ export default function ProductCard({
 
   const autoplayRef = useRef<NodeJS.Timeout | null>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
-  const isRequestInFlightRef = useRef(false);
+  const isRequestInFlightRef = useRef<boolean>(false);
   const pendingQuantityRef = useRef<number | null>(null);
 
   const hasMultipleImages = images.length > 1;
-
   const cartItem = cartData?.data?.find((item: any) => item.product?.id === id);
   const isInCart = !!cartItem;
-  const isOutOfStock = stock !== undefined && stock === 0;
+  const isOutOfStock = stock === 0;
   const availableStock = stock || 999;
-  const t = useTranslations();
+
+  // Carousel setup
   useEffect(() => {
     if (!api) return;
     setCurrent(api.selectedScrollSnap());
-    api.on("select", () => {
-      setCurrent(api.selectedScrollSnap());
-    });
+    const onSelect = () => setCurrent(api.selectedScrollSnap());
+    api.on("select", onSelect);
+    return () => {
+      api.off("select", onSelect);
+    };
   }, [api]);
 
+  // Autoplay
   useEffect(() => {
     if (!api || !hasMultipleImages) return;
 
-    const startAutoplay = () => {
-      autoplayRef.current = setInterval(() => {
-        if (api.canScrollNext()) {
-          api.scrollNext();
-        } else {
-          api.scrollTo(0);
-        }
-      }, 3000);
-    };
+    autoplayRef.current = setInterval(() => {
+      api.canScrollNext() ? api.scrollNext() : api.scrollTo(0);
+    }, 3000);
 
-    startAutoplay();
     return () => {
-      if (autoplayRef.current) {
-        clearInterval(autoplayRef.current);
-      }
+      if (autoplayRef.current) clearInterval(autoplayRef.current);
     };
   }, [api, hasMultipleImages]);
 
-  // Sync localQuantity with cart
+  // Sync local quantity with cart
   useEffect(() => {
-    if (cartItem?.product_quantity) {
-      setLocalQuantity(cartItem.product_quantity);
-    } else {
-      setLocalQuantity(1);
-    }
+    setLocalQuantity(cartItem?.product_quantity || 1);
   }, [cartItem]);
 
+  // Server sync function
   const syncToServer = useCallback(
     async (quantity: number) => {
       if (isRequestInFlightRef.current) {
@@ -125,13 +118,7 @@ export default function ProductCard({
       setIsSyncing(true);
 
       try {
-        await updateCartMutation.mutateAsync({
-          productId: id,
-          quantity: quantity,
-        });
-
-        isRequestInFlightRef.current = false;
-        setIsSyncing(false);
+        await updateCartMutation.mutateAsync({ productId: id, quantity });
         await refetchCart();
 
         if (pendingQuantityRef.current !== null) {
@@ -141,9 +128,13 @@ export default function ProductCard({
         }
       } catch (error) {
         console.error("Sync failed:", error);
+        setLocalQuantity(cartItem?.product_quantity || 1);
+        toast.error("Failed to update quantity", {
+          description: "Please try again",
+        });
+      } finally {
         isRequestInFlightRef.current = false;
         setIsSyncing(false);
-        setLocalQuantity(cartItem?.product_quantity || 1);
       }
     },
     [id, updateCartMutation, cartItem, refetchCart]
@@ -151,24 +142,17 @@ export default function ProductCard({
 
   // Debounced sync
   useEffect(() => {
-    if (!isInCart) return;
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    if (localQuantity === (cartItem?.product_quantity || 1)) {
+    if (!isInCart || localQuantity === (cartItem?.product_quantity || 1))
       return;
-    }
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
 
     debounceTimerRef.current = setTimeout(() => {
       syncToServer(localQuantity);
     }, 800);
 
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, [localQuantity, isInCart, cartItem, syncToServer]);
 
@@ -180,14 +164,11 @@ export default function ProductCard({
       toggleFavorite(
         { productId: id, isFavorite },
         {
-          onSuccess: (data) => {
+          onSuccess: (data) =>
             toast.success(
               data.wasAdded ? "Added to favorites" : "Removed from favorites"
-            );
-          },
-          onError: () => {
-            toast.error("Error. Try again");
-          },
+            ),
+          onError: () => toast.error("Error. Try again"),
         }
       );
     },
@@ -199,6 +180,16 @@ export default function ProductCard({
       e.preventDefault();
       e.stopPropagation();
 
+      // Stock kontrolü
+      if (localQuantity > availableStock) {
+        toast.error("Insufficient Stock", {
+          description: `Only ${availableStock} items available in stock`,
+          duration: 4000,
+        });
+        setLocalQuantity(availableStock);
+        return;
+      }
+
       setIsSyncing(true);
 
       try {
@@ -206,58 +197,51 @@ export default function ProductCard({
           productId: id,
           quantity: localQuantity,
         });
-
         await refetchCart();
-        setIsSyncing(false);
-
         toast.success("Added to cart", {
           description: `${name} has been added to your cart`,
         });
       } catch (error) {
         console.error("Add to cart error:", error);
-        setIsSyncing(false);
         toast.error("Failed to add to cart");
+      } finally {
+        setIsSyncing(false);
       }
     },
-    [id, name, localQuantity, addToCartMutation, refetchCart]
+    [id, name, localQuantity, availableStock, addToCartMutation, refetchCart]
   );
 
-  const handleQuantityIncrease = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
+  const handleQuantityChange = useCallback(
+    (e: MouseEvent<HTMLButtonElement>, delta: number) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (localQuantity >= availableStock) {
-        toast.error("Stock limit reached", {
-          description: `Only ${availableStock} items available`,
+      const newQuantity = localQuantity + delta;
+
+      if (newQuantity < 1) return;
+
+      if (newQuantity > availableStock) {
+        toast.error("Stock Limit Reached", {
+          description: `Maximum ${availableStock} items available`,
+          duration: 4000,
         });
         return;
       }
 
-      setLocalQuantity((prev) => prev + 1);
+      setLocalQuantity(newQuantity);
     },
     [localQuantity, availableStock]
   );
 
-  const handleQuantityDecrease = useCallback(
-    (e: MouseEvent<HTMLButtonElement>) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      if (localQuantity <= 1) return;
-      setLocalQuantity((prev) => prev - 1);
-    },
-    [localQuantity]
-  );
-
-  const handleCardClick = (e: MouseEvent<HTMLAnchorElement>) => {
+  const handleCardClick = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
     if (
       target.closest("button") ||
       target.closest('[data-carousel-control="true"]')
     ) {
-      e.preventDefault();
+      return;
     }
+    router.push(`/product/${id}`);
   };
 
   const handleNavClick = (e: MouseEvent, action: () => void) => {
@@ -267,32 +251,27 @@ export default function ProductCard({
   };
 
   return (
-    <a
-      href={`/product/${id}`}
-      className="no-underline flex justify-center"
+    <div
       onClick={handleCardClick}
+      className="flex justify-center cursor-pointer"
     >
       <Card
-        className="relative gap-2 border-none shadow-none p-0 w-full overflow-hidden rounded-2xl cursor-pointer"
+        className="relative gap-2 border-none shadow-none p-0 w-full overflow-hidden rounded-2xl"
         style={{ height, maxWidth: width }}
       >
         <div className="relative w-full h-[260px] group">
           <Carousel
-            opts={{
-              align: "start",
-              loop: true,
-              watchDrag: false,
-            }}
+            opts={{ align: "start", loop: true, watchDrag: false }}
             setApi={setApi}
             className="w-full h-full"
           >
             <CarouselContent className="h-[260px] ml-0">
-              {images.map((image, index) => (
-                <CarouselItem key={index} className="h-[260px] pl-0">
+              {images.map((image, idx) => (
+                <CarouselItem key={idx} className="h-[260px] pl-0">
                   <div className="h-full flex items-center justify-center">
                     <img
                       src={image}
-                      alt={`${name} - ${index + 1}`}
+                      alt={`${name} - ${idx + 1}`}
                       className="max-w-full max-h-full object-contain"
                       draggable="false"
                     />
@@ -317,7 +296,6 @@ export default function ProductCard({
             )}
           </Carousel>
 
-          {/* Favorite button */}
           <button
             onClick={handleFavorite}
             disabled={isFavoriteToggling || isFavoriteLoading}
@@ -325,29 +303,31 @@ export default function ProductCard({
           >
             {isFavoriteLoading ? (
               <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-            ) : isFavorite ? (
-              <Heart className="w-5 h-5 text-red-500 fill-red-500" />
             ) : (
-              <Heart className="w-5 h-5 text-gray-700" />
+              <Heart
+                className={`w-5 h-5 ${
+                  isFavorite ? "text-red-500 fill-red-500" : "text-gray-700"
+                }`}
+              />
             )}
           </button>
 
           {hasMultipleImages && (
             <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
-              {images.map((_, index) => (
+              {images.map((_, idx) => (
                 <button
-                  key={index}
+                  key={idx}
                   data-carousel-control="true"
-                  onClick={(e) => handleNavClick(e, () => api?.scrollTo(index))}
+                  onClick={(e) => handleNavClick(e, () => api?.scrollTo(idx))}
                   className={`h-1.5 rounded-full transition-all ${
-                    index === current ? "w-6 bg-white" : "w-1.5 bg-white/60"
+                    idx === current ? "w-6 bg-white" : "w-1.5 bg-white/60"
                   }`}
                 />
               ))}
             </div>
           )}
 
-          {labels?.length > 0 && (
+          {labels.length > 0 && (
             <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
               {labels.map((label, idx) => (
                 <Badge
@@ -361,7 +341,6 @@ export default function ProductCard({
             </div>
           )}
 
-          {/* Out of Stock Overlay */}
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
               <Badge variant="secondary" className="text-sm font-bold">
@@ -383,14 +362,13 @@ export default function ProductCard({
           </p>
         </CardContent>
 
-        {/* Cart controls - show on hover if button enabled */}
         {button && !isOutOfStock && (
-          <div className=" px-1">
+          <div className="px-1">
             {!isInCart ? (
               <Button
                 onClick={handleAddToCart}
                 disabled={isSyncing}
-                className="w-full rounded-lg gap-2 bg-[#005bff] hover:bg-[#0041c4] cursor-pointer"
+                className="w-full rounded-lg gap-2 bg-[#005bff] hover:bg-[#0041c4]"
                 size="sm"
               >
                 {isSyncing ? (
@@ -410,9 +388,9 @@ export default function ProductCard({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={handleQuantityDecrease}
+                  onClick={(e) => handleQuantityChange(e, -1)}
                   disabled={isSyncing || localQuantity <= 1}
-                  className="rounded-lg cursor-pointer h-9 w-9 shrink-0"
+                  className="rounded-lg h-9 w-9 shrink-0"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -425,9 +403,9 @@ export default function ProductCard({
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={handleQuantityIncrease}
+                  onClick={(e) => handleQuantityChange(e, 1)}
                   disabled={localQuantity >= availableStock || isSyncing}
-                  className="rounded-lg cursor-pointer h-9 w-9 shrink-0"
+                  className="rounded-lg h-9 w-9 shrink-0"
                 >
                   <Plus className="h-4 w-4 text-[#005bff]" />
                 </Button>
@@ -436,6 +414,6 @@ export default function ProductCard({
           </div>
         )}
       </Card>
-    </a>
+    </div>
   );
 }

@@ -146,7 +146,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-6">
+    <div className="container mx-auto px-2 md:px-4 lg:px-6 mb-18">
       <h1 className="text-3xl font-bold mb-6 pt-3">{t("cart")}</h1>
 
       <div className="flex flex-col md:flex-row gap-6">

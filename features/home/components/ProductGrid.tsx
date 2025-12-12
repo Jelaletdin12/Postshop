@@ -1,9 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import ProductCard from "@/features/home/components/ProductCard";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useCollectionProducts } from "@/lib/hooks";
 import type { Collection } from "@/lib/types/api";
 
@@ -14,48 +12,42 @@ type Props = {
 
 export default function CollectionSection({ collection, locale }: Props) {
   const router = useRouter();
-  const [shouldRender, setShouldRender] = useState(true);
-
   const {
     data: productsData,
     isLoading,
     isError,
-  } = useCollectionProducts(collection.id, { enabled: shouldRender });
-
-  useEffect(() => {
-    if (!isLoading && productsData) {
-      const hasProducts = productsData.data && productsData.data.length > 0;
-      setShouldRender(hasProducts);
-    }
-  }, [isLoading, productsData]);
-
-  if (!isLoading && (!productsData?.data || productsData.data.length === 0)) {
-    return null;
-  }
+  } = useCollectionProducts(collection.id);
 
   const handleTitleClick = () => {
     router.push(`/${locale}/collections/${collection.id}`);
   };
 
+  // Hide section if no products
+  if (!isLoading && (!productsData?.data || productsData.data.length === 0)) {
+    return null;
+  }
+
   if (isLoading) {
     return (
       <section className="bg-white rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-6 w-6 rounded-full" />
+          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
+          <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="w-full h-64 rounded-lg" />
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="w-full h-[260px] bg-gray-200 rounded-xl animate-pulse" />
+              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse mx-2" />
+              <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse mx-2" />
+            </div>
           ))}
         </div>
       </section>
     );
   }
 
-  if (isError) {
-    return null;
-  }
+  if (isError) return null;
 
   const displayProducts = productsData?.data.slice(0, 10) || [];
 
@@ -75,11 +67,11 @@ export default function CollectionSection({ collection, locale }: Props) {
         {displayProducts.map((product) => {
           const allImages = product.media
             ?.map(
-              (media) =>
-                media.images_800x800 ||
-                media.images_720x720 ||
-                media.images_400x400 ||
-                media.thumbnail
+              (m) =>
+                m.images_800x800 ||
+                m.images_720x720 ||
+                m.images_400x400 ||
+                m.thumbnail
             )
             .filter(Boolean) || ["/placeholder-product.jpg"];
 
@@ -101,7 +93,6 @@ export default function CollectionSection({ collection, locale }: Props) {
               price_color="#0059ff"
               height={360}
               width={250}
-              
             />
           );
         })}

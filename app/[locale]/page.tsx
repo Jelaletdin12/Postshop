@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import HomePage from "@/features/home/components/HomePage";
 
-export const revalidate = 300;
+const META = {
+  ru: {
+    title: "Интернет магазин - Лучшие товары по низким ценам",
+    description: "Качественные товары с быстрой доставкой по всей стране",
+  },
+  tm: {
+    title: "Post shop - Iň gowy harytlar, amatly bahada",
+    description:
+      "Ýokary hilli harytlar. Elektronika, eşik, arassaçylyk, sport, kosmetika",
+  },
+} as const;
 
 export async function generateMetadata({
   params,
@@ -9,19 +19,7 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-
-  const meta = {
-    ru: {
-      title: "Интернет магазин - Лучшие товары по низким ценам",
-      description: "Качественные товары с быстрой доставкой по всей стране",
-    },
-    tm: {
-      title: "Satym dükanı - Iň gowy harytlar aşak bahada",
-      description: "Suw harytly towarnama. Elektrika, eşik, ev we bag",
-    },
-  };
-
-  const { title, description } = meta[locale as keyof typeof meta] || meta.ru;
+  const { title, description } = META[locale as keyof typeof META] || META.ru;
 
   return {
     title,

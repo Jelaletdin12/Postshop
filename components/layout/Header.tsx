@@ -11,9 +11,11 @@ import SearchBar from "./ui/SearchBar";
 import AuthDialog from "./ui/AuthDialog";
 import ActionButtons from "./ui/ActionButtons";
 import LanguageSelector from "./ui/LanguageSelector";
+import MobileBottomNav from "./MobileBar";
 import { useAuthStatus, useLogout } from "@/lib/hooks/useAuth";
 import { useTranslations } from "next-intl";
 import { CategoryIcon } from "../icons";
+import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   locale?: string;
@@ -25,6 +27,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const t = useTranslations();
+  const router = useRouter();
 
   const { isAuthenticated, isLoading } = useAuthStatus();
   const { mutate: logout, isPending: isLoggingOut } = useLogout();
@@ -52,6 +55,10 @@ export default function Header({ locale = "ru" }: HeaderProps) {
   const closeCategoryMenu = useCallback(() => {
     setIsCategoryOpen(false);
   }, []);
+
+  const handleProfileClick = useCallback(() => {
+    router.push(`/${locale}/me`);
+  }, [router, locale]);
 
   if (!isClient) return null;
 
@@ -103,8 +110,6 @@ export default function Header({ locale = "ru" }: HeaderProps) {
               locale={locale}
             />
 
-       
-
             <ActionButtons
               isAuthenticated={isAuthenticated}
               onAuthClick={handleAuthClick}
@@ -124,6 +129,21 @@ export default function Header({ locale = "ru" }: HeaderProps) {
       />
 
       <AuthDialog isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+
+      <MobileBottomNav
+        locale={locale}
+        isAuthenticated={isAuthenticated}
+        translations={{
+          catalog: t("common.catalog"),
+          favorites: t("common.favorites"),
+          orders: t("common.orders"),
+          cart: t("common.cart"),
+          login: t("common.login"),
+          profile: t("profile"),
+        }}
+        onLoginClick={() => setIsLoginOpen(true)}
+        onProfileClick={handleProfileClick}
+      />
     </>
   );
 }

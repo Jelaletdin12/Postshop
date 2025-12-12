@@ -2,6 +2,7 @@
 import { useRouter, usePathname } from "next/navigation";
 import Image from "next/image";
 import { useLocale } from "next-intl";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Select,
   SelectContent,
@@ -26,13 +27,18 @@ const LANGUAGES: Language[] = [
 export default function LanguageSelector() {
   const locale = useLocale();
   const router = useRouter();
-  const pathname = usePathname(); // Şu anki path'i al
+  const pathname = usePathname();
+  const queryClient = useQueryClient();
 
-  const handleLanguageChange = (newLocale: string) => {
-    // Mevcut path'i yeni locale ile değiştir
-    // Örnek: /tm/cart -> /ru/cart
+  const handleLanguageChange = async (newLocale: string) => {
+    if (typeof window !== "undefined") {
+      (window as any).i18n = { language: newLocale };
+    }
+
+    queryClient.invalidateQueries();
+
     const currentPath = pathname.replace(`/${locale}`, "");
-    router.push(`/${newLocale}${currentPath}`);
+    router.replace(`/${newLocale}${currentPath}`);
   };
 
   return (

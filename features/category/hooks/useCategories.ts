@@ -47,7 +47,7 @@ export function useCategoryProducts(
         {
           params: { 
             page: options?.page || 1,
-            limit: options?.limit 
+            per_page: options?.limit 
           },
         }
       )
@@ -123,7 +123,7 @@ export function useFilteredCategoryProducts(
     queryFn: async () => {
       const params: Record<string, any> = {
         page: filters.page || 1,
-        limit: filters.limit || 6,
+        per_page: filters.limit || 6,
       }
 
       if (filters.brands && filters.brands.length > 0) {
@@ -166,10 +166,10 @@ export function useAllCategoryProductsPaginated(
   }
 ) {
   const page = options?.page || 1
-  const limit = options?.limit || 6
+  const per_page = options?.limit || 6
 
   return useQuery({
-    queryKey: ["category", category?.id, "paginated-products", page, limit],
+    queryKey: ["category", category?.id, "paginated-products", page, per_page],
     queryFn: async () => {
       if (!category) {
         return {
@@ -186,7 +186,7 @@ export function useAllCategoryProductsPaginated(
         category.children.forEach((child) => categoryIds.push(child.id))
       }
 
-      const perCategoryLimit = Math.ceil(limit / categoryIds.length)
+      const perCategoryLimit = Math.ceil(per_page / categoryIds.length)
       const hasMoreByCategory: Record<number, boolean> = {}
       let allPageProducts: Product[] = []
 
@@ -196,7 +196,7 @@ export function useAllCategoryProductsPaginated(
           {
             params: {
               page,
-              limit: perCategoryLimit
+              per_page: perCategoryLimit
             }
           }
         )

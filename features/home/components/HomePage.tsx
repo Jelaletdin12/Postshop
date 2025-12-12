@@ -1,6 +1,6 @@
 "use client";
 import { useLocale, useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import HeroCarousel from "./Carousel";
 import CategoryGrid from "./CategoryGrid";
@@ -15,7 +15,6 @@ import {
 export default function HomePage() {
   const locale = useLocale();
   const t = useTranslations("common");
-  const [mounted, setMounted] = useState(false);
   const [visibleCount, setVisibleCount] = useState(10);
 
   const {
@@ -23,19 +22,15 @@ export default function HomePage() {
     isLoading: categoriesLoading,
     isError: categoriesError,
   } = useCategories();
-
   const { data: carousels, isLoading: carouselsLoading } = useCarousels();
-
   const {
     data: collections,
     isLoading: collectionsLoading,
     isError: collectionsError,
   } = useCollections();
 
-  // CRITICAL: Prefetch favorites on mount to avoid loading states
-  const { isLoading: favoritesLoading } = useFavorites();
-
-  useEffect(() => setMounted(true), []);
+  // Prefetch favorites
+  useFavorites();
 
   const loadMore = () => {
     if (collections && visibleCount < collections.length) {
@@ -43,21 +38,15 @@ export default function HomePage() {
     }
   };
 
-  if (!mounted) return <div className="p-8">Loading...</div>;
-
   const carouselItems =
-    carousels?.map((carousel) => ({
-      title: carousel.title || "",
-      image: carousel.image || carousel.thumbnail,
-      url: carousel.link || null,
+    carousels?.map((c) => ({
+      title: c.title || "",
+      image: c.image || c.thumbnail,
+      url: c.link || null,
     })) || [];
 
   const visibleCollections = collections?.slice(0, visibleCount) || [];
   const hasMore = collections ? visibleCount < collections.length : false;
-
-  // Show loading indicator while favorites are being fetched
-  const showFavoritesLoading =
-    favoritesLoading && !categoriesLoading && !collectionsLoading;
 
   return (
     <div className="px-2 md:px-4 lg:px-6 pt-4 pb-12 space-y-8 max-w-[1504px] mx-auto">
@@ -73,13 +62,6 @@ export default function HomePage() {
         title={t("categories")}
       />
 
-      {showFavoritesLoading && (
-        <div className="text-center py-4">
-          <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-blue-600 border-r-transparent"></div>
-          <p className="text-gray-500 text-sm mt-2">Loading favorites...</p>
-        </div>
-      )}
-
       {collectionsError ? (
         <section className="bg-white rounded-2xl shadow-sm p-6">
           <p className="text-red-600">
@@ -89,17 +71,18 @@ export default function HomePage() {
       ) : collectionsLoading ? (
         <div className="space-y-8">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl shadow-sm p-6">
+            <section key={i} className="bg-white rounded-2xl shadow-sm p-6">
               <div className="h-8 bg-gray-200 rounded w-48 mb-4 animate-pulse" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {Array.from({ length: 4 }).map((_, j) => (
-                  <div
-                    key={j}
-                    className="h-64 bg-gray-200 rounded-lg animate-pulse"
-                  />
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                {Array.from({ length: 5 }).map((_, j) => (
+                  <div key={j} className="space-y-2">
+                    <div className="w-full h-[260px] bg-gray-200 rounded-xl animate-pulse" />
+                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+                    <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
+                  </div>
                 ))}
               </div>
-            </div>
+            </section>
           ))}
         </div>
       ) : (
@@ -109,13 +92,13 @@ export default function HomePage() {
           hasMore={hasMore}
           loader={
             <div className="text-center py-8">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
-              <p className="text-gray-500 mt-2">Loading more collections...</p>
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent" />
+              <p className="text-gray-500 mt-2">{t("loading")}</p>
             </div>
           }
           endMessage={
             <div className="text-center py-8">
-              <p className="text-gray-600">✓ All collections loaded</p>
+              <p className="text-gray-600">✓ {t("all_collections_loaded")}</p>
             </div>
           }
           scrollThreshold={0.8}
