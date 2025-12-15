@@ -1,30 +1,12 @@
 "use client";
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import Image from "next/image";
-import Link from "next/link";
-import {
-  Minus,
-  Plus,
-  Heart,
-  ShoppingCart,
-  Store,
-  Loader2,
-  AlertTriangle,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useProductsBySlug } from "@/features/products/hooks/useProducts";
+  useProductsBySlug,
+  useRelatedProducts,
+  useSubmitReview,
+} from "@/features/products/hooks/useProducts";
 import {
   useAddToCart,
   useUpdateCartItemQuantity,
@@ -33,6 +15,13 @@ import {
 } from "@/features/cart/hooks/useCart";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { ProductImageGallery } from "./ProductImageGallery";
+import { ProductInfoCard } from "./ProductInfoCard";
+import { ProductPurchaseCard } from "./ProductPurchaseCard";
+import { ProductReviewsSection } from "./ProductReviewsSection";
+import { RelatedProductsSection } from "./RelatedProductsSection";
+import { ReviewModal } from "./ReviewModal";
+import { StockLimitModal } from "./StockLimitModal";
 
 interface ProductDetailProps {
   slug: string;
@@ -47,12 +36,12 @@ interface PendingUpdate {
 }
 
 export default function ProductPageContent({ slug }: ProductDetailProps) {
-  const [selectedImage, setSelectedImage] = useState(0);
   const [localQuantity, setLocalQuantity] = useState(1);
   const [isFavorite, setIsFavorite] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
 
   const t = useTranslations();
 
@@ -63,24 +52,30 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   const retryTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const syncToServerRef = useRef<((quantity: number) => void) | null>(null);
   const retrySyncRef = useRef<((quantity: number) => void) | null>(null);
-  const autoplayTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const {
     data: product,
     isLoading: productLoading,
     error,
+    refetch: refetchProduct,
   } = useProductsBySlug(slug);
+
   const { data: cartData, refetch: refetchCart } = useCart();
+  
+  const { data: relatedProducts } = useRelatedProducts(product?.id || 0, {
+    enabled: !!product?.id,
+  });
+
   const addToCartMutation = useAddToCart();
   const updateCartMutation = useUpdateCartItemQuantity();
   const removeFromCartMutation = useRemoveFromCart();
+  const submitReviewMutation = useSubmitReview();
 
   const cartItem = useMemo(
     () => cartData?.data?.find((item: any) => item.product?.id === product?.id),
     [cartData, product]
   );
   const isInCart = !!cartItem;
-
   const availableStock = product?.stock || 0;
 
   const imageUrls = useMemo(
@@ -91,42 +86,11 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     [product]
   );
 
-  // Auto-play carousel every 3 seconds
-  useEffect(() => {
-    if (imageUrls.length <= 1) return;
-
-    const startAutoplay = () => {
-      autoplayTimerRef.current = setInterval(() => {
-        setSelectedImage((prev) => (prev + 1) % imageUrls.length);
-      }, 3000);
-    };
-
-    startAutoplay();
-
-    return () => {
-      if (autoplayTimerRef.current) {
-        clearInterval(autoplayTimerRef.current);
-      }
-    };
-  }, [imageUrls.length]);
-
-  // Reset autoplay timer when user manually selects image
-  const handleImageSelect = useCallback(
-    (index: number) => {
-      setSelectedImage(index);
-
-      // Reset autoplay timer
-      if (autoplayTimerRef.current) {
-        clearInterval(autoplayTimerRef.current);
-      }
-
-      if (imageUrls.length > 1) {
-        autoplayTimerRef.current = setInterval(() => {
-          setSelectedImage((prev) => (prev + 1) % imageUrls.length);
-        }, 3000);
-      }
-    },
-    [imageUrls.length]
+  // ✅ CORRECT - Use reviews from product data
+  const reviews = useMemo(() => product?.reviews_resources || [], [product]);
+  const averageRating = useMemo(
+    () => (product?.reviews?.rating ? parseFloat(product.reviews.rating) : 0),
+    [product]
   );
 
   useEffect(() => {
@@ -138,19 +102,16 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   const savePendingUpdate = useCallback(
     (quantity: number) => {
       if (!product?.id) return;
-
       try {
         const stored = sessionStorage.getItem(PENDING_PRODUCT_UPDATES_KEY);
         const pending: Record<number, PendingUpdate> = stored
           ? JSON.parse(stored)
           : {};
-
         pending[product.id] = {
           quantity,
           timestamp: Date.now(),
           retryCount: retryCountRef.current,
         };
-
         sessionStorage.setItem(
           PENDING_PRODUCT_UPDATES_KEY,
           JSON.stringify(pending)
@@ -164,13 +125,11 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
 
   const clearPendingUpdate = useCallback(() => {
     if (!product?.id) return;
-
     try {
       const stored = sessionStorage.getItem(PENDING_PRODUCT_UPDATES_KEY);
       if (stored) {
         const pending: Record<number, PendingUpdate> = JSON.parse(stored);
         delete pending[product.id];
-
         if (Object.keys(pending).length === 0) {
           sessionStorage.removeItem(PENDING_PRODUCT_UPDATES_KEY);
         } else {
@@ -225,7 +184,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
       setSyncError(false);
 
       try {
-        // If quantity is 0, remove from cart
         if (quantity === 0) {
           await removeFromCartMutation.mutateAsync(product.id);
           toast.success(t("removed_from_cart"));
@@ -245,7 +203,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
         setIsSyncing(false);
         retryCountRef.current = 0;
         clearPendingUpdate();
-
         await refetchCart();
 
         if (pendingQuantityRef.current !== null) {
@@ -340,7 +297,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-      if (autoplayTimerRef.current) clearInterval(autoplayTimerRef.current);
     };
   }, []);
 
@@ -356,7 +312,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
       });
 
       await refetchCart();
-
       setIsSyncing(false);
 
       toast.success(t("added_to_cart"), {
@@ -376,20 +331,48 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
       setShowStockModal(true);
       return;
     }
-
     setLocalQuantity((prev) => prev + 1);
   }, [localQuantity, availableStock]);
 
   const handleQuantityDecrease = useCallback(() => {
-    // Allow decreasing to 0 to remove from cart
     if (localQuantity <= 0) return;
-
     setLocalQuantity((prev) => prev - 1);
   }, [localQuantity]);
 
   const handleToggleFavorite = useCallback(() => {
     setIsFavorite(!isFavorite);
   }, [isFavorite]);
+
+  const handleSubmitReview = useCallback(
+    async (rating: number, text: string) => {
+      if (!product?.id || rating === 0 || !text.trim()) {
+        toast.error(t("error"), {
+          description: "Please provide rating and review text",
+        });
+        return;
+      }
+
+      try {
+        await submitReviewMutation.mutateAsync({
+          productId: product.id,
+          rating: rating,
+          title: text,
+          source: "site",
+        });
+
+        // ✅ Refetch product to get updated reviews
+        await refetchProduct();
+        
+        toast.success("Review submitted successfully!");
+        setShowReviewModal(false);
+      } catch (error) {
+        toast.error(t("error"), {
+          description: "Failed to submit review",
+        });
+      }
+    },
+    [product?.id, submitReviewMutation, refetchProduct, t]
+  );
 
   const loadingSkeleton = useMemo(
     () => (
@@ -413,9 +396,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     []
   );
 
-  if (productLoading) {
-    return loadingSkeleton;
-  }
+  if (productLoading) return loadingSkeleton;
 
   if (error || !product) {
     return (
@@ -434,318 +415,67 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     <>
       <div className="px-2 md:px-4 lg:px-6 rounded-lg mb-18 space-y-8 max-w-[1504px] mx-auto">
         <div className="flex flex-col lg:flex-row gap-8 rounded-b-lg bg-white p-4">
-          <div className="flex-1 max-w-2xl">
-            <div className="relative">
-              <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white">
-                {imageUrls.length > 0 ? (
-                  <Image
-                    src={imageUrls[selectedImage]}
-                    alt={product.name}
-                    fill
-                    className="object-contain"
-                    priority
-                  />
-                ) : (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    {t("no_image")}
-                  </div>
-                )}
-              </div>
+          <ProductImageGallery
+            images={imageUrls}
+            productName={product.name}
+            noImageText={t("no_image")}
+          />
 
-              {imageUrls.length > 1 && (
-                <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
-                  {imageUrls.map((image, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleImageSelect(index)}
-                      className={`relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
-                        selectedImage === index
-                          ? "border-primary ring-2 ring-primary/20"
-                          : "border-gray-200 hover:border-gray-300"
-                      }`}
-                    >
-                      <Image
-                        src={image}
-                        alt={`${product.name} ${index + 1}`}
-                        fill
-                        className="object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
+          <ProductInfoCard
+            brandName={product.brand?.name}
+            stock={product.stock}
+            barcode={product.barcode}
+            colour={product.colour}
+            properties={product.properties}
+            description={product.description}
+            averageRating={averageRating}
+            reviewsCount={product.reviews?.count || 0}
+            t={t}
+          />
 
-          <div className="flex-1 space-y-6 bg-white">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-            </div>
-
-            <Card className="p-4 rounded-xl border-gray-200">
-              <h3 className="text-xl font-semibold mb-4">
-                {t("about_product")}
-              </h3>
-              <div className="space-y-3">
-                {product.brand?.name && (
-                  <>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-500">{t("brands")}</span>
-                      <span className="font-medium">{product.brand.name}</span>
-                    </div>
-                    <Separator />
-                  </>
-                )}
-
-                {product.stock !== undefined && (
-                  <>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-500">{t("stock")}</span>
-                      <span
-                        className={`font-medium ${
-                          product.stock === 0
-                            ? "text-red-500"
-                            : product.stock <= 5
-                            ? "text-orange-600"
-                            : "text-green-600"
-                        }`}
-                      >
-                        {product.stock === 0
-                          ? t("out_of_stock")
-                          : product.stock <= 5
-                          ? `${t("only_left", { count: product.stock })}`
-                          : product.stock}
-                      </span>
-                    </div>
-                    <Separator />
-                  </>
-                )}
-
-                {product.barcode && (
-                  <>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-500">{t("barcode")}</span>
-                      <span className="font-mono text-sm">
-                        {product.barcode}
-                      </span>
-                    </div>
-                    <Separator />
-                  </>
-                )}
-
-                {product.colour && (
-                  <>
-                    <div className="flex justify-between items-center py-2">
-                      <span className="text-gray-500">{t("color")}</span>
-                      <span className="font-medium">{product.colour}</span>
-                    </div>
-                    <Separator />
-                  </>
-                )}
-
-                {product.properties && product.properties.length > 0 && (
-                  <>
-                    {product.properties.map(
-                      (prop, idx) =>
-                        prop.value && (
-                          <div key={idx}>
-                            <div className="flex justify-between items-center py-2">
-                              <span className="text-gray-500">{prop.name}</span>
-                              <span className="font-medium">{prop.value}</span>
-                            </div>
-                            {idx < product.properties.length - 1 && (
-                              <Separator />
-                            )}
-                          </div>
-                        )
-                    )}
-                  </>
-                )}
-              </div>
-            </Card>
-
-            {product.description && (
-              <Card className="p-4 rounded-xl border-gray-200">
-                <h3 className="text-xl font-semibold mb-3">
-                  {t("product_description")}
-                </h3>
-                <div
-                  className="text-gray-700 leading-relaxed prose prose-sm max-w-none"
-                  dangerouslySetInnerHTML={{ __html: product.description }}
-                />
-              </Card>
-            )}
-          </div>
-
-          <div className="lg:w-[380px] space-y-4">
-            <Card className="p-6 rounded-xl ">
-              <div className="flex justify-between items-start mb-6">
-                <span className="text-lg text-gray-500">{t("price")}:</span>
-                <div className="flex flex-col items-end">
-                  <span className="text-3xl font-bold text-primary">
-                    {product.price_amount} TMT
-                  </span>
-                  {product.old_price_amount &&
-                    parseFloat(product.old_price_amount) > 0 && (
-                      <span className="text-lg text-gray-400 line-through">
-                        {product.old_price_amount} TMT
-                      </span>
-                    )}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                {isInCart ? (
-                  <>
-                    <Link href="/cart">
-                      <Button
-                        size="lg"
-                        className="w-full rounded-lg text-lg font-bold bg-green-600 hover:bg-green-700 mb-4"
-                      >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        {t("go_to_cart")}
-                      </Button>
-                    </Link>
-
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleQuantityDecrease}
-                        disabled={isSyncing}
-                        className={`rounded-lg h-12 w-12 ${
-                          isSyncing ? "opacity-70" : ""
-                        }`}
-                      >
-                        <Minus className="h-5 w-5" />
-                      </Button>
-                      <div className="flex-1 text-center font-semibold text-xl border rounded-xl h-12 flex items-center justify-center relative">
-                        {localQuantity}
-
-                        {syncError && (
-                          <span
-                            className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"
-                            title="Sync error"
-                          />
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleQuantityIncrease}
-                        disabled={localQuantity >= availableStock || isSyncing}
-                        className={`rounded-lg h-12 w-12 ${
-                          isSyncing ? "opacity-70" : ""
-                        } ${
-                          localQuantity >= availableStock
-                            ? "opacity-50 cursor-not-allowed"
-                            : ""
-                        }`}
-                      >
-                        <Plus className="h-5 w-5" />
-                      </Button>
-
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={handleToggleFavorite}
-                        className={`rounded-lg h-12 w-12 transition-all border cursor-pointer ${
-                          isFavorite
-                            ? "bg-[#F0F8FF] border-blue-300 hover:bg-blue-100"
-                            : "hover:bg-gray-50"
-                        }`}
-                      >
-                        <Heart
-                          className={`h-6! w-6! transition-all ${
-                            isFavorite
-                              ? "fill-[#005bff] text-[#005bff]"
-                              : "text-[#005bff]"
-                          }`}
-                        />
-                      </Button>
-                    </div>
-                  </>
-                ) : (
-                  <Button
-                    size="lg"
-                    onClick={handleAddToCart}
-                    disabled={isSyncing || product.stock === 0}
-                    className="w-full rounded-lg text-lg font-bold bg-[#005bff] hover:bg-[#0041c4] cursor-pointer"
-                  >
-                    {isSyncing ? (
-                      <>
-                        <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                        {t("adding")}
-                      </>
-                    ) : (
-                      <>
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        {product.stock === 0
-                          ? t("out_of_stock")
-                          : t("add_to_cart")}
-                      </>
-                    )}
-                  </Button>
-                )}
-              </div>
-            </Card>
-
-            {product.channel && product.channel.length > 0 && (
-              <Card className="p-6 rounded-xl">
-                <div className="flex items-center gap-4 mb-4">
-                  <Avatar className="w-14 h-14 bg-primary/10">
-                    <AvatarFallback className="bg-transparent">
-                      <Store className="h-6 w-6 text-primary" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm text-gray-500">{t("store")}</p>
-                    <h4 className="text-lg font-bold">
-                      {product.channel[0].name}
-                    </h4>
-                  </div>
-                </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="w-full rounded-lg"
-                >
-                  {t("write_to_store")}
-                </Button>
-              </Card>
-            )}
-          </div>
+          <ProductPurchaseCard
+            price={product.price_amount}
+            oldPrice={product.old_price_amount}
+            isInCart={isInCart}
+            localQuantity={localQuantity}
+            availableStock={availableStock}
+            isSyncing={isSyncing}
+            syncError={syncError}
+            isFavorite={isFavorite}
+            productStock={product.stock}
+            channelName={product.channel?.[0]?.name}
+            onAddToCart={handleAddToCart}
+            onQuantityIncrease={handleQuantityIncrease}
+            onQuantityDecrease={handleQuantityDecrease}
+            onToggleFavorite={handleToggleFavorite}
+            t={t}
+          />
         </div>
+
+        <ProductReviewsSection
+          reviews={reviews}
+          averageRating={averageRating}
+          isLoading={false}
+          onWriteReview={() => setShowReviewModal(true)}
+        />
+
+        <RelatedProductsSection products={relatedProducts || []} />
       </div>
 
-      <Dialog open={showStockModal} onOpenChange={setShowStockModal}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center justify-center mb-4">
-              <div className="rounded-full bg-orange-100 p-3">
-                <AlertTriangle className="h-6 w-6 text-orange-600" />
-              </div>
-            </div>
-            <DialogTitle className="text-center text-xl">
-              {t("stock_limit_title")}
-            </DialogTitle>
-            <DialogDescription className="text-center text-base pt-2">
-              {t("stock_limit_message", {
-                product: product.name,
-                stock: availableStock,
-              })}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex justify-center mt-4">
-            <Button
-              onClick={() => setShowStockModal(false)}
-              className="w-full rounded-lg"
-            >
-              {t("understood")}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <StockLimitModal
+        open={showStockModal}
+        onOpenChange={setShowStockModal}
+        productName={product.name}
+        availableStock={availableStock}
+        t={t}
+      />
+
+      <ReviewModal
+        open={showReviewModal}
+        onOpenChange={setShowReviewModal}
+        onSubmit={handleSubmitReview}
+        isSubmitting={submitReviewMutation.isPending}
+      />
     </>
   );
 }

@@ -19,7 +19,7 @@ export default function CollectionSection({ collection, locale }: Props) {
   } = useCollectionProducts(collection.id);
 
   const handleTitleClick = () => {
-    router.push(`/${locale}/collections/${collection.id}`);
+    router.push(`/collections/${collection.slug}`);
   };
 
   // Hide section if no products

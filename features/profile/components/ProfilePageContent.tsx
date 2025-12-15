@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, useEffect } from "react";
-import { LogOut, Edit2, Save, X, User, Phone, MapPin, Mail } from "lucide-react";
+import { LogOut, Edit2, Save, X, User, Phone, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,7 +29,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: "",
+    name: "",
     last_name: "",
     phone_number: "",
     address: "",
@@ -37,22 +37,15 @@ export default function ClientProfilePage(props: ProfilePageProps) {
 
   useEffect(() => {
     if (user && !isEditing) {
+      console.log("[Profile] User data loaded:", user);
       setFormData({
-        first_name: user.first_name || "",
+        name: user.first_name || "",
         last_name: user.last_name || "",
         phone_number: user.phone_number || "",
         address: user.address || "",
       });
     }
   }, [user, isEditing]);
-
-  const prepareDataForAPI = useCallback(() => {
-    return {
-      name: `${formData.first_name} ${formData.last_name}`.trim(),
-      phone_number: formData.phone_number,
-      address: formData.address,
-    };
-  }, [formData]);
 
   const handleLogout = useCallback(() => {
     clearAuthToken();
@@ -62,7 +55,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
   const handleEdit = useCallback(() => {
     if (user) {
       setFormData({
-        first_name: user.first_name || "",
+        name: user.first_name || "",
         last_name: user.last_name || "",
         phone_number: user.phone_number || "",
         address: user.address || "",
@@ -75,7 +68,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
     setIsEditing(false);
     if (user) {
       setFormData({
-        first_name: user.first_name || "",
+        name: user.first_name || "",
         last_name: user.last_name || "",
         phone_number: user.phone_number || "",
         address: user.address || "",
@@ -84,23 +77,35 @@ export default function ClientProfilePage(props: ProfilePageProps) {
   }, [user]);
 
   const handleSave = useCallback(async () => {
-    const apiData = prepareDataForAPI();
-    
-    if (!apiData.name) {
+    if (!formData.name.trim()) {
       toast.error(t("name_required") || "Name is required");
       return;
     }
 
+    const apiData = {
+      name: formData.name.trim(),
+      last_name: formData.last_name.trim(),
+      phone_number: formData.phone_number.trim(),
+      address: formData.address.trim(),
+    };
+
+    console.log("[Profile] Saving data:", apiData);
+
     try {
       await updateProfile.mutateAsync(apiData);
       setIsEditing(false);
-      toast.success(t("profile_updated_success") || "Profile updated successfully");
+      toast.success(
+        t("profile_updated_success") || "Profile updated successfully"
+      );
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || t("profile_update_error") || "Failed to update profile";
+      const errorMessage =
+        err?.response?.data?.message ||
+        t("profile_update_error") ||
+        "Failed to update profile";
       toast.error(errorMessage);
-      console.error("Profile update error:", err);
+      console.error("[Profile] Update error:", err);
     }
-  }, [formData, updateProfile, t, prepareDataForAPI]);
+  }, [formData, updateProfile, t]);
 
   const handleInputChange = useCallback(
     (field: keyof typeof formData, value: string) => {
@@ -165,7 +170,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-24">
       <div className="container mx-auto max-w-4xl">
         {/* Header Section */}
         <div className="mb-6 sm:mb-8">
@@ -175,7 +180,9 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                 {t("profile")}
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
-                {isEditing ? t("edit_your_information") : t("view_your_information")}
+                {isEditing
+                  ? t("edit_your_information")
+                  : t("view_your_information")}
               </p>
             </div>
             <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
@@ -209,7 +216,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
               )}
             </div>
           </CardHeader>
-          
+
           <CardContent className="pt-5 sm:pt-6 space-y-4 sm:space-y-5">
             {user && (
               <>
@@ -217,17 +224,17 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
                   <div className="space-y-2">
                     <Label
-                      htmlFor="firstName"
+                      htmlFor="name"
                       className="text-sm font-medium text-gray-700 flex items-center gap-1.5"
                     >
                       <User className="h-3.5 w-3.5 text-gray-400" />
                       {t("first_name")}
                     </Label>
                     <Input
-                      id="firstName"
-                      value={formData.first_name}
+                      id="name"
+                      value={formData.name}
                       onChange={(e) =>
-                        handleInputChange("first_name", e.target.value)
+                        handleInputChange("name", e.target.value)
                       }
                       disabled={!isEditing}
                       className={`h-10 sm:h-11 text-sm sm:text-base ${
@@ -264,6 +271,8 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                   </div>
                 </div>
 
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+
                 {/* Phone Field */}
                 <div className="space-y-2">
                   <Label
@@ -288,7 +297,6 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                     placeholder={t("enter_phone_number")}
                   />
                 </div>
-
                 {/* Address Field */}
                 <div className="space-y-2">
                   <Label
@@ -313,6 +321,8 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                     placeholder={t("enter_address")}
                   />
                 </div>
+</div>
+
 
                 {/* Action Buttons - Edit Mode */}
                 {isEditing && (
@@ -323,7 +333,9 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                       className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base font-medium shadow-sm"
                     >
                       <Save className="h-4 w-4 mr-2" />
-                      {updateProfile.isPending ? t("saving") : t("save_changes")}
+                      {updateProfile.isPending
+                        ? t("saving")
+                        : t("save_changes")}
                     </Button>
                     <Button
                       onClick={handleCancel}

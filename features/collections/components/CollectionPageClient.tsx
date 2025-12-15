@@ -2,63 +2,47 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  useCategories,
-  useCategoryFilters,
-  useFilteredCategoryProducts,
-} from "@/features/category/hooks/useCategories";
 import { useTranslations } from "next-intl";
-import type { Category, Product } from "@/lib/types/api";
-import CategoryFilters from "./CategoryFilters";
-import CategoryProductsGrid from "./CategoryProductsGrid";
-import CategoryFiltersSheet from "./CategoryFiltersSheet";
+import type { Product } from "@/lib/types/api";
+import CollectionFilters from "./CollectionFilters";
+import CollectionProductsGrid from "./CollectionProductsGrid";
+import CollectionFiltersSheet from "./CollectionFiltersSheet";
+import {
+  useCollections,
+  useCollectionFilters,
+  useFilteredCollectionProducts,
+} from "@/features/collections/hooks/useCollections";
 
-interface CategoryPageClientProps {
+interface CollectionPageClientProps {
   params: { locale: string; slug: string };
 }
 
-export default function CategoryPageClient({
+export default function CollectionPageClient({
   params,
-}: CategoryPageClientProps) {
+}: CollectionPageClientProps) {
   const { slug } = params;
   const t = useTranslations();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const { data: categoriesData, isLoading: categoriesLoading } =
-    useCategories();
+  const { data: collectionsData, isLoading: collectionsLoading } =
+    useCollections();
 
-  const selectedCategory = useMemo(() => {
-    if (!categoriesData || !slug) return null;
-
-    const findBySlug = (categories: Category[]): Category | null => {
-      for (const category of categories) {
-        if (category.slug === slug) return category;
-        if (category.children) {
-          const found = findBySlug(category.children);
-          if (found) return found;
-        }
-      }
-      return null;
-    };
-
-    return findBySlug(categoriesData);
-  }, [categoriesData, slug]);
+  const selectedCollection = useMemo(() => {
+    if (!collectionsData || !slug) return null;
+    return collectionsData.find((col) => col.slug === slug);
+  }, [collectionsData, slug]);
 
   // State management
   const [currentPage, setCurrentPage] = useState(1);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
-  const [priceSort, setPriceSort] = useState<
-    "none" | "lowToHigh" | "highToLow"
-  >("none");
+  const [priceSort, setPriceSort] = useState<"none" | "lowToHigh" | "highToLow">("none");
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000]);
   const [selectedBrands, setSelectedBrands] = useState<Set<number>>(new Set());
-  const [selectedFilterCategories, setSelectedFilterCategories] = useState<
-    Set<number>
-  >(new Set());
+  const [selectedCategories, setSelectedCategories] = useState<Set<number>>(new Set());
 
   // Fetch filters
-  const { data: filtersData } = useCategoryFilters(selectedCategory?.id, {
-    enabled: !!selectedCategory,
+  const { data: filtersData } = useCollectionFilters(selectedCollection?.id, {
+    enabled: !!selectedCollection,
   });
 
   // Build filter params
@@ -72,8 +56,8 @@ export default function CategoryPageClient({
       params.brands = Array.from(selectedBrands);
     }
 
-    if (selectedFilterCategories.size > 0) {
-      params.categories = Array.from(selectedFilterCategories);
+    if (selectedCategories.size > 0) {
+      params.categories = Array.from(selectedCategories);
     }
 
     if (priceRange[0] > 0) {
@@ -85,82 +69,51 @@ export default function CategoryPageClient({
     }
 
     return params;
-  }, [currentPage, selectedBrands, selectedFilterCategories, priceRange]);
+  }, [currentPage, selectedBrands, selectedCategories, priceRange]);
 
   // Fetch filtered products
-  const { data: productsData, isFetching } = useFilteredCategoryProducts(
-    selectedCategory?.id?.toString() || "",
+  const { data: productsData, isFetching } = useFilteredCollectionProducts(
+    selectedCollection?.id?.toString() || "",
     filterParams,
-    { enabled: !!selectedCategory }
+    { enabled: !!selectedCollection }
   );
 
-  // Reset on category change
+  // Reset on collection change
   useEffect(() => {
-    if (selectedCategory) {
+    if (selectedCollection) {
       setAllProducts([]);
       setCurrentPage(1);
       setSelectedBrands(new Set());
-      setSelectedFilterCategories(new Set());
+      setSelectedCategories(new Set());
       setPriceRange([0, 10000]);
       setPriceSort("none");
     }
-  }, [selectedCategory?.id]);
+  }, [selectedCollection?.id]);
 
-  // Update products list - BU KISIM ÖNEMLİ!
+  // Update products list
   useEffect(() => {
     if (productsData?.data) {
       setAllProducts((prev) => {
-        // İlk sayfa ise direkt replace et
         if (currentPage === 1) {
           return productsData.data;
         }
-
-        // Sonraki sayfalar için deduplicate et
         const existingIds = new Set(prev.map((p) => p.id));
         const newProducts = productsData.data.filter(
           (p: Product) => !existingIds.has(p.id)
         );
-
-        // Eğer yeni ürün yoksa, return prev (gereksiz re-render önlenir)
-        if (newProducts.length === 0) {
-          return prev;
-        }
-
         return [...prev, ...newProducts];
       });
     }
-  }, [productsData?.data, currentPage]); // productsData yerine productsData.data
+  }, [productsData, currentPage]);
 
-  // hasMore hesaplama - BU KISIM DA ÖNEMLİ!
   const hasMore = useMemo(() => {
-    if (!productsData?.pagination) return false;
-
-    // pagination.next_page_url varsa devam et
-    if (productsData.pagination.next_page_url) return true;
-
-    // Alternatif olarak: current_page < last_page kontrolü
-    if (
-      productsData.pagination.current_page &&
-      productsData.pagination.last_page
-    ) {
-      return (
-        productsData.pagination.current_page < productsData.pagination.last_page
-      );
-    }
-
-    // Alternatif 2: hasMorePages flag'i varsa
-    if (productsData.pagination.hasMorePages !== undefined) {
-      return productsData.pagination.hasMorePages;
-    }
-
-    return false;
-  }, [productsData?.pagination]);
+    return !!productsData?.pagination?.next_page_url;
+  }, [productsData]);
 
   const loadMoreData = useCallback(() => {
     if (!hasMore || isFetching) return;
-    console.log("Loading page:", currentPage + 1); // Debug için
     setCurrentPage((prev) => prev + 1);
-  }, [hasMore, isFetching, currentPage]);
+  }, [hasMore, isFetching]);
 
   const sortedProducts = useMemo(() => {
     const products = [...allProducts];
@@ -191,11 +144,9 @@ export default function CategoryPageClient({
   }, []);
 
   const handleCategoryToggle = useCallback((categoryId: number) => {
-    setSelectedFilterCategories((prev) => {
+    setSelectedCategories((prev) => {
       const newSet = new Set(prev);
-      newSet.has(categoryId)
-        ? newSet.delete(categoryId)
-        : newSet.add(categoryId);
+      newSet.has(categoryId) ? newSet.delete(categoryId) : newSet.add(categoryId);
       return newSet;
     });
     setCurrentPage(1);
@@ -217,7 +168,7 @@ export default function CategoryPageClient({
 
   const resetFilters = useCallback(() => {
     setSelectedBrands(new Set());
-    setSelectedFilterCategories(new Set());
+    setSelectedCategories(new Set());
     setPriceRange([0, 10000]);
     setPriceSort("none");
     setCurrentPage(1);
@@ -240,24 +191,24 @@ export default function CategoryPageClient({
     [t]
   );
 
-  if (categoriesLoading) return <div>{t("common.loading")}</div>;
-  if (!selectedCategory)
-    return <div className="text-center py-8">{t("category_not_found")}</div>;
+  if (collectionsLoading) return <div>{t("common.loading")}</div>;
+  if (!selectedCollection)
+    return <div className="text-center py-8">{t("collection_not_found")}</div>;
 
   return (
     <div className="flex flex-col mx-auto max-w-[1504px] px-2 md:px-4 lg:px-6 pb-12">
       <h2 className="p-4 text-3xl font-bold pb-6 rounded-t-lg mb-0 bg-white">
-        {selectedCategory.name}
+        {selectedCollection.name}
       </h2>
 
       <div className="flex gap-4 bg-white rounded-b-lg">
         {/* Desktop Filters Sidebar */}
         <div className="hidden sm:block w-[280px] shrink-0 border-r px-4">
           <ScrollArea className="h-auto">
-            <CategoryFilters
+            <CollectionFilters
               filtersData={filtersData}
               selectedBrands={selectedBrands}
-              selectedFilterCategories={selectedFilterCategories}
+              selectedCategories={selectedCategories}
               priceSort={priceSort}
               priceRange={priceRange}
               onBrandToggle={handleBrandToggle}
@@ -272,11 +223,10 @@ export default function CategoryPageClient({
 
         {/* Products Grid */}
         <div className="flex-1 bg-white rounded-lg mb-6">
-          <CategoryProductsGrid
+          <CollectionProductsGrid
             products={sortedProducts}
             hasMore={hasMore}
             onLoadMore={loadMoreData}
-            isFetching={isFetching}
             translations={{
               loading: t("common.loading"),
               no_results: t("no_results"),
@@ -286,16 +236,16 @@ export default function CategoryPageClient({
       </div>
 
       {/* Mobile Filters Sheet */}
-      <CategoryFiltersSheet
+      <CollectionFiltersSheet
         isOpen={isSheetOpen}
         onOpenChange={setIsSheetOpen}
         filterLabel={t("filter")}
         closeLabel={t("close")}
       >
-        <CategoryFilters
+        <CollectionFilters
           filtersData={filtersData}
           selectedBrands={selectedBrands}
-          selectedFilterCategories={selectedFilterCategories}
+          selectedCategories={selectedCategories}
           priceSort={priceSort}
           priceRange={priceRange}
           onBrandToggle={handleBrandToggle}
@@ -305,7 +255,7 @@ export default function CategoryPageClient({
           onReset={resetFilters}
           translations={filterTranslations}
         />
-      </CategoryFiltersSheet>
+      </CollectionFiltersSheet>
     </div>
   );
 }

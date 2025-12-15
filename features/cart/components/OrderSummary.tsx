@@ -45,8 +45,10 @@ interface OrderSummaryProps {
   paymentTypes: PaymentType[];
   phone: string;
   name: string;
+  lastName: string;
   onPhoneChange: (phone: string) => void;
   onNameChange: (name: string) => void;
+  onLastNameChange: (lastName: string) => void;
   onPaymentTypeChange: (type: PaymentType) => void;
   onDeliveryTypeChange: (type: DeliveryType) => void;
   onRegionChange: (regionCode: string) => void;
@@ -68,8 +70,10 @@ export default function OrderSummary({
   paymentTypes,
   phone,
   name,
+  lastName,
   onPhoneChange,
   onNameChange,
+  onLastNameChange,
   onPaymentTypeChange,
   onDeliveryTypeChange,
   onRegionChange,
@@ -93,7 +97,7 @@ export default function OrderSummary({
         <h3 className="text-lg font-semibold mb-3">
           {t("customer_information")}
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-5">
           <div>
             <Label className="text-sm font-medium mb-2 block">
               {t("name")}
@@ -103,6 +107,18 @@ export default function OrderSummary({
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
               placeholder={t("name")}
+              className="rounded-xl"
+            />
+          </div>
+          <div>
+            <Label className="text-sm font-medium mb-2 block">
+              {t("last_name")}
+            </Label>
+            <Input
+              type="text"
+              value={lastName}
+              onChange={(e) => onLastNameChange(e.target.value)}
+              placeholder={t("last_name")}
               className="rounded-xl"
             />
           </div>

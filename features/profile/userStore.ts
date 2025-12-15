@@ -1,4 +1,4 @@
-import type { UserProfile } from "./types";
+import type { UserProfile } from "@/lib/types/api";
 
 // In-memory store (session-based, no persistence)
 class UserStore {
@@ -16,11 +16,12 @@ class UserStore {
     this.user = null;
   }
 
-  getOrderData(): { customer_name: string; customer_phone: string } | null {
+  getOrderData(): { customer_name: string; customer_phone: string, customer_last_name: string } | null {
     if (!this.user) return null;
     
     return {
-      customer_name: `${this.user.first_name} ${this.user.last_name}`.trim(),
+      customer_name: this.user.first_name,
+      customer_last_name: this.user.last_name,
       customer_phone: this.user.phone_number,
     };
   }

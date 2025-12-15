@@ -195,8 +195,8 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">{t("my_orders")}</h1>
 
       <Tabs defaultValue="active" className="w-full">
-        <TabsList className="mb-6">
-          <TabsTrigger value="active">
+        <TabsList className="mb-4 md:mb-6 w-full md:w-fit gap-2 p-0">
+          <TabsTrigger value="active" >
             {t("active_orders")} ({activeOrders.length})
           </TabsTrigger>
           <TabsTrigger value="completed">

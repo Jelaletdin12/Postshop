@@ -25,6 +25,7 @@ export default function CartPage() {
   const [note, setNote] = useState<string>("");
   const [phone, setPhone] = useState<string>("");
   const [name, setName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
   const router = useRouter();
   const t = useTranslations();
 
@@ -42,6 +43,7 @@ export default function CartPage() {
     const orderData = userStore.getOrderData();
     if (orderData) {
       if (orderData.customer_name) setName(orderData.customer_name);
+      if (orderData.customer_last_name) setLastName(orderData.customer_last_name);
       if (orderData.customer_phone) setPhone(orderData.customer_phone);
     }
   }, []);
@@ -227,8 +229,10 @@ export default function CartPage() {
           paymentTypes={paymentTypes}
           phone={phone}
           name={name}
+          lastName={lastName}
           onPhoneChange={setPhone}
           onNameChange={setName}
+          onLastNameChange={setLastName}
           onPaymentTypeChange={setPaymentType}
           onDeliveryTypeChange={handleDeliveryTypeChange}
           onRegionChange={setSelectedRegion}

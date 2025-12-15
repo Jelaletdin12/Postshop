@@ -43,7 +43,7 @@ export default function LanguageSelector() {
 
   return (
     <Select value={locale} onValueChange={handleLanguageChange}>
-      <SelectTrigger className="w-[70px] rounded-xl border-gray-300">
+      <SelectTrigger className="w-[70px] md:h-10! flex items-center justify-center rounded-lg border-gray-300">
         <SelectValue>
           <FlagIcon locale={locale} />
         </SelectValue>

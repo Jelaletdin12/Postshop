@@ -81,7 +81,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
 
             <Button
               onClick={toggleCategoryMenu}
-              className="hidden gap-2 rounded-xl font-bold sm:flex hover:bg-[#005bff] bg-[#005bff] text-white"
+              className="hidden gap-2 rounded-lg font-bold sm:flex hover:bg-[#005bff] bg-[#005bff] text-white"
               size="lg"
             >
               {isCategoryOpen ? <X className="h-5 w-5" /> : <CategoryIcon />}
@@ -131,19 +131,10 @@ export default function Header({ locale = "ru" }: HeaderProps) {
       <AuthDialog isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
       <MobileBottomNav
-        locale={locale}
-        isAuthenticated={isAuthenticated}
-        translations={{
-          catalog: t("common.catalog"),
-          favorites: t("common.favorites"),
-          orders: t("common.orders"),
-          cart: t("common.cart"),
-          login: t("common.login"),
-          profile: t("profile"),
-        }}
-        onLoginClick={() => setIsLoginOpen(true)}
-        onProfileClick={handleProfileClick}
-      />
+  locale={locale}
+ 
+  onLoginClick={() => setIsLoginOpen(true)}
+/>
     </>
   );
 }

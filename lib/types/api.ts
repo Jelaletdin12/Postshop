@@ -97,10 +97,11 @@ export interface Category {
 export interface Collection {
   id: number;
   name: string;
-  slug?: string;
+  slug: string;
   description?: string;
   image?: string;
   created_at?: string;
+  media?: ProductMedia[];
 }
 
 // Cart Types
@@ -495,7 +496,7 @@ export interface FiltersResponse {
   };
 }
 
-// Existing types'a ekleme
+
 export interface ProductFilters {
   brands?: number[];
   categories?: number[];
@@ -503,4 +504,5 @@ export interface ProductFilters {
   max_price?: number;
   page?: number;
   limit?: number;
+  collection_id?: number; 
 }

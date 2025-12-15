@@ -13,23 +13,22 @@ const metadataContent = {
 } as const;
 
 interface PageProps {
-  params: {
+  params: Promise<{
     locale: string;
-  };
+  }>;
 }
 
 export async function generateMetadata(
   { params }: PageProps,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
-  const locale = params.locale as keyof typeof metadataContent;
-
-  const content = metadataContent[locale] || metadataContent.ru;
+  const { locale } = await params;
+  const localeKey = locale as keyof typeof metadataContent;
+  const content = metadataContent[localeKey] || metadataContent.ru;
 
   return {
     title: content.title,
     description: content.description,
-
     robots: {
       index: false,
       follow: false,
@@ -39,5 +38,6 @@ export async function generateMetadata(
 }
 
 export default async function OrdersPage({ params }: PageProps) {
-  return <OrdersPageClient locale={params.locale} />;
+  const { locale } = await params;
+  return <OrdersPageClient locale={locale} />;
 }

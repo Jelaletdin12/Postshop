@@ -14,9 +14,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useCategories, useCart, useFavorites, useOrders } from "@/lib/hooks";
 import { useRouter } from "next/navigation";
+import { useAuthStatus } from "@/lib/hooks/useAuth";
+import { useTranslations } from "next-intl";
 interface MobileBottomNavProps {
   locale?: string;
-  isAuthenticated?: boolean;
   translations?: {
     catalog: string;
     favorites: string;
@@ -26,48 +27,56 @@ interface MobileBottomNavProps {
     profile: string;
   };
   onLoginClick?: () => void;
-  onProfileClick?: () => void;
 }
 
 export default function MobileBottomNav({
   locale = "ru",
-  isAuthenticated = false,
   translations,
   onLoginClick,
-  onProfileClick, // EKLENEN
 }: MobileBottomNavProps) {
   const [isClient, setIsClient] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-
+ const t = useTranslations();
+  // AUTH STATE DIRECTLY FROM HOOK - NOT FROM PROPS
+  const { isAuthenticated, isLoading: authLoading } = useAuthStatus();
+  
   const { data: categories = [] } = useCategories();
   const { data: cartData } = useCart();
   const { data: favoritesData } = useFavorites();
   const { data: ordersData } = useOrders();
   const router = useRouter();
-  const t = translations || {
-    catalog: "Каталог",
-    favorites: "Избранное",
-    orders: "Заказы",
-    cart: "Корзина",
-    login: "Войти",
-    profile: "Профиль",
-  };
+
+  
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const handleAuthClick = () => {
-    if (isAuthenticated) {
-      if (onProfileClick) {
-        onProfileClick();
-      } else {
-        router.push(`/${locale}/me`);
-        console.log("hello");
-      }
-    } else if (onLoginClick) {
-      onLoginClick();
+
+
+  const handleProfileClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    
+
+    if (authLoading) {
+      return;
     }
+
+    if (isAuthenticated) {
+      router.push(`/${locale}/me`);
+    } else {
+      if (onLoginClick) {
+        onLoginClick();
+      }
+    }
+  };
+
+  const handleNavigation = (path: string) => (e: React.MouseEvent) => {
+    e.preventDefault();
+    console.log("[MobileBottomNav] Navigating to:", path);
+    router.push(path);
   };
 
   if (!isClient) return null;
@@ -82,94 +91,85 @@ export default function MobileBottomNav({
             variant="ghost"
             size="sm"
             className="flex-col gap-0.5 h-auto px-2 py-2"
-            onClick={() => setIsCategoryOpen(true)}
+            onClick={() => {
+              console.log("[MobileBottomNav] Catalog clicked");
+              setIsCategoryOpen(true);
+            }}
           >
             <Menu className="h-5 w-5 text-gray-600" />
-            <span className="text-xs text-gray-700">{t.catalog}</span>
+            <span className="text-xs text-gray-700">{t("common.catalog")}</span>
           </Button>
 
           {/* Favorites Button */}
-          <Link href="/favorites">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative flex-col gap-0.5 h-auto px-2 py-2"
-            >
-              <div className="relative">
-                <Heart className="h-5 w-5 text-gray-600" />
-                <Badge
-                  variant="destructive"
-                  className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-                >
-                  {favoritesData?.length || 0}
-                </Badge>
-              </div>
-              <span className="text-xs text-gray-700">{t.favorites}</span>
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="relative flex-col gap-0.5 h-auto px-2 py-2"
+            onClick={handleNavigation("/favorites")}
+          >
+            <div className="relative">
+              <Heart className="h-5 w-5 text-gray-600" />
+              <Badge
+                variant="destructive"
+                className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+              >
+                {favoritesData?.length || 0}
+              </Badge>
+            </div>
+            <span className="text-xs text-gray-700">{t("common.favorites")}</span>
+          </Button>
 
           {/* Orders Button */}
-          <Link href="/orders">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative flex-col gap-0.5 h-auto px-2 py-2"
-            >
-              <div className="relative">
-                <Truck className="h-5 w-5 text-gray-600" />
-                <Badge
-                  variant="destructive"
-                  className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-                >
-                  {ordersData?.length || 0}
-                </Badge>
-              </div>
-              <span className="text-xs text-gray-700">{t.orders}</span>
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="relative flex-col gap-0.5 h-auto px-2 py-2"
+            onClick={handleNavigation("/orders")}
+          >
+            <div className="relative">
+              <Truck className="h-5 w-5 text-gray-600" />
+              <Badge
+                variant="destructive"
+                className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+              >
+                {ordersData?.length || 0}
+              </Badge>
+            </div>
+            <span className="text-xs text-gray-700">{t("common.orders")}</span>
+          </Button>
 
           {/* Cart Button */}
-          <Link href="/cart">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="relative flex-col gap-0.5 h-auto px-2 py-2"
-            >
-              <div className="relative">
-                <ShoppingCart className="h-5 w-5 text-gray-600" />
-                <Badge
-                  variant="destructive"
-                  className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-                >
-                  {cartData?.data?.length || 0}
-                </Badge>
-              </div>
-              <span className="text-xs text-gray-700">{t.cart}</span>
-            </Button>
-          </Link>
-
-          {isAuthenticated ? (
-            <Link href={`/${locale}/me`}>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="flex-col gap-0.5 h-auto px-2 py-2"
+          <Button
+            variant="ghost"
+            size="sm"
+            className="relative flex-col gap-0.5 h-auto px-2 py-2"
+            onClick={handleNavigation("/cart")}
+          >
+            <div className="relative">
+              <ShoppingCart className="h-5 w-5 text-gray-600" />
+              <Badge
+                variant="destructive"
+                className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
               >
-                <User className="h-5 w-5 text-gray-600" />
-                <span className="text-xs text-gray-700">{t.profile}</span>
-              </Button>
-            </Link>
-          ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="flex-col gap-0.5 h-auto px-2 py-2"
-              onClick={onLoginClick}
-            >
-              <User className="h-5 w-5 text-gray-600" />
-              <span className="text-xs text-gray-700">{t.login}</span>
-            </Button>
-          )}
+                {cartData?.data?.length || 0}
+              </Badge>
+            </div>
+            <span className="text-xs text-gray-700">{t("common.cart")}</span>
+          </Button>
+
+          {/* Profile/Login Button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex-col gap-0.5 h-auto px-2 py-2"
+            onClick={handleProfileClick}
+            disabled={authLoading}
+          >
+            <User className="h-5 w-5 text-gray-600" />
+            <span className="text-xs text-gray-700">
+              {authLoading ? "..." : (isAuthenticated ? t("profile") : t("login"))}
+            </span>
+          </Button>
         </div>
       </div>
 
@@ -177,7 +177,7 @@ export default function MobileBottomNav({
       <Sheet open={isCategoryOpen} onOpenChange={setIsCategoryOpen}>
         <SheetContent side="left" className="w-[300px] p-0">
           <SheetHeader className="p-4 border-b">
-            <SheetTitle>{t.catalog}</SheetTitle>
+            <SheetTitle>{t("common.catalog")}</SheetTitle>
           </SheetHeader>
           <ScrollArea className="h-[calc(100vh-80px)]">
             <div className="p-4">

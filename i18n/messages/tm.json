@@ -147,15 +147,22 @@
   "sending": "Iberilýär...",
   "verifying": "Barlanýar...",
   "verify": "Tassyklamak",
-   "only_left": "Diňe {count} sany galdy",
+  "only_left": "Diňe {count} sany galdy",
   "stock_limit_title": "Çäkli sanda",
   "stock_limit_message": "{product} harytdan diňe {stock} sany bar. Mundan köp sebediňize goşup bilmersiňiz.",
   "understood": "Düşündim",
-    "loading": "Ýüklenýär...",
-    "customer_information": "Müşteri maglumatlary",
-    "name": "Ady"
-    
-  
-
+  "loading": "Ýüklenýär...",
+  "customer_information": "Müşteri maglumatlary",
+  "name": "Ady",
+  "edit_your_information": "Maglumatlaryňyzy üýtgediň",
+  "view_your_information": "Maglumatlaryňyzy görüň",
+  "edit": "Üýtgetmek",
+  "enter_first_name": "Adyňyzy ýazyň",
+  "enter_last_name": "Familiýaňyzy ýazyň",
+  "enter_phone_number": "Telefon belgisini giriziň",
+  "enter_address": "Adres giriziň",
+  "save_changes": "Ýatda sakla",
+  "saving": "Ýatda saklýar...",
+  "cancel": "Goýbolsun"
   
 }
