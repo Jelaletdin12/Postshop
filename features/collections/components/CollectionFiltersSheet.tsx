@@ -28,7 +28,7 @@ export default function CollectionFiltersSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button
-          className="sm:hidden fixed bottom-20 right-4 rounded-xl font-bold gap-2 z-10 shadow-lg"
+          className="bg-[#005bff] hover:bg-[#0041c4] sm:hidden fixed bottom-20 right-4 rounded-xl font-bold gap-2 z-10 shadow-lg"
           size="lg"
         >
           {filterLabel}

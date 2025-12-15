@@ -191,7 +191,7 @@ export default function CollectionPageClient({
     [t]
   );
 
-  if (collectionsLoading) return <div>{t("common.loading")}</div>;
+ 
   if (!selectedCollection)
     return <div className="text-center py-8">{t("collection_not_found")}</div>;
 
@@ -201,7 +201,7 @@ export default function CollectionPageClient({
         {selectedCollection.name}
       </h2>
 
-      <div className="flex gap-4 bg-white rounded-b-lg">
+      <div className="flex  p-2 md:p-4 gap-4 bg-white rounded-b-lg">
         {/* Desktop Filters Sidebar */}
         <div className="hidden sm:block w-[280px] shrink-0 border-r px-4">
           <ScrollArea className="h-auto">

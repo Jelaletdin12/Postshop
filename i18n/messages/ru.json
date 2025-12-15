@@ -163,5 +163,21 @@
   "enter_address": "Введите адрес",
   "save_changes": "Сохранить изменения",
   "saving": "Сохранение...",
-  "cancel": "Отменить"
+  "cancel": "Отменить",
+  "write_review": "Написать отзыв",
+  "no_reviews": "Отзывов пока нет, стать первым, кто оставил отзыв!",
+  "customer_reviews": "Отзывы",
+  "share_experience": "Поделитесь опытом с этим товаром",
+  "rating": "Рейтинг",
+  "your_review": "Ваш отзыв",
+  "submitting": "Отправляется...",
+  "submit_review": "Отправить отзыв",
+  "characters": "символы",
+  "related_products": "Связанные товары",
+  "cart_empty_message": "Вы пока не добавили товары в корзину. Начните поиск и добавьте любимые товары в корзину.",
+  "start_shopping": "Начните поиск",
+  "favorites_empty": "У вас пока нет избранных товаров",
+  "favorites_empty_message": "Добавьте любимые товары в избранное",
+  "orders_empty": "У вас пока нет заказов",
+  "orders_empty_message": "Начните делать заказы"
 }

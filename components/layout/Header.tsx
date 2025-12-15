@@ -12,10 +12,9 @@ import AuthDialog from "./ui/AuthDialog";
 import ActionButtons from "./ui/ActionButtons";
 import LanguageSelector from "./ui/LanguageSelector";
 import MobileBottomNav from "./MobileBar";
-import { useAuthStatus, useLogout } from "@/lib/hooks/useAuth";
+import { useAuthStatus } from "@/lib/hooks/useAuth";
 import { useTranslations } from "next-intl";
 import { CategoryIcon } from "../icons";
-import { useRouter } from "next/navigation";
 
 interface HeaderProps {
   locale?: string;
@@ -27,10 +26,10 @@ export default function Header({ locale = "ru" }: HeaderProps) {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const t = useTranslations();
-  const router = useRouter();
+  
 
   const { isAuthenticated, isLoading } = useAuthStatus();
-  const { mutate: logout, isPending: isLoggingOut } = useLogout();
+  
 
   useEffect(() => {
     setIsClient(true);
@@ -44,9 +43,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
     }
   }, [isAuthenticated, locale]);
 
-  const handleLogout = useCallback(() => {
-    logout();
-  }, [logout]);
+ 
 
   const toggleCategoryMenu = useCallback(() => {
     setIsCategoryOpen((prev) => !prev);
@@ -56,9 +53,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
     setIsCategoryOpen(false);
   }, []);
 
-  const handleProfileClick = useCallback(() => {
-    router.push(`/${locale}/me`);
-  }, [router, locale]);
+
 
   if (!isClient) return null;
 
@@ -133,7 +128,10 @@ export default function Header({ locale = "ru" }: HeaderProps) {
       <MobileBottomNav
   locale={locale}
  
-  onLoginClick={() => setIsLoginOpen(true)}
+   onLoginClick={() => {
+    console.log('[Header] Opening login dialog');
+    setIsLoginOpen(true);
+  }}
 />
     </>
   );

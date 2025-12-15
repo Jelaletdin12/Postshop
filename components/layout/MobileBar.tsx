@@ -12,10 +12,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useCategories, useCart, useFavorites, useOrders } from "@/lib/hooks";
+import { useCategories, useFavorites, useOrders } from "@/lib/hooks";
+import { useCartCount } from "@/features/cart/hooks/useCart";
 import { useRouter } from "next/navigation";
 import { useAuthStatus } from "@/lib/hooks/useAuth";
 import { useTranslations } from "next-intl";
+import AuthDialog from "./ui/AuthDialog";
+
 interface MobileBottomNavProps {
   locale?: string;
   translations?: {
@@ -36,29 +39,33 @@ export default function MobileBottomNav({
 }: MobileBottomNavProps) {
   const [isClient, setIsClient] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
- const t = useTranslations();
-  // AUTH STATE DIRECTLY FROM HOOK - NOT FROM PROPS
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const t = useTranslations();
+
   const { isAuthenticated, isLoading: authLoading } = useAuthStatus();
-  
+
   const { data: categories = [] } = useCategories();
-  const { data: cartData } = useCart();
+
+  // OPTIMIZED: Use event-driven cart count instead of full cart data
+  const cartCount = useCartCount();
+
   const { data: favoritesData } = useFavorites();
   const { data: ordersData } = useOrders();
   const router = useRouter();
-
-  
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-
-
   const handleProfileClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    
+
+    console.log("[MobileBottomNav] Profile clicked", {
+      authLoading,
+      isAuthenticated,
+      hasOnLoginClick: !!onLoginClick,
+    });
 
     if (authLoading) {
       return;
@@ -68,7 +75,11 @@ export default function MobileBottomNav({
       router.push(`/${locale}/me`);
     } else {
       if (onLoginClick) {
+        console.log("[MobileBottomNav] Calling parent onLoginClick");
         onLoginClick();
+      } else {
+        console.log("[MobileBottomNav] Using local login dialog");
+        setIsLoginOpen(true);
       }
     }
   };
@@ -109,14 +120,18 @@ export default function MobileBottomNav({
           >
             <div className="relative">
               <Heart className="h-5 w-5 text-gray-600" />
-              <Badge
-                variant="destructive"
-                className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-              >
-                {favoritesData?.length || 0}
-              </Badge>
+              {(favoritesData?.length || 0) > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                >
+                  {favoritesData?.length}
+                </Badge>
+              )}
             </div>
-            <span className="text-xs text-gray-700">{t("common.favorites")}</span>
+            <span className="text-xs text-gray-700">
+              {t("common.favorites")}
+            </span>
           </Button>
 
           {/* Orders Button */}
@@ -128,17 +143,19 @@ export default function MobileBottomNav({
           >
             <div className="relative">
               <Truck className="h-5 w-5 text-gray-600" />
-              <Badge
-                variant="destructive"
-                className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-              >
-                {ordersData?.length || 0}
-              </Badge>
+              {(ordersData?.length || 0) > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                >
+                  {ordersData?.length}
+                </Badge>
+              )}
             </div>
             <span className="text-xs text-gray-700">{t("common.orders")}</span>
           </Button>
 
-          {/* Cart Button */}
+          {/* Cart Button - OPTIMIZED */}
           <Button
             variant="ghost"
             size="sm"
@@ -147,12 +164,14 @@ export default function MobileBottomNav({
           >
             <div className="relative">
               <ShoppingCart className="h-5 w-5 text-gray-600" />
-              <Badge
-                variant="destructive"
-                className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
-              >
-                {cartData?.data?.length || 0}
-              </Badge>
+              {cartCount > 0 && (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-2 -top-2 h-4 w-4 flex items-center justify-center p-0 text-[10px]"
+                >
+                  {cartCount}
+                </Badge>
+              )}
             </div>
             <span className="text-xs text-gray-700">{t("common.cart")}</span>
           </Button>
@@ -167,7 +186,11 @@ export default function MobileBottomNav({
           >
             <User className="h-5 w-5 text-gray-600" />
             <span className="text-xs text-gray-700">
-              {authLoading ? "..." : (isAuthenticated ? t("profile") : t("login"))}
+              {authLoading
+                ? "..."
+                : isAuthenticated
+                ? t("common.profile")
+                : t("common.login")}
             </span>
           </Button>
         </div>
@@ -212,6 +235,9 @@ export default function MobileBottomNav({
           </ScrollArea>
         </SheetContent>
       </Sheet>
+
+      {/* Local Auth Dialog  */}
+      <AuthDialog isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 }

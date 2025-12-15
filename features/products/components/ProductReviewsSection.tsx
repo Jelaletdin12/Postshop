@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslations } from "next-intl";
 
 interface Review {
   id: number;
@@ -41,11 +42,13 @@ export function ProductReviewsSection({
     );
   };
 
+  const t= useTranslations();
+
   return (
     <Card className="p-6 rounded-xl">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center ">
         <div>
-          <h3 className="text-2xl font-bold">Customer Reviews</h3>
+          <h3 className="text-2xl font-bold">{t("customer_reviews")}</h3>
           <div className="flex items-center gap-2 mt-2">
             {renderStars(Math.round(averageRating))}
             <span className="text-sm text-gray-600">
@@ -53,9 +56,9 @@ export function ProductReviewsSection({
             </span>
           </div>
         </div>
-        <Button onClick={onWriteReview} className="rounded-lg">
+        <Button onClick={onWriteReview} className="rounded-lg bg-[#005bff] hover:bg-[#0041c4]">
           <Send className="mr-2 h-4 w-4" />
-          Write Review
+          {t("write_review")}
         </Button>
       </div>
 
@@ -83,7 +86,7 @@ export function ProductReviewsSection({
         </div>
       ) : (
         <div className="text-center py-8 text-gray-500">
-          No reviews yet. Be the first to review this product!
+          {t("no_reviews")}
         </div>
       )}
     </Card>

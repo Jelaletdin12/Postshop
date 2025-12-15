@@ -306,7 +306,7 @@ export default function ProductCard({
             ) : (
               <Heart
                 className={`w-5 h-5 ${
-                  isFavorite ? "text-red-500 fill-red-500" : "text-gray-700"
+                  isFavorite ? "text-[#005bff] fill-[#005bff]" : "text-gray-700"
                 }`}
               />
             )}

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { useTranslations } from "next-intl";
 
 interface ReviewModalProps {
   open: boolean;
@@ -26,6 +27,8 @@ export function ReviewModal({
   const [rating, setRating] = useState(0);
   const [text, setText] = useState("");
   const [hoveredStar, setHoveredStar] = useState(0);
+
+  const t = useTranslations();
 
   const handleClose = () => {
     onOpenChange(false);
@@ -63,29 +66,29 @@ export function ReviewModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-xl">Write a Review</DialogTitle>
+          <DialogTitle className="text-xl">{t("write_review")}</DialogTitle>
           <DialogDescription>
-            Share your experience with this product
+            {t("share_experience")}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 pt-4">
           <div>
-            <label className="block text-sm font-medium mb-2">Rating</label>
+            <label className="block text-sm font-medium mb-2">{t("rating")}</label>
             {renderStars()}
           </div>
           <div>
             <label className="block text-sm font-medium mb-2">
-              Your Review
+              {t("your_review")}
             </label>
             <Textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
-              placeholder="Write your review here..."
+              placeholder={t("write_review")}
               className="min-h-[120px] resize-none"
               maxLength={500}
             />
             <p className="text-xs text-gray-500 mt-1">
-              {text.length}/500 characters
+              {text.length}/500 {t("characters")}
             </p>
           </div>
         </div>
@@ -95,22 +98,22 @@ export function ReviewModal({
             onClick={handleClose}
             className="flex-1 rounded-lg"
           >
-            Cancel
+            {t("cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={rating === 0 || !text.trim() || isSubmitting}
-            className="flex-1 rounded-lg"
+            className="flex-1 rounded-lg bg-[#005bff] hover:bg-[#0041c4]"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                {t("submitting")}
               </>
             ) : (
               <>
                 <Send className="mr-2 h-4 w-4" />
-                Submit Review
+                {t("submit_review")}
               </>
             )}
           </Button>

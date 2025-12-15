@@ -12,7 +12,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useCart, useFavorites, useOrders } from "@/lib/hooks";
+import { useCart, useFavorites, useOrders, useCartCount } from "@/lib/hooks";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import { useLogout } from "@/lib/hooks/useAuth";
@@ -53,10 +53,7 @@ export default function ActionButtons({
   const { data: ordersData, isLoading: ordersLoading } = useOrders();
 
   // Calculate cart count from cart items array
-  const cartCount = useMemo(() => {
-    if (!cartData?.data) return 0;
-    return cartData.data.length;
-  }, [cartData]);
+const cartCount = useCartCount()
 
   // Calculate favorites count
   const favoritesCount = useMemo(() => {

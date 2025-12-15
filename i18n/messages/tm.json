@@ -163,6 +163,21 @@
   "enter_address": "Adres giriziň",
   "save_changes": "Ýatda sakla",
   "saving": "Ýatda saklýar...",
-  "cancel": "Goýbolsun"
-  
+  "cancel": "Goýbolsun",
+  "write_review": "Teswir ýaz",
+  "no_reviews": "Entek teswir ýok, ilkinji teswiri siz ýazyň!",
+  "customer_reviews": "Teswirler",
+  "share_experience": "Bu haryt barada öz teswiriňizi ýazyň",
+  "rating": "Reýting",
+  "your_review": "Teswiriňiz",
+  "submitting": "Ugradylýar...",
+  "submit_review": "Teswiri ugrat",
+  "characters": "simbol",
+  "related_products": "Meňzeş harytlar",
+  "cart_empty_message": "Entek sebediňize haryt goşmadyňyz. Söwda etmäge başlaň!!!",
+  "start_shopping": "Söwda etmäge başla!",
+  "favorites_empty": "Siziň saýlanan harytlaryňyz ýok",
+  "favorites_empty_message": "Halan harydyňyz saýlap goýuň!",
+  "orders_empty": "Siziň sargytlaryňyz ýok",
+  "orders_empty_message": "Sargyt etmäge başlaň!"
 }

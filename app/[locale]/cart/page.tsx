@@ -14,7 +14,7 @@ import { userStore } from "@/features/profile/userStore";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { DeliveryType, PaymentType } from "@/lib/types/api";
-
+import EmptyCart from "@/features/cart/components/EmptyCart";
 export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
@@ -129,21 +129,11 @@ export default function CartPage() {
 
   if (!isClient) return null;
 
-  if (isLoading) {
-    return (
-      <div className="container mx-auto px-4 min-h-[90vh] flex items-center justify-center">
-        <p>{t("common.loading")}</p>
-      </div>
-    );
-  }
+  
 
   if (isError || cartItems.length === 0) {
     return (
-      <div className="container mx-auto px-4 min-h-[90vh] flex items-center justify-center">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl text-gray-400 font-semibold">
-          {t("cart_empty")}
-        </h2>
-      </div>
+      <EmptyCart/>
     );
   }
 

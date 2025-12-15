@@ -28,7 +28,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useOrders, useCancelOrder } from "@/lib/hooks";
 import { useTranslations } from "next-intl";
 import type { Order } from "@/lib/types/api";
-
+import EmptyOrders from "./EmptyOrders";
 interface OrdersPageClientProps {
   locale: string;
 }
@@ -181,12 +181,7 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
 
   if (isError || !orders || orders.length === 0) {
     return (
-      <div className="container mx-auto p-4 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-2xl text-gray-400">{t("no_orders")}</p>
-        </div>
-      </div>
+    <EmptyOrders/>
     );
   }
 

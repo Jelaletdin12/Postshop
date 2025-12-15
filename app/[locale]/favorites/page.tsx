@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslations } from "next-intl";
 import ProductCard from "@/features/home/components/ProductCard";
 import type { Favorite } from "@/lib/types/api";
-
+import EmptyFavorites from "@/features/favorites/components/EmptyFavorites";
 export default function FavoritesPage() {
   const t = useTranslations();
   const { data: favorites, isLoading, isError } = useFavorites();
@@ -25,12 +25,7 @@ export default function FavoritesPage() {
 
   if (isError || !favorites || favorites.length === 0) {
     return (
-      <div className="container mx-auto px-6 py-8  bg-white">
-        <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <p className="text-2xl text-gray-400">{t("empty_favorites")}</p>
-        </div>
-      </div>
+     <EmptyFavorites/>
     );
   }
 
