@@ -24,7 +24,7 @@ import {
   CreditCard,
   ShoppingBag,
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { useOrders, useCancelOrder } from "@/lib/hooks";
 import { useTranslations } from "next-intl";
 import type { Order } from "@/lib/types/api";
@@ -37,7 +37,7 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [orderToCancel, setOrderToCancel] = useState<Order | null>(null);
   const [expandedOrders, setExpandedOrders] = useState<Set<number>>(new Set());
-  const { toast } = useToast();
+
   const t = useTranslations();
 
   const { data: orders, isLoading, isError } = useOrders();
@@ -66,19 +66,12 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
 
     cancelOrder(orderToCancel.id, {
       onSuccess: () => {
-        toast({
-          title: t("order_cancelled"),
-          description: t("order_cancelled_description"),
-        });
+        toast.success(t("order_cancelled"));
         setIsCancelDialogOpen(false);
         setOrderToCancel(null);
       },
       onError: (error: any) => {
-        toast({
-          title: t("error"),
-          description: error.message || t("cancel_order_failed"),
-          variant: "destructive",
-        });
+        toast.error(error.message || t("cancel_order_failed"));
       },
     });
   }, [orderToCancel, cancelOrder, toast, t]);
@@ -168,7 +161,7 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto p-4 min-h-screen">
+      <div className=" mx-auto p-4 min-h-screen">
         <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
         <div className="space-y-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -186,7 +179,7 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
   }
 
   return (
-    <div className="container mx-auto p-2 lg:p-6 md:p-4 mb-16 min-h-screen">
+    <div className=" mx-auto p-2 lg:p-6 md:p-4 mb-16 min-h-screen">
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">{t("my_orders")}</h1>
 
       <Tabs defaultValue="active" className="w-full">
@@ -331,7 +324,7 @@ function CompactOrderCard({
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex flex-col md:flex-row gap-2 ">
+            <div className="flex flex-col md:flex-row gap-2 items-end">
               
             {getStatusBadge(order.status)}
             <div className="text-right">
@@ -354,7 +347,7 @@ function CompactOrderCard({
         <div className="border-t bg-white">
           {/* Order Info Grid */}
           <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50">
-            <div className="flex items-start gap-3">
+            {/* <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-blue-500 mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-gray-700">
@@ -365,7 +358,7 @@ function CompactOrderCard({
                   {order.delivery_time}
                 </p>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-start gap-3">
               <MapPin className="h-5 w-5 text-red-500 mt-0.5" />

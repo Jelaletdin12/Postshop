@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useOpenStore } from "@/lib/hooks";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface OpenStorePageProps {
   locale?: string;
@@ -68,7 +68,7 @@ export default function OpenStorePage({
   const [fileName, setFileName] = useState("");
 
   const { mutate: submitOpenStore, isPending: loading } = useOpenStore();
-  const { toast } = useToast();
+  
 
   const t = translations || {
     title: "Форма подачи заявления на открытие магазина",
@@ -160,10 +160,9 @@ export default function OpenStorePage({
         },
         {
           onSuccess: () => {
-            toast({
-              title: "Success",
-              description: "Your store request has been submitted successfully",
-            });
+            toast.success("Your store request has been submitted successfully");
+
+            
             setFormData({
               firstName: "",
               lastName: "",
@@ -174,11 +173,7 @@ export default function OpenStorePage({
             setFileName("");
           },
           onError: (error: any) => {
-            toast({
-              title: "Error",
-              description: error?.message || "Failed to submit store request",
-              variant: "destructive",
-            });
+            toast.error(error?.message || "Failed to submit store request");
           },
         }
       );

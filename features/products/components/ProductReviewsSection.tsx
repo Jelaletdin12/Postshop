@@ -51,9 +51,9 @@ export function ProductReviewsSection({
           <h3 className="text-2xl font-bold">{t("customer_reviews")}</h3>
           <div className="flex items-center gap-2 mt-2">
             {renderStars(Math.round(averageRating))}
-            <span className="text-sm text-gray-600">
+            {/* <span className="text-sm text-gray-600">
               {averageRating.toFixed(1)} out of 5
-            </span>
+            </span> */}
           </div>
         </div>
         <Button onClick={onWriteReview} className="rounded-lg bg-[#005bff] hover:bg-[#0041c4]">

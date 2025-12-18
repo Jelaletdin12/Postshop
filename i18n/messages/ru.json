@@ -179,5 +179,8 @@
   "favorites_empty": "У вас пока нет избранных товаров",
   "favorites_empty_message": "Добавьте любимые товары в избранное",
   "orders_empty": "У вас пока нет заказов",
-  "orders_empty_message": "Начните делать заказы"
+  "orders_empty_message": "Начните делать заказы",
+  "product": "Продукт",
+  "collection_not_found": "Коллекция не найдена"
+  
 }

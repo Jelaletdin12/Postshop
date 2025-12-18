@@ -26,10 +26,8 @@ export default function Header({ locale = "ru" }: HeaderProps) {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const t = useTranslations();
-  
 
-  const { isAuthenticated, isLoading } = useAuthStatus();
-  
+  const { isAuthenticated } = useAuthStatus();
 
   useEffect(() => {
     setIsClient(true);
@@ -43,8 +41,6 @@ export default function Header({ locale = "ru" }: HeaderProps) {
     }
   }, [isAuthenticated, locale]);
 
- 
-
   const toggleCategoryMenu = useCallback(() => {
     setIsCategoryOpen((prev) => !prev);
   }, []);
@@ -53,14 +49,12 @@ export default function Header({ locale = "ru" }: HeaderProps) {
     setIsCategoryOpen(false);
   }, []);
 
-
-
   if (!isClient) return null;
 
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
-        <div className="container mx-auto px-4">
+        <div className=" mx-auto px-4">
           <div className="flex h-16 items-center justify-between gap-3">
             <Link href="/" className="shrink-0">
               <div className="relative h-8 w-[180px]">
@@ -76,7 +70,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
 
             <Button
               onClick={toggleCategoryMenu}
-              className="hidden gap-2 rounded-lg font-bold sm:flex hover:bg-[#005bff] bg-[#005bff] text-white"
+              className="hidden gap-2 rounded-lg font-bold lg:flex hover:bg-[#005bff] bg-[#005bff] text-white"
               size="lg"
             >
               {isCategoryOpen ? <X className="h-5 w-5" /> : <CategoryIcon />}
@@ -126,13 +120,11 @@ export default function Header({ locale = "ru" }: HeaderProps) {
       <AuthDialog isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
 
       <MobileBottomNav
-  locale={locale}
- 
-   onLoginClick={() => {
-    console.log('[Header] Opening login dialog');
-    setIsLoginOpen(true);
-  }}
-/>
+        locale={locale}
+        onLoginClick={() => {
+          setIsLoginOpen(true);
+        }}
+      />
     </>
   );
 }

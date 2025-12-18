@@ -34,33 +34,33 @@ export function useOrder(id: number | string) {
   });
 }
 
-export function useCreateOrder() {
-  const queryClient = useQueryClient();
+// export function useCreateOrder() {
+//   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: async (orderData: CreateOrderRequest) => {
-      const formData = new URLSearchParams();
+//   return useMutation({
+//     mutationFn: async (orderData: CreateOrderRequest) => {
+//       const formData = new URLSearchParams();
 
-      Object.entries(orderData).forEach(([key, value]) => {
-        if (value !== null && value !== undefined) {
-          formData.append(key, String(value));
-        }
-      });
+//       Object.entries(orderData).forEach(([key, value]) => {
+//         if (value !== null && value !== undefined) {
+//           formData.append(key, String(value));
+//         }
+//       });
 
-      const response = await apiClient.post("/orders", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
+//       const response = await apiClient.post("/orders", formData, {
+//         headers: {
+//           "Content-Type": "application/x-www-form-urlencoded",
+//         },
+//       });
 
-      return response.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["orders"] });
-      queryClient.invalidateQueries({ queryKey: ["cart"] });
-    },
-  });
-}
+//       return response.data;
+//     },
+//     onSuccess: () => {
+//       queryClient.invalidateQueries({ queryKey: ["orders"] });
+//       queryClient.invalidateQueries({ queryKey: ["cart"] });
+//     },
+//   });
+// }
 
 export function useCancelOrder() {
   const queryClient = useQueryClient();

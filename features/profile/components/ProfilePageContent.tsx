@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useUserProfile, useUpdateProfile } from "@/lib/hooks";
-import { clearAuthToken } from "@/lib/api";
+
+import { useLogout } from "@/lib/hooks/useAuth";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -46,9 +47,9 @@ export default function ClientProfilePage(props: ProfilePageProps) {
       });
     }
   }, [user, isEditing]);
-
+  const { mutate: logout, isPending: isLoggingOut } = useLogout();
   const handleLogout = useCallback(() => {
-    clearAuthToken();
+    logout();
     window.location.href = "/";
   }, []);
 
@@ -117,7 +118,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
   const loadingSkeleton = useMemo(
     () => (
       <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pt-20 sm:pt-24">
-        <div className="container mx-auto max-w-4xl">
+        <div className=" mx-auto max-w-4xl">
           <div className="mb-6 sm:mb-8">
             <Skeleton className="h-8 sm:h-10 w-32 sm:w-40 mb-2" />
             <Skeleton className="h-4 w-48 sm:w-64" />
@@ -171,12 +172,12 @@ export default function ClientProfilePage(props: ProfilePageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 pb-20 sm:pb-24">
-      <div className="container mx-auto max-w-4xl">
+      <div className=" mx-auto max-w-4xl">
         {/* Header Section */}
         <div className="mb-6 sm:mb-8">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
+              <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 mb-1 sm:mb-2 truncate">
                 {t("profile")}
               </h1>
               <p className="text-sm sm:text-base text-gray-600">
@@ -271,58 +272,56 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                   </div>
                 </div>
 
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-
-                {/* Phone Field */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="phone"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-1.5"
-                  >
-                    <Phone className="h-3.5 w-3.5 text-gray-400" />
-                    {t("phone_number")}
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={formData.phone_number}
-                    onChange={(e) =>
-                      handleInputChange("phone_number", e.target.value)
-                    }
-                    disabled={!isEditing}
-                    className={`h-10 sm:h-11 text-sm sm:text-base ${
-                      isEditing
-                        ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
-                        : "bg-gray-50 border-gray-200 text-gray-700"
-                    }`}
-                    placeholder={t("enter_phone_number")}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+                  {/* Phone Field */}
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="phone"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-1.5"
+                    >
+                      <Phone className="h-3.5 w-3.5 text-gray-400" />
+                      {t("phone_number")}
+                    </Label>
+                    <Input
+                      id="phone"
+                      value={formData.phone_number}
+                      onChange={(e) =>
+                        handleInputChange("phone_number", e.target.value)
+                      }
+                      disabled={!isEditing}
+                      className={`h-10 sm:h-11 text-sm sm:text-base ${
+                        isEditing
+                          ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+                          : "bg-gray-50 border-gray-200 text-gray-700"
+                      }`}
+                      placeholder={t("enter_phone_number")}
+                    />
+                  </div>
+                  {/* Address Field */}
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor="address"
+                      className="text-sm font-medium text-gray-700 flex items-center gap-1.5"
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-gray-400" />
+                      {t("address")}
+                    </Label>
+                    <Input
+                      id="address"
+                      value={formData.address}
+                      onChange={(e) =>
+                        handleInputChange("address", e.target.value)
+                      }
+                      disabled={!isEditing}
+                      className={`h-10 sm:h-11 text-sm sm:text-base ${
+                        isEditing
+                          ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
+                          : "bg-gray-50 border-gray-200 text-gray-700"
+                      }`}
+                      placeholder={t("enter_address")}
+                    />
+                  </div>
                 </div>
-                {/* Address Field */}
-                <div className="space-y-2">
-                  <Label
-                    htmlFor="address"
-                    className="text-sm font-medium text-gray-700 flex items-center gap-1.5"
-                  >
-                    <MapPin className="h-3.5 w-3.5 text-gray-400" />
-                    {t("address")}
-                  </Label>
-                  <Input
-                    id="address"
-                    value={formData.address}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
-                    disabled={!isEditing}
-                    className={`h-10 sm:h-11 text-sm sm:text-base ${
-                      isEditing
-                        ? "border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 bg-white"
-                        : "bg-gray-50 border-gray-200 text-gray-700"
-                    }`}
-                    placeholder={t("enter_address")}
-                  />
-                </div>
-</div>
-
 
                 {/* Action Buttons - Edit Mode */}
                 {isEditing && (

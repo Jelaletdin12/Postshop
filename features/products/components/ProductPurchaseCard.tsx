@@ -94,13 +94,9 @@ export function ProductPurchaseCard({
                   variant="outline"
                   size="icon"
                   onClick={onQuantityIncrease}
-                  disabled={localQuantity >= availableStock || isSyncing}
+                  disabled={isSyncing}
                   className={`rounded-lg h-12 w-12 ${
                     isSyncing ? "opacity-70" : ""
-                  } ${
-                    localQuantity >= availableStock
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
                   }`}
                 >
                   <Plus className="h-5 w-5" />

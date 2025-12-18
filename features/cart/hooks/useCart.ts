@@ -14,16 +14,30 @@ interface CartResponse {
   errorDetails?: string;
 }
 
-// Event emitter for cross-component cart updates
+// DEBUG: Enable detailed logging
+const DEBUG = true;
+const log = (...args: any[]) => {
+  if (DEBUG) console.log('[useCart]', ...args);
+};
+
+// CRITICAL: Single source of truth for pending updates
+const pendingUpdates = new Map<number, number>(); // productId -> quantity
+let updateLock = false;
+
 class CartEventEmitter {
   private listeners: Set<() => void> = new Set();
 
   subscribe(callback: () => void) {
+    log('🔔 New subscriber added. Total:', this.listeners.size + 1);
     this.listeners.add(callback);
-    return () => this.listeners.delete(callback);
+    return () => {
+      log('🔕 Subscriber removed. Total:', this.listeners.size - 1);
+      this.listeners.delete(callback);
+    };
   }
 
   emit() {
+    log('📢 Emitting cart event to', this.listeners.size, 'listeners');
     this.listeners.forEach((cb) => cb());
   }
 }
@@ -36,31 +50,22 @@ function transformCartResponse(response: any): CartResponse {
     (response.trim().startsWith("<!DOCTYPE") ||
       response.trim().startsWith("<html"))
   ) {
-    console.error(
-      "Received HTML response instead of JSON:",
-      response.substring(0, 100)
-    );
     return {
       message: "error",
       data: [],
-      errorDetails:
-        "Server returned HTML instead of JSON. The server might be down or experiencing issues.",
+      errorDetails: "Server returned HTML instead of JSON.",
     };
   }
 
   if (typeof response === "object") {
-    if (response.data) {
-      return response;
-    }
+    if (response.data) return response;
     return { message: "success", data: [] };
   }
 
   if (typeof response === "string") {
     try {
-      const parsed = JSON.parse(response);
-      return parsed;
-    } catch (error) {
-      console.error("Failed to parse response:", error);
+      return JSON.parse(response);
+    } catch {
       return { message: "error", data: [] };
     }
   }
@@ -71,34 +76,54 @@ function transformCartResponse(response: any): CartResponse {
 export function useCart(options?: Partial<UseQueryOptions<CartResponse>>) {
   const queryClient = useQueryClient();
 
+  log('🎣 useCart hook called with options:', options);
+
   const query = useQuery({
     queryKey: ["cart"],
     queryFn: async () => {
+      log('🌐 Fetching cart from API...');
       const response = await apiClient.get("/carts");
-      return transformCartResponse(response.data);
+      const transformed = transformCartResponse(response.data);
+      log('✅ Cart fetched:', {
+        itemCount: transformed.data.length,
+        items: transformed.data.map(item => ({
+          productId: item.product?.id,
+          quantity: item.product_quantity
+        }))
+      });
+      return transformed;
     },
-    // REMOVED: Aggressive polling
-    // ADDED: Smart refetching only when needed
-    refetchOnMount: false, // Don't refetch on every mount
-    refetchOnWindowFocus: false, // Don't refetch on tab focus
-    refetchOnReconnect: true, // Only refetch on reconnect
-    staleTime: Infinity, // Data never goes stale automatically
-    gcTime: 1000 * 60 * 5, // Cache for 5 minutes
+    // CRITICAL FIX: Merge options AFTER defaults
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: true,
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 5,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    // User options OVERRIDE defaults
     ...options,
   });
 
-  // Subscribe to cart events for cross-component updates
+  log('🔧 Query config after merge:', {
+    refetchOnMount: query.refetch !== undefined,
+    staleTime: query.isStale,
+    dataUpdatedAt: query.dataUpdatedAt
+  });
+
   useEffect(() => {
+    log('🔗 Setting up cart events listener in useCart');
     const unsubscribe = cartEvents.subscribe(() => {
-      // Only update cache, don't refetch
+      log('📥 Cart event received in useCart, invalidating query');
       queryClient.invalidateQueries({
         queryKey: ["cart"],
         refetchType: "none",
       });
     });
-    return unsubscribe;
+    return () => {
+      log('🔌 Cleaning up cart events listener in useCart');
+      unsubscribe();
+    };
   }, [queryClient]);
 
   return query;
@@ -115,6 +140,7 @@ export function useAddToCart() {
       productId: number;
       quantity?: number;
     }) => {
+      log('➕ AddToCart mutation:', { productId, quantity });
       const params = new URLSearchParams({
         product_id: String(productId),
         product_quantity: String(quantity),
@@ -132,10 +158,8 @@ export function useAddToCart() {
 
       if (typeof response.data === "string") {
         try {
-          const parsed = JSON.parse(response.data);
-          return parsed;
-        } catch (error) {
-          console.error("Failed to parse add to cart response:", error);
+          return JSON.parse(response.data);
+        } catch {
           return { message: "success", data: "Added to cart" };
         }
       }
@@ -143,66 +167,89 @@ export function useAddToCart() {
       return { message: "success", data: "Added to cart" };
     },
     onMutate: async ({ productId, quantity }) => {
-      // Cancel outgoing refetches
+      log('🔒 AddToCart onMutate - Waiting for lock...');
+      while (updateLock) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      updateLock = true;
+      log('🔓 Lock acquired');
+
       await queryClient.cancelQueries({ queryKey: ["cart"] });
 
-      // Snapshot previous value
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
+      log('📸 Previous cart state:', previousCart?.data.length, 'items');
 
-      // Optimistically update cart
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
 
-        const existingItem = old.data.find(
+        let updated = { ...old, data: [...old.data] };
+
+        pendingUpdates.forEach((pendingQty, pendingId) => {
+          const idx = updated.data.findIndex(
+            (item: any) => item.product?.id === pendingId
+          );
+          if (idx !== -1) {
+            updated.data[idx] = {
+              ...updated.data[idx],
+              product_quantity: pendingQty,
+            };
+          }
+        });
+
+        const existingItem = updated.data.find(
           (item: any) => item.product?.id === productId
         );
 
         if (existingItem) {
-          // Update existing item quantity
-          return {
-            ...old,
-            data: old.data.map((item: any) =>
-              item.product?.id === productId
-                ? {
-                    ...item,
-                    product_quantity: item.product_quantity + quantity,
-                  }
-                : item
-            ),
-          };
+          updated.data = updated.data.map((item: any) =>
+            item.product?.id === productId
+              ? {
+                  ...item,
+                  product_quantity: item.product_quantity + quantity,
+                }
+              : item
+          );
         } else {
-          // Add new item (we don't have full product data, so we add placeholder)
-          return {
-            ...old,
-            data: [
-              ...old.data,
-              {
-                product: { id: productId },
-                product_quantity: quantity,
-              } as any,
-            ],
-          };
+          updated.data = [
+            ...updated.data,
+            {
+              product: { id: productId },
+              product_quantity: quantity,
+            } as any,
+          ];
         }
+
+        const finalItem = updated.data.find(
+          (item: any) => item.product?.id === productId
+        );
+        if (finalItem) {
+          pendingUpdates.set(productId, finalItem.product_quantity);
+          log('💾 Pending update saved:', productId, '→', finalItem.product_quantity);
+        }
+
+        log('🔄 Cart updated optimistically:', updated.data.length, 'items');
+        return updated;
       });
 
-      // Notify other components
       cartEvents.emit();
+      updateLock = false;
 
       return { previousCart };
     },
     onError: (error, variables, context) => {
-      // Rollback on error
+      log('❌ AddToCart error:', error);
       if (context?.previousCart) {
         queryClient.setQueryData(["cart"], context.previousCart);
+        pendingUpdates.delete(variables.productId);
         cartEvents.emit();
       }
-      console.error("Add to cart error:", error);
     },
-    onSuccess: () => {
-      // Silently refetch in background to sync with server
+    onSuccess: (data, variables) => {
+      log('✅ AddToCart success');
+      pendingUpdates.delete(variables.productId);
       queryClient.invalidateQueries({
         queryKey: ["cart"],
-        refetchType: "active", // Only refetch if actively being watched
+        refetchType: "active",
       });
     },
   });
@@ -213,6 +260,7 @@ export function useRemoveFromCart() {
 
   return useMutation({
     mutationFn: async (productId: number) => {
+      log('🗑️ RemoveFromCart mutation:', productId);
       const params = new URLSearchParams({ product_id: String(productId) });
 
       const response = await apiClient.patch("/carts", params.toString(), {
@@ -229,8 +277,7 @@ export function useRemoveFromCart() {
         try {
           const parsed = JSON.parse(response.data);
           return parsed.data || [];
-        } catch (error) {
-          console.error("Failed to parse cart response:", error);
+        } catch {
           return [];
         }
       }
@@ -238,30 +285,56 @@ export function useRemoveFromCart() {
       return [];
     },
     onMutate: async (productId) => {
+      while (updateLock) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      updateLock = true;
+
       await queryClient.cancelQueries({ queryKey: ["cart"] });
 
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
 
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
-        return {
-          ...old,
-          data: old.data.filter((item: any) => item.product?.id !== productId),
-        };
+
+        let updated = { ...old, data: [...old.data] };
+        pendingUpdates.forEach((pendingQty, pendingId) => {
+          if (pendingId !== productId) {
+            const idx = updated.data.findIndex(
+              (item: any) => item.product?.id === pendingId
+            );
+            if (idx !== -1) {
+              updated.data[idx] = {
+                ...updated.data[idx],
+                product_quantity: pendingQty,
+              };
+            }
+          }
+        });
+
+        updated.data = updated.data.filter(
+          (item: any) => item.product?.id !== productId
+        );
+
+        pendingUpdates.delete(productId);
+        log('🗑️ Item removed optimistically:', productId);
+        return updated;
       });
 
       cartEvents.emit();
+      updateLock = false;
 
       return { previousCart };
     },
     onError: (error, variables, context) => {
+      log('❌ RemoveFromCart error:', error);
       if (context?.previousCart) {
         queryClient.setQueryData(["cart"], context.previousCart);
         cartEvents.emit();
       }
-      console.error("Remove from cart error:", error);
     },
     onSuccess: () => {
+      log('✅ RemoveFromCart success');
       queryClient.invalidateQueries({
         queryKey: ["cart"],
         refetchType: "active",
@@ -275,6 +348,7 @@ export function useCleanCart() {
 
   return useMutation({
     mutationFn: async () => {
+      log('🧹 CleanCart mutation');
       const response = await apiClient.delete("/carts", {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -289,8 +363,7 @@ export function useCleanCart() {
         try {
           const parsed = JSON.parse(response.data);
           return parsed.data || [];
-        } catch (error) {
-          console.error("Failed to parse cart response:", error);
+        } catch {
           return [];
         }
       }
@@ -298,16 +371,23 @@ export function useCleanCart() {
       return [];
     },
     onMutate: async () => {
+      while (updateLock) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      updateLock = true;
+
       await queryClient.cancelQueries({ queryKey: ["cart"] });
 
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
 
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
+        pendingUpdates.clear();
         return { ...old, data: [] };
       });
 
       cartEvents.emit();
+      updateLock = false;
 
       return { previousCart };
     },
@@ -334,6 +414,7 @@ export function useUpdateCartItemQuantity() {
       productId: number;
       quantity: number;
     }) => {
+      log('🔄 UpdateQuantity mutation:', { productId, quantity });
       const params = new URLSearchParams({
         product_id: String(productId),
         product_quantity: String(quantity),
@@ -352,10 +433,8 @@ export function useUpdateCartItemQuantity() {
 
       if (typeof response.data === "string") {
         try {
-          const parsed = JSON.parse(response.data);
-          return parsed;
-        } catch (error) {
-          console.error("Failed to parse update cart response:", error);
+          return JSON.parse(response.data);
+        } catch {
           return { message: "success", data: "Updated cart" };
         }
       }
@@ -363,39 +442,68 @@ export function useUpdateCartItemQuantity() {
       return { message: "success", data: "Updated cart" };
     },
     onMutate: async ({ productId, quantity }) => {
+      log('🔒 UpdateQuantity onMutate - Waiting for lock...');
+      while (updateLock) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      updateLock = true;
+      log('🔓 Lock acquired');
+
       await queryClient.cancelQueries({ queryKey: ["cart"] });
 
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
+      log('📸 Previous cart state:', previousCart?.data.length, 'items');
 
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
-        return {
-          ...old,
-          data: old.data.map((item: any) =>
-            item.product?.id === productId
-              ? { ...item, product_quantity: quantity }
-              : item
-          ),
-        };
+
+        let updated = { ...old, data: [...old.data] };
+
+        pendingUpdates.forEach((pendingQty, pendingId) => {
+          const idx = updated.data.findIndex(
+            (item: any) => item.product?.id === pendingId
+          );
+          if (idx !== -1) {
+            updated.data[idx] = {
+              ...updated.data[idx],
+              product_quantity: pendingQty,
+            };
+          }
+        });
+
+        updated.data = updated.data.map((item: any) =>
+          item.product?.id === productId
+            ? { ...item, product_quantity: quantity }
+            : item
+        );
+
+        pendingUpdates.set(productId, quantity);
+        log('💾 Pending update saved:', productId, '→', quantity);
+
+        log('🔄 Cart updated optimistically:', updated.data.length, 'items');
+        return updated;
       });
 
       cartEvents.emit();
+      updateLock = false;
 
       return { previousCart };
     },
     onError: (error, variables, context) => {
+      log('❌ UpdateQuantity error:', error);
       if (context?.previousCart) {
         queryClient.setQueryData(["cart"], context.previousCart);
+        pendingUpdates.delete(variables.productId);
         cartEvents.emit();
       }
-      console.error("API update failed:", error);
       throw error;
     },
-    onSuccess: () => {
-      // Background sync
+    onSuccess: (data, variables) => {
+      log('✅ UpdateQuantity success');
+      pendingUpdates.delete(variables.productId);
       queryClient.invalidateQueries({
         queryKey: ["cart"],
-        refetchType: "none", // Don't refetch, trust optimistic update
+        refetchType: "none",
       });
     },
   });
@@ -420,7 +528,7 @@ export function useCreateOrder() {
       return response.data;
     },
     onSuccess: () => {
-      // Clear cart after successful order
+      pendingUpdates.clear();
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
         return { ...old, data: [] };
@@ -437,7 +545,6 @@ export function useCreateOrder() {
   });
 }
 
-// Hook to get cart count for badges
 export function useCartCount() {
   const { data } = useCart();
   return (

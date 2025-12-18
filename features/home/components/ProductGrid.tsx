@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import ProductCard from "@/features/home/components/ProductCard";
-import { useCollectionProducts } from "@/lib/hooks";
+import { useCollectionProducts } from "@/features/collections/hooks/useCollections";
 import type { Collection } from "@/lib/types/api";
 
 type Props = {

@@ -23,7 +23,7 @@ export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
 
   return (
     <div className="fixed left-0 right-0 top-15 z-40 bg-white border-b shadow-lg max-w-[1504px] mx-auto">
-      <div className="container mx-auto px-4">
+      <div className=" mx-auto px-4">
         <div className="flex">
           <CategoryList
             categories={categoryList}

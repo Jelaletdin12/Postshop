@@ -91,9 +91,9 @@ export default function OrderSummary({
     selectedRegion && selectedProvince && paymentType && phone && name;
 
   return (
-    <Card className="w-full md:w-[380px] p-6 rounded-xl h-fit sticky top-20">
+    <Card className="w-full md:w-[380px] p-4 md:p-6 rounded-xl h-fit sticky top-20">
       {/* Customer Information */}
-      <div className="mb-6">
+      <div className="">
         <h3 className="text-lg font-semibold mb-3">
           {t("customer_information")}
         </h3>
@@ -107,7 +107,7 @@ export default function OrderSummary({
               value={name}
               onChange={(e) => onNameChange(e.target.value)}
               placeholder={t("name")}
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
           <div>
@@ -119,7 +119,7 @@ export default function OrderSummary({
               value={lastName}
               onChange={(e) => onLastNameChange(e.target.value)}
               placeholder={t("last_name")}
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
           <div>
@@ -131,14 +131,14 @@ export default function OrderSummary({
               value={phone}
               onChange={(e) => onPhoneChange(e.target.value)}
               placeholder={t("phone")}
-              className="rounded-xl"
+              className="rounded-lg"
             />
           </div>
         </div>
       </div>
 
       {/* Payment Type */}
-      <div className="mb-6">
+      <div className="">
         <h3 className="text-lg font-semibold mb-3">{t("payment_type")}</h3>
         <div className="flex gap-2">
           {paymentTypes.map((type) => (
@@ -166,13 +166,13 @@ export default function OrderSummary({
       </div>
 
       {/* Delivery Type */}
-      <DeliveryTypeSelector
+      {/* <DeliveryTypeSelector
         selectedType={deliveryType}
         onSelect={onDeliveryTypeChange}
-      />
+      /> */}
 
       {/* Region Selection */}
-      <div className="mb-6">
+      <div className="">
         <Label className="text-lg font-semibold mb-3 block">
           {t("choose_region")}
         </Label>
@@ -204,7 +204,7 @@ export default function OrderSummary({
 
       {/* Province Selection */}
       {selectedRegion && provincesForSelectedRegion.length > 0 && (
-        <div className="mb-6">
+        <div className="">
           <Label className="text-lg font-semibold mb-3 block">
             {t("choose_address")}
           </Label>
@@ -212,7 +212,7 @@ export default function OrderSummary({
             value={selectedProvince?.toString() || ""}
             onValueChange={(value) => onProvinceChange(parseInt(value))}
           >
-            <SelectTrigger className="rounded-xl">
+            <SelectTrigger className="rounded-lg w-full">
               <SelectValue placeholder={t("choose_address")} />
             </SelectTrigger>
             <SelectContent>
@@ -227,7 +227,7 @@ export default function OrderSummary({
       )}
 
       {/* Note */}
-      <div className="mb-6">
+      <div className="">
         <Label className="text-lg font-semibold mb-3 block">{t("note")}</Label>
         <Textarea
           value={note}
@@ -253,7 +253,7 @@ export default function OrderSummary({
 
       <Separator className="my-4" />
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center ">
         <span className="text-lg font-semibold">
           {order.billing.footer.title}:
         </span>

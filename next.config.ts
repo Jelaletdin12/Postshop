@@ -11,8 +11,9 @@ const nextConfig: NextConfig = {
     unoptimized: true,
     remotePatterns: [
       {
-        protocol: "https",
+        protocol: "http",
         hostname: "shop.post.tm",
+        port: "8080",
       },
     ],
   },

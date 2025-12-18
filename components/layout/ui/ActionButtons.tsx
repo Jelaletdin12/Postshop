@@ -112,7 +112,7 @@ const cartCount = useCartCount()
   );
 
   return (
-    <div className="hidden items-center gap-1 md:flex">
+    <div className="hidden items-center gap-1 lg:flex">
       {/* Profile/Login Button with Dropdown */}
       {authLoading ? (
         <div className="h-10 w-24 animate-pulse bg-gray-200 rounded" />

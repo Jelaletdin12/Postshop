@@ -105,7 +105,7 @@ export default function CartPage() {
     const orderData = userStore.getOrderData();
     if (!orderData) {
       console.error("User data not found");
-      router.push("/login");
+      router.push("/");
       return;
     }
 
@@ -114,7 +114,7 @@ export default function CartPage() {
         customer_name: name,
         customer_phone: phone,
         customer_address: selectedProvinceData.name,
-        shipping_method: deliveryType === "PICK_UP" ? "pickup" : "standart",
+        shipping_method: "standart",
         payment_type_id: paymentType.id,
         region: selectedRegion,
         note: note || undefined,
@@ -138,12 +138,12 @@ export default function CartPage() {
   }
 
   return (
-    <div className="container mx-auto px-2 md:px-4 lg:px-6 mb-18">
-      <h1 className="text-3xl font-bold mb-6 pt-3">{t("cart")}</h1>
+    <div className=" mx-auto px-2 md:px-4 lg:px-6 mb-18">
+      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 pt-3">{t("cart")}</h1>
 
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1">
-          <Card className="p-6 rounded-xl">
+          <Card className="p-4 md:p-6 rounded-xl">
             {Object.entries(itemsBySeller).map(
               ([sellerId, { seller, items }]) => (
                 <div key={sellerId} className="mb-6">
