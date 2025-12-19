@@ -44,7 +44,7 @@ export function ProductImageGallery({
   );
 
   return (
-    <div className="flex-1 max-w-2xl">
+    <div className="contents  max-w-2xl">
       <div className="relative">
         <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-white">
           {images.length > 0 ? (
@@ -68,7 +68,7 @@ export function ProductImageGallery({
               <button
                 key={index}
                 onClick={() => handleImageSelect(index)}
-                className={`relative w-16 h-16 flex-shrink-0 rounded overflow-hidden border-2 transition-all ${
+                className={`relative w-16 h-16 shrink-0 rounded cursor-pointer overflow-hidden border-2 transition-all ${
                   selectedImage === index
                     ? "border-primary ring-2 ring-primary/20"
                     : "border-gray-200 hover:border-gray-300"

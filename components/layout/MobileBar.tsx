@@ -46,7 +46,6 @@ export default function MobileBottomNav({
 
   const { data: categories = [] } = useCategories();
 
-  // OPTIMIZED: Use event-driven cart count instead of full cart data
   const cartCount = useCartCount();
 
   const { data: favoritesData } = useFavorites();
@@ -61,12 +60,6 @@ export default function MobileBottomNav({
     e.preventDefault();
     e.stopPropagation();
 
-    console.log("[MobileBottomNav] Profile clicked", {
-      authLoading,
-      isAuthenticated,
-      hasOnLoginClick: !!onLoginClick,
-    });
-
     if (authLoading) {
       return;
     }
@@ -75,10 +68,8 @@ export default function MobileBottomNav({
       router.push(`/${locale}/me`);
     } else {
       if (onLoginClick) {
-        console.log("[MobileBottomNav] Calling parent onLoginClick");
         onLoginClick();
       } else {
-        console.log("[MobileBottomNav] Using local login dialog");
         setIsLoginOpen(true);
       }
     }
@@ -86,7 +77,6 @@ export default function MobileBottomNav({
 
   const handleNavigation = (path: string) => (e: React.MouseEvent) => {
     e.preventDefault();
-    console.log("[MobileBottomNav] Navigating to:", path);
     router.push(path);
   };
 
@@ -103,7 +93,6 @@ export default function MobileBottomNav({
             size="sm"
             className="flex-col gap-0.5 h-auto px-2 py-2"
             onClick={() => {
-              console.log("[MobileBottomNav] Catalog clicked");
               setIsCategoryOpen(true);
             }}
           >

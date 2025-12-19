@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { useOpenStore } from "@/lib/hooks";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface OpenStorePageProps {
   locale?: string;
@@ -68,56 +69,39 @@ export default function OpenStorePage({
   const [fileName, setFileName] = useState("");
 
   const { mutate: submitOpenStore, isPending: loading } = useOpenStore();
-  
 
-  const t = translations || {
-    title: "Форма подачи заявления на открытие магазина",
-    firstName: "Имя",
-    lastName: "Фамилия",
-    email: "Email",
-    phone: "Телефон",
-    uploadPatent: "Загрузите патент на розничную торговлю (PDF, JPG)",
-    submit: "Отправить",
-    selectedFile: "Выбранный файл",
-    firstNameRequired: "Имя обязательно",
-    lastNameRequired: "Фамилия обязательна",
-    emailInvalid: "Некорректный email",
-    phoneInvalid: "Некорректный номер телефона",
-    fileRequired: "Патент обязателен",
-    fileSizeError: "Файл слишком большой (макс. 25MB)",
-    fileTypeError: "Только PDF и JPG документы",
-  };
+  const t = useTranslations();
 
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = t.firstNameRequired;
+      newErrors.firstName = t("firstNameRequired");
     }
 
     if (!formData.lastName.trim()) {
-      newErrors.lastName = t.lastNameRequired;
+      newErrors.lastName = t("lastNameRequired");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      newErrors.email = t.emailInvalid;
+      newErrors.email = t("emailInvalid");
     }
 
     const phoneRegex = /^\+?[0-9]{6,15}$/;
     if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = t.phoneInvalid;
+      newErrors.phone = t("phoneInvalid");
     }
 
     if (!formData.file) {
-      newErrors.file = t.fileRequired;
+      newErrors.file = t("fileRequired");
     } else {
       const allowedTypes = ["image/jpeg", "image/jpg", "application/pdf"];
       if (!allowedTypes.includes(formData.file.type)) {
-        newErrors.file = t.fileTypeError;
+        newErrors.file = t("fileTypeError");
       }
       if (formData.file.size > 25 * 1024 * 1024) {
-        newErrors.file = t.fileSizeError;
+        newErrors.file = t("fileSizeError");
       }
     }
 
@@ -160,9 +144,8 @@ export default function OpenStorePage({
         },
         {
           onSuccess: () => {
-            toast.success("Your store request has been submitted successfully");
+            toast.success(t("submit_success"));
 
-            
             setFormData({
               firstName: "",
               lastName: "",
@@ -173,7 +156,7 @@ export default function OpenStorePage({
             setFileName("");
           },
           onError: (error: any) => {
-            toast.error(error?.message || "Failed to submit store request");
+            toast.error(error?.message || t("submit_error"));
           },
         }
       );
@@ -184,7 +167,7 @@ export default function OpenStorePage({
     <div className=" bg-gray-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl text-center">{t.title}</CardTitle>
+          <CardTitle className="text-2xl text-center">{t("title")}</CardTitle>
           <CardDescription className="text-center">
             Заполните форму для подачи заявления
           </CardDescription>
@@ -193,7 +176,7 @@ export default function OpenStorePage({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* First Name */}
             <div className="space-y-2">
-              <Label htmlFor="firstName">{t.firstName}</Label>
+              <Label htmlFor="firstName">{t("firstName")}</Label>
               <Input
                 id="firstName"
                 name="firstName"
@@ -208,7 +191,7 @@ export default function OpenStorePage({
 
             {/* Last Name */}
             <div className="space-y-2">
-              <Label htmlFor="lastName">{t.lastName}</Label>
+              <Label htmlFor="lastName">{t("lastName")}</Label>
               <Input
                 id="lastName"
                 name="lastName"
@@ -223,7 +206,7 @@ export default function OpenStorePage({
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">{t.email}</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -239,7 +222,7 @@ export default function OpenStorePage({
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label htmlFor="phone">{t.phone}</Label>
+              <Label htmlFor="phone">{t("phone")}</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -255,7 +238,7 @@ export default function OpenStorePage({
 
             {/* File Upload */}
             <div className="space-y-2">
-              <Label htmlFor="file">{t.uploadPatent}</Label>
+              <Label htmlFor="file">{t("uploadPatent")}</Label>
               <div className="flex flex-col gap-2">
                 <Input
                   id="file"
@@ -267,15 +250,15 @@ export default function OpenStorePage({
                 <Button
                   type="button"
                   variant="outline"
-                  className="w-full bg-transparent"
+                  className="w-full bg-transparent cursor-pointer"
                   onClick={() => document.getElementById("file")?.click()}
                 >
                   <Upload className="mr-2 h-4 w-4" />
-                  {t.uploadPatent}
+                  {t("uploadPatent")}
                 </Button>
                 {fileName && (
                   <p className="text-sm text-gray-600">
-                    {t.selectedFile}: {fileName}
+                    {t("selectedFile")}: {fileName}
                   </p>
                 )}
                 {errors.file && (
@@ -290,7 +273,7 @@ export default function OpenStorePage({
               className="w-full cursor-pointer bg-[#005bff] hover:bg-[#0041c4]"
               disabled={loading}
             >
-              {loading ? "Загрузка..." : t.submit}
+              {loading ? "Загрузка..." : t("submit")}
             </Button>
           </form>
         </CardContent>

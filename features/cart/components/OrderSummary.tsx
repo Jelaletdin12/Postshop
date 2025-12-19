@@ -265,7 +265,7 @@ export default function OrderSummary({
       <Button
         onClick={onCompleteOrder}
         disabled={!isFormValid || isLoading}
-        className="w-full rounded-xl bg-[#005bff] hover:bg-[#004dcc] h-12 text-lg font-bold disabled:opacity-50"
+        className="w-full rounded-lg cursor-pointer bg-[#005bff] hover:bg-[#004dcc] h-12 text-lg font-bold disabled:opacity-50"
         size="lg"
       >
         {isLoading ? `${t("order")}...` : t("order")}

@@ -106,22 +106,19 @@ export default function CategoryPageClient({
     }
   }, [selectedCategory?.id]);
 
-  // Update products list - BU KISIM ÖNEMLİ!
+  // Update products list
   useEffect(() => {
     if (productsData?.data) {
       setAllProducts((prev) => {
-        // İlk sayfa ise direkt replace et
         if (currentPage === 1) {
           return productsData.data;
         }
 
-        // Sonraki sayfalar için deduplicate et
         const existingIds = new Set(prev.map((p) => p.id));
         const newProducts = productsData.data.filter(
           (p: Product) => !existingIds.has(p.id)
         );
 
-        // Eğer yeni ürün yoksa, return prev (gereksiz re-render önlenir)
         if (newProducts.length === 0) {
           return prev;
         }
@@ -129,16 +126,13 @@ export default function CategoryPageClient({
         return [...prev, ...newProducts];
       });
     }
-  }, [productsData?.data, currentPage]); // productsData yerine productsData.data
+  }, [productsData?.data, currentPage]); 
 
-  // hasMore hesaplama - BU KISIM DA ÖNEMLİ!
   const hasMore = useMemo(() => {
     if (!productsData?.pagination) return false;
 
-    // pagination.next_page_url varsa devam et
     if (productsData.pagination.next_page_url) return true;
 
-    // Alternatif olarak: current_page < last_page kontrolü
     if (
       productsData.pagination.current_page &&
       productsData.pagination.last_page
@@ -148,7 +142,6 @@ export default function CategoryPageClient({
       );
     }
 
-    // Alternatif 2: hasMorePages flag'i varsa
     if (productsData.pagination.hasMorePages !== undefined) {
       return productsData.pagination.hasMorePages;
     }
@@ -158,7 +151,6 @@ export default function CategoryPageClient({
 
   const loadMoreData = useCallback(() => {
     if (!hasMore || isFetching) return;
-    console.log("Loading page:", currentPage + 1); // Debug için
     setCurrentPage((prev) => prev + 1);
   }, [hasMore, isFetching, currentPage]);
 

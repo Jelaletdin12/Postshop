@@ -235,7 +235,6 @@ export function useLogout() {
       }
     },
     onError: () => {
-      // Always clear local state on logout
       TokenStorage.clearTokens();
       queryClient.clear();
       

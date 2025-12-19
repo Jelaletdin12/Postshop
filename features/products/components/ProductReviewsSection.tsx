@@ -56,7 +56,7 @@ export function ProductReviewsSection({
             </span> */}
           </div>
         </div>
-        <Button onClick={onWriteReview} className="rounded-lg bg-[#005bff] hover:bg-[#0041c4]">
+        <Button onClick={onWriteReview} className="rounded-lg cursor-pointer bg-[#005bff] hover:bg-[#0041c4]">
           <Send className="mr-2 h-4 w-4" />
           {t("write_review")}
         </Button>

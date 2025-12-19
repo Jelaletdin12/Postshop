@@ -28,12 +28,11 @@ class TokenStorage {
   static setAuthToken(token: string): void {
     if (!this.isClient) return;
     localStorage.setItem(AUTH_TOKEN_KEY, token);
-    localStorage.removeItem(GUEST_TOKEN_KEY); // Auth token replaces guest token
+    localStorage.removeItem(GUEST_TOKEN_KEY); 
   }
 
   static setGuestToken(token: string): void {
     if (!this.isClient) return;
-    // Only set guest token if no auth token exists
     if (!this.getAuthToken()) {
       localStorage.setItem(GUEST_TOKEN_KEY, token);
     }

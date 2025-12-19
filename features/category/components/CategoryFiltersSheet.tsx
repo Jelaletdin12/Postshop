@@ -28,7 +28,7 @@ export default function CategoryFiltersSheet({
     <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetTrigger asChild>
         <Button
-          className="bg-[#005bff] hover:bg-[#0041c4] sm:hidden fixed bottom-20 right-4 rounded-xl font-bold gap-2 z-10 shadow-lg"
+          className="bg-[#005bff] hover:bg-[#0041c4] sm:hidden fixed bottom-20 right-4 rounded-lg cursor-pointer font-bold gap-2 z-10 shadow-lg"
           size="lg"
         >
           {filterLabel}
@@ -40,7 +40,7 @@ export default function CategoryFiltersSheet({
           <SheetTitle>{filterLabel}</SheetTitle>
           <button
             onClick={() => onOpenChange(false)}
-            className="absolute top-4 right-4 rounded-md ring-offset-background transition-opacity hover:opacity-100"
+            className="absolute top-4 right-4 rounded-md cursor-pointer ring-offset-background transition-opacity hover:opacity-100"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">{closeLabel}</span>

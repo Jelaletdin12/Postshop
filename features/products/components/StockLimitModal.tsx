@@ -45,7 +45,7 @@ export function StockLimitModal({
         <div className="flex justify-center mt-4">
           <Button
             onClick={() => onOpenChange(false)}
-            className="w-full rounded-lg"
+            className="w-full rounded-lg cursor-pointer"
           >
             {t("understood")}
           </Button>

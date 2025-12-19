@@ -23,7 +23,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  // Generate static params for popular products
   return [{ slug: "nike-air-max" }, { slug: "adidas-ultraboost" }];
 }
 

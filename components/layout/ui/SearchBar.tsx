@@ -92,9 +92,9 @@ export default function SearchBar({
           <button
             key={product.id}
             onClick={() => handleProductClick(product.id)}
-            className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b last:border-b-0"
+            className="w-full cursor-pointer flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b last:border-b-0"
           >
-            <div className="relative w-16 h-16 flex-shrink-0">
+            <div className="relative w-16 h-16 shrink-0">
               <Image
                 src={product.thumbnail}
                 alt={product.name}
@@ -157,7 +157,7 @@ export default function SearchBar({
       </div>
       <Button
         size="icon"
-        className="h-auto hover:bg-[#005bff] cursor-pointer bg-transparent flex items-center mr-1.5 text-white"
+        className="h-auto  hover:bg-[#005bff] cursor-pointer bg-transparent flex items-center mr-1.5 text-white"
       >
         <SearchIcon />
       </Button>

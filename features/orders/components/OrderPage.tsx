@@ -258,6 +258,7 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
               variant="outline"
               onClick={() => setIsCancelDialogOpen(false)}
               disabled={isCancellingOrder}
+              className="cursor-pointer"
             >
               {t("keep_order")}
             </Button>
@@ -265,6 +266,7 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
               variant="destructive"
               onClick={confirmCancelOrder}
               disabled={isCancellingOrder}
+              className="cursor-pointer"
             >
               {isCancellingOrder ? t("cancelling") : t("cancel_order")}
             </Button>
@@ -404,7 +406,7 @@ function CompactOrderCard({
                   key={index}
                   className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <div className="relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden bg-white border">
+                  <div className="relative w-16 h-16 shrink-0 rounded-md overflow-hidden bg-white border">
                     <Image
                       src={
                         item.product.images_400x400 || item.product.thumbnail
@@ -454,7 +456,7 @@ function CompactOrderCard({
                   onCancel(order);
                 }}
                 disabled={isCancelling}
-                className="w-full"
+                className="w-full cursor-pointer"
               >
                 {t("cancel_order")}
               </Button>

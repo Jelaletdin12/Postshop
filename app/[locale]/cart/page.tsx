@@ -10,11 +10,11 @@ import {
   useRegions,
   usePaymentTypes,
 } from "@/lib/hooks";
-import { userStore } from "@/features/profile/userStore";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { DeliveryType, PaymentType } from "@/lib/types/api";
 import EmptyCart from "@/features/cart/components/EmptyCart";
+
 export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
   const [paymentType, setPaymentType] = useState<PaymentType | null>(null);
@@ -38,14 +38,6 @@ export default function CartPage() {
 
   useEffect(() => {
     setIsClient(true);
-    
-    // Get user data from store if available
-    const orderData = userStore.getOrderData();
-    if (orderData) {
-      if (orderData.customer_name) setName(orderData.customer_name);
-      if (orderData.customer_last_name) setLastName(orderData.customer_last_name);
-      if (orderData.customer_phone) setPhone(orderData.customer_phone);
-    }
   }, []);
 
   const regionGroups = useMemo(() => {
@@ -92,7 +84,13 @@ export default function CartPage() {
   };
 
   const handleCompleteOrder = () => {
-    if (!selectedRegion || !selectedProvince || !paymentType || !phone || !name) {
+    if (
+      !selectedRegion ||
+      !selectedProvince ||
+      !paymentType ||
+      !phone ||
+      !name
+    ) {
       console.warn("Missing required fields for order");
       return;
     }
@@ -101,13 +99,6 @@ export default function CartPage() {
       (p) => p.id === selectedProvince
     );
     if (!selectedProvinceData) return;
-
-    const orderData = userStore.getOrderData();
-    if (!orderData) {
-      console.error("User data not found");
-      router.push("/");
-      return;
-    }
 
     createOrder(
       {
@@ -129,17 +120,15 @@ export default function CartPage() {
 
   if (!isClient) return null;
 
-  
-
   if (isError || cartItems.length === 0) {
-    return (
-      <EmptyCart/>
-    );
+    return <EmptyCart />;
   }
 
   return (
     <div className=" mx-auto px-2 md:px-4 lg:px-6 mb-18">
-      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 pt-3">{t("cart")}</h1>
+      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 pt-3">
+        {t("cart")}
+      </h1>
 
       <div className="flex flex-col md:flex-row gap-6">
         <div className="flex-1">

@@ -169,7 +169,7 @@ export default function ProductCard({
         {
           onSuccess: (data) =>
             toast.success(
-              data.wasAdded ? "Added to favorites" : "Removed from favorites"
+              data.wasAdded ? t("added_to_favorites") : t("removed_from_favorites")
             ),
           onError: () => toast.error("Error. Try again"),
         }
@@ -196,12 +196,12 @@ export default function ProductCard({
           quantity: localQuantity,
         });
         await refetchCart();
-        toast.success("Added to cart", {
-          description: `${name} has been added to your cart`,
+        toast.success(t("added_to_cart"), {
+          description: `${name} ${t("added_to_cart_description")}`,
         });
       } catch (error) {
         console.error("Add to cart error:", error);
-        toast.error("Failed to add to cart");
+        toast.error(t("add_to_cart_failed"));
       } finally {
         setIsSyncing(false);
       }
@@ -303,7 +303,7 @@ export default function ProductCard({
             <button
               onClick={handleFavorite}
               disabled={isFavoriteToggling || isFavoriteLoading}
-              className="absolute top-3 right-3 z-10 rounded-full bg-white/80 p-2 hover:bg-white transition-all disabled:opacity-50"
+              className="absolute top-3 cursor-pointer right-3 z-10 rounded-full bg-white/80 p-2 hover:bg-white transition-all disabled:opacity-50"
             >
               {isFavoriteLoading ? (
                 <div className="w-5 h-5 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
@@ -323,7 +323,7 @@ export default function ProductCard({
                     key={idx}
                     data-carousel-control="true"
                     onClick={(e) => handleNavClick(e, () => api?.scrollTo(idx))}
-                    className={`h-1.5 rounded-full transition-all ${
+                    className={`h-1.5 rounded-full cursor-pointer transition-all ${
                       idx === current ? "w-6 bg-white" : "w-1.5 bg-white/60"
                     }`}
                   />
@@ -372,7 +372,7 @@ export default function ProductCard({
                 <Button
                   onClick={handleAddToCart}
                   disabled={isSyncing}
-                  className="w-full rounded-lg gap-2 bg-[#005bff] hover:bg-[#0041c4]"
+                  className="w-full rounded-lg cursor-pointer gap-2 bg-[#005bff] hover:bg-[#0041c4]"
                   size="sm"
                 >
                   {isSyncing ? (
@@ -394,7 +394,7 @@ export default function ProductCard({
                     size="icon"
                     onClick={(e) => handleQuantityChange(e, -1)}
                     disabled={isSyncing || localQuantity <= 1}
-                    className="rounded-lg h-9 w-9 shrink-0"
+                    className="rounded-lg cursor-pointer h-9 w-9 shrink-0"
                   >
                     <Minus className="h-4 w-4" />
                   </Button>
@@ -409,7 +409,7 @@ export default function ProductCard({
                     size="icon"
                     onClick={(e) => handleQuantityChange(e, 1)}
                     disabled={isSyncing}
-                    className="rounded-lg h-9 w-9 shrink-0"
+                    className="rounded-lg cursor-pointer h-9 w-9 shrink-0"
                   >
                     <Plus className="h-4 w-4 text-[#005bff]" />
                   </Button>
@@ -444,7 +444,7 @@ export default function ProductCard({
                 e.stopPropagation();
                 setShowStockModal(false);
               }}
-              className="w-full rounded-lg"
+              className="w-full rounded-lg cursor-pointer"
             >
               {t("understood")}
             </Button>

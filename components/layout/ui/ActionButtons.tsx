@@ -122,7 +122,7 @@ const cartCount = useCartCount()
             <Button
               variant="ghost"
               size="sm"
-              className="flex-col gap-0.5 h-auto px-2 py-2"
+              className="flex-col cursor-pointer gap-0.5 h-auto px-2 py-2"
             >
               <ProfileIcon />
               <span className="text-xs text-gray-700">{t("profile")}</span>
@@ -143,7 +143,7 @@ const cartCount = useCartCount()
         <Button
           variant="ghost"
           size="sm"
-          className="flex-col gap-0.5 h-auto px-2 py-2"
+          className="flex-col cursor-pointer gap-0.5 h-auto px-2 py-2"
           onClick={onAuthClick}
         >
           <ProfileIcon />

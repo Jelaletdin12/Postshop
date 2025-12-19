@@ -12,6 +12,20 @@ export interface ProductMedia {
   
 }
 
+export interface Carousel {
+  title: string
+  image:  string
+  url?: string | null
+}
+
+export interface Review {
+  id: number;
+  rating: number;
+  title: string;
+  created_at: string;
+}
+
+
 export type DeliveryType = "SELECTED_DELIVERY" | "PICK_UP";
 
 export interface PaymentType {

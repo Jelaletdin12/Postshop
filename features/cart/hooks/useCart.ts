@@ -14,30 +14,20 @@ interface CartResponse {
   errorDetails?: string;
 }
 
-// DEBUG: Enable detailed logging
-const DEBUG = true;
-const log = (...args: any[]) => {
-  if (DEBUG) console.log('[useCart]', ...args);
-};
-
-// CRITICAL: Single source of truth for pending updates
-const pendingUpdates = new Map<number, number>(); // productId -> quantity
+const pendingUpdates = new Map<number, number>();
 let updateLock = false;
 
 class CartEventEmitter {
   private listeners: Set<() => void> = new Set();
 
   subscribe(callback: () => void) {
-    log('🔔 New subscriber added. Total:', this.listeners.size + 1);
     this.listeners.add(callback);
     return () => {
-      log('🔕 Subscriber removed. Total:', this.listeners.size - 1);
       this.listeners.delete(callback);
     };
   }
 
   emit() {
-    log('📢 Emitting cart event to', this.listeners.size, 'listeners');
     this.listeners.forEach((cb) => cb());
   }
 }
@@ -76,24 +66,13 @@ function transformCartResponse(response: any): CartResponse {
 export function useCart(options?: Partial<UseQueryOptions<CartResponse>>) {
   const queryClient = useQueryClient();
 
-  log('🎣 useCart hook called with options:', options);
-
   const query = useQuery({
     queryKey: ["cart"],
     queryFn: async () => {
-      log('🌐 Fetching cart from API...');
       const response = await apiClient.get("/carts");
       const transformed = transformCartResponse(response.data);
-      log('✅ Cart fetched:', {
-        itemCount: transformed.data.length,
-        items: transformed.data.map(item => ({
-          productId: item.product?.id,
-          quantity: item.product_quantity
-        }))
-      });
       return transformed;
     },
-    // CRITICAL FIX: Merge options AFTER defaults
     refetchOnMount: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: true,
@@ -101,27 +80,17 @@ export function useCart(options?: Partial<UseQueryOptions<CartResponse>>) {
     gcTime: 1000 * 60 * 5,
     retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    // User options OVERRIDE defaults
     ...options,
   });
 
-  log('🔧 Query config after merge:', {
-    refetchOnMount: query.refetch !== undefined,
-    staleTime: query.isStale,
-    dataUpdatedAt: query.dataUpdatedAt
-  });
-
   useEffect(() => {
-    log('🔗 Setting up cart events listener in useCart');
     const unsubscribe = cartEvents.subscribe(() => {
-      log('📥 Cart event received in useCart, invalidating query');
       queryClient.invalidateQueries({
         queryKey: ["cart"],
         refetchType: "none",
       });
     });
     return () => {
-      log('🔌 Cleaning up cart events listener in useCart');
       unsubscribe();
     };
   }, [queryClient]);
@@ -140,7 +109,6 @@ export function useAddToCart() {
       productId: number;
       quantity?: number;
     }) => {
-      log('➕ AddToCart mutation:', { productId, quantity });
       const params = new URLSearchParams({
         product_id: String(productId),
         product_quantity: String(quantity),
@@ -167,17 +135,14 @@ export function useAddToCart() {
       return { message: "success", data: "Added to cart" };
     },
     onMutate: async ({ productId, quantity }) => {
-      log('🔒 AddToCart onMutate - Waiting for lock...');
       while (updateLock) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
       updateLock = true;
-      log('🔓 Lock acquired');
 
       await queryClient.cancelQueries({ queryKey: ["cart"] });
 
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
-      log('📸 Previous cart state:', previousCart?.data.length, 'items');
 
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
@@ -224,10 +189,8 @@ export function useAddToCart() {
         );
         if (finalItem) {
           pendingUpdates.set(productId, finalItem.product_quantity);
-          log('💾 Pending update saved:', productId, '→', finalItem.product_quantity);
         }
 
-        log('🔄 Cart updated optimistically:', updated.data.length, 'items');
         return updated;
       });
 
@@ -237,7 +200,6 @@ export function useAddToCart() {
       return { previousCart };
     },
     onError: (error, variables, context) => {
-      log('❌ AddToCart error:', error);
       if (context?.previousCart) {
         queryClient.setQueryData(["cart"], context.previousCart);
         pendingUpdates.delete(variables.productId);
@@ -245,7 +207,6 @@ export function useAddToCart() {
       }
     },
     onSuccess: (data, variables) => {
-      log('✅ AddToCart success');
       pendingUpdates.delete(variables.productId);
       queryClient.invalidateQueries({
         queryKey: ["cart"],
@@ -260,7 +221,6 @@ export function useRemoveFromCart() {
 
   return useMutation({
     mutationFn: async (productId: number) => {
-      log('🗑️ RemoveFromCart mutation:', productId);
       const params = new URLSearchParams({ product_id: String(productId) });
 
       const response = await apiClient.patch("/carts", params.toString(), {
@@ -286,7 +246,7 @@ export function useRemoveFromCart() {
     },
     onMutate: async (productId) => {
       while (updateLock) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
       updateLock = true;
 
@@ -317,7 +277,6 @@ export function useRemoveFromCart() {
         );
 
         pendingUpdates.delete(productId);
-        log('🗑️ Item removed optimistically:', productId);
         return updated;
       });
 
@@ -327,14 +286,12 @@ export function useRemoveFromCart() {
       return { previousCart };
     },
     onError: (error, variables, context) => {
-      log('❌ RemoveFromCart error:', error);
       if (context?.previousCart) {
         queryClient.setQueryData(["cart"], context.previousCart);
         cartEvents.emit();
       }
     },
     onSuccess: () => {
-      log('✅ RemoveFromCart success');
       queryClient.invalidateQueries({
         queryKey: ["cart"],
         refetchType: "active",
@@ -348,7 +305,6 @@ export function useCleanCart() {
 
   return useMutation({
     mutationFn: async () => {
-      log('🧹 CleanCart mutation');
       const response = await apiClient.delete("/carts", {
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -372,7 +328,7 @@ export function useCleanCart() {
     },
     onMutate: async () => {
       while (updateLock) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
       updateLock = true;
 
@@ -414,7 +370,6 @@ export function useUpdateCartItemQuantity() {
       productId: number;
       quantity: number;
     }) => {
-      log('🔄 UpdateQuantity mutation:', { productId, quantity });
       const params = new URLSearchParams({
         product_id: String(productId),
         product_quantity: String(quantity),
@@ -442,17 +397,14 @@ export function useUpdateCartItemQuantity() {
       return { message: "success", data: "Updated cart" };
     },
     onMutate: async ({ productId, quantity }) => {
-      log('🔒 UpdateQuantity onMutate - Waiting for lock...');
       while (updateLock) {
-        await new Promise(resolve => setTimeout(resolve, 50));
+        await new Promise((resolve) => setTimeout(resolve, 50));
       }
       updateLock = true;
-      log('🔓 Lock acquired');
 
       await queryClient.cancelQueries({ queryKey: ["cart"] });
 
       const previousCart = queryClient.getQueryData<CartResponse>(["cart"]);
-      log('📸 Previous cart state:', previousCart?.data.length, 'items');
 
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;
@@ -478,9 +430,7 @@ export function useUpdateCartItemQuantity() {
         );
 
         pendingUpdates.set(productId, quantity);
-        log('💾 Pending update saved:', productId, '→', quantity);
 
-        log('🔄 Cart updated optimistically:', updated.data.length, 'items');
         return updated;
       });
 
@@ -490,7 +440,6 @@ export function useUpdateCartItemQuantity() {
       return { previousCart };
     },
     onError: (error, variables, context) => {
-      log('❌ UpdateQuantity error:', error);
       if (context?.previousCart) {
         queryClient.setQueryData(["cart"], context.previousCart);
         pendingUpdates.delete(variables.productId);
@@ -499,7 +448,6 @@ export function useUpdateCartItemQuantity() {
       throw error;
     },
     onSuccess: (data, variables) => {
-      log('✅ UpdateQuantity success');
       pendingUpdates.delete(variables.productId);
       queryClient.invalidateQueries({
         queryKey: ["cart"],

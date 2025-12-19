@@ -96,14 +96,14 @@ export function ReviewModal({
           <Button
             variant="outline"
             onClick={handleClose}
-            className="flex-1 rounded-lg"
+            className="flex-1 rounded-lg cursor-pointer"
           >
             {t("cancel")}
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={rating === 0 || !text.trim() || isSubmitting}
-            className="flex-1 rounded-lg bg-[#005bff] hover:bg-[#0041c4]"
+            className="flex-1 rounded-lg cursor-pointer bg-[#005bff] hover:bg-[#0041c4]"
           >
             {isSubmitting ? (
               <>

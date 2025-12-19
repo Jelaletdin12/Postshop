@@ -29,7 +29,6 @@ export default function HomePage() {
     isError: collectionsError,
   } = useCollections();
 
-  // Prefetch favorites
   useFavorites();
 
   const loadMore = () => {

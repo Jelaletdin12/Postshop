@@ -349,7 +349,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
                 size="sm"
                 onClick={handleDelete}
                 disabled={isRemoving}
-                className="w-fit p-0 h-auto hover:bg-transparent hover:text-red-500"
+                className="w-fit cursor-pointer p-0 h-auto hover:bg-transparent hover:text-red-500"
               >
                 <Trash2 className="h-5 w-5" />
               </Button>
@@ -387,7 +387,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
                 variant="outline"
                 size="icon"
                 onClick={handleQuantityDecrease}
-                className={` cursor-pointerrounded-xl bg-blue-50 ${
+                className={` cursor-pointer rounded-xl bg-blue-50 ${
                   isSyncing ? "opacity-70" : ""
                 }`}
               >
@@ -449,7 +449,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
           <div className="flex justify-center mt-4">
             <Button
               onClick={() => setShowStockModal(false)}
-              className="w-full rounded-xl"
+              className="w-full rounded-lg cursor-pointer"
             >
               {t("understood")}
             </Button>

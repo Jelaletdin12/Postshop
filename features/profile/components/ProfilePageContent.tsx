@@ -38,7 +38,6 @@ export default function ClientProfilePage(props: ProfilePageProps) {
 
   useEffect(() => {
     if (user && !isEditing) {
-      console.log("[Profile] User data loaded:", user);
       setFormData({
         name: user.first_name || "",
         last_name: user.last_name || "",
@@ -90,7 +89,6 @@ export default function ClientProfilePage(props: ProfilePageProps) {
       address: formData.address.trim(),
     };
 
-    console.log("[Profile] Saving data:", apiData);
 
     try {
       await updateProfile.mutateAsync(apiData);
@@ -160,7 +158,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
             </p>
             <Button
               onClick={() => window.location.reload()}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto cursor-pointer"
             >
               {t("try_again")}
             </Button>
@@ -186,7 +184,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                   : t("view_your_information")}
               </p>
             </div>
-            <div className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
+            <div className="shrink-0 w-12 h-12 sm:w-14 sm:h-14 bg-blue-600 rounded-full flex items-center justify-center shadow-sm">
               <User className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
             </div>
           </div>
@@ -209,7 +207,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                   onClick={handleEdit}
                   variant="outline"
                   size="sm"
-                  className="self-start sm:self-center border-gray-300 hover:bg-gray-50 text-gray-700 h-9"
+                  className="self-start sm:self-center cursor-pointer border-gray-300 hover:bg-gray-50 text-gray-700 h-9"
                 >
                   <Edit2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                   <span className="text-sm">{t("edit")}</span>
@@ -329,7 +327,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                     <Button
                       onClick={handleSave}
                       disabled={updateProfile.isPending}
-                      className="w-full sm:flex-1 bg-blue-600 hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base font-medium shadow-sm"
+                      className="w-full sm:flex-1 cursor-pointer bg-blue-600 hover:bg-blue-700 h-10 sm:h-11 text-sm sm:text-base font-medium shadow-sm"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       {updateProfile.isPending
@@ -340,7 +338,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
                       onClick={handleCancel}
                       variant="outline"
                       disabled={updateProfile.isPending}
-                      className="w-full sm:flex-1 h-10 sm:h-11 text-sm sm:text-base font-medium border-gray-300 hover:bg-gray-50"
+                      className="w-full sm:flex-1 cursor-pointer h-10 sm:h-11 text-sm sm:text-base font-medium border-gray-300 hover:bg-gray-50"
                     >
                       <X className="h-4 w-4 mr-2" />
                       {t("cancel")}
@@ -358,7 +356,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
             onClick={handleLogout}
             variant="destructive"
             size="lg"
-            className="w-full sm:w-auto sm:min-w-[280px] flex items-center justify-center gap-2 h-11 text-sm sm:text-base font-medium shadow-sm"
+            className="w-full cursor-pointer sm:w-auto sm:min-w-[280px] flex items-center justify-center gap-2 h-11 text-sm sm:text-base font-medium shadow-sm"
           >
             <LogOut className="h-4 w-4 sm:h-5 sm:w-5" />
             {t("common.logout")}

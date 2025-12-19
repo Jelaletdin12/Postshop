@@ -139,7 +139,6 @@ export function useCollectionProductsInfinite(
     },
     getNextPageParam: (lastPage) => {
       if (lastPage.pagination?.next_page_url) {
-        // Extract page number from URL or increment
         const currentPage = lastPage.pagination.page || 1;
         return currentPage + 1;
       }

@@ -6,7 +6,7 @@ interface CategoryProductsGridProps {
   products: Product[];
   hasMore: boolean;
   onLoadMore: () => void;
-  isFetching?: boolean; // Yeni prop - loading durumu için
+  isFetching?: boolean; 
   translations: {
     loading: string;
     no_results: string;
@@ -46,7 +46,6 @@ export default function CategoryProductsGrid({
       endMessage={
         products.length > 0 && !hasMore ? (
           <div className="text-center py-4 text-gray-500 text-sm">
-            {/* Opsiyonel: "Tüm ürünler yüklendi" mesajı */}
           </div>
         ) : null
       }
@@ -68,7 +67,6 @@ export default function CategoryProductsGrid({
         ))}
       </div>
       
-      {/* İlk yükleme için skeleton göster */}
       {isFetching && products.length === 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mt-3">
           {Array.from({ length: 6 }).map((_, i) => (

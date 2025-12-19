@@ -62,7 +62,7 @@ export function ProductPurchaseCard({
               <Link href="/cart">
                 <Button
                   size="lg"
-                  className="w-full rounded-lg text-lg font-bold bg-green-600 hover:bg-green-700 mb-4"
+                  className="w-full rounded-lg cursor-pointer text-lg font-bold bg-green-600 hover:bg-green-700 mb-4"
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
                   {t("go_to_cart")}
@@ -75,7 +75,7 @@ export function ProductPurchaseCard({
                   size="icon"
                   onClick={onQuantityDecrease}
                   disabled={isSyncing}
-                  className={`rounded-lg h-12 w-12 ${
+                  className={`rounded-lg cursor-pointer h-12 w-12 ${
                     isSyncing ? "opacity-70" : ""
                   }`}
                 >
@@ -95,7 +95,7 @@ export function ProductPurchaseCard({
                   size="icon"
                   onClick={onQuantityIncrease}
                   disabled={isSyncing}
-                  className={`rounded-lg h-12 w-12 ${
+                  className={`rounded-lg cursor-pointer h-12 w-12 ${
                     isSyncing ? "opacity-70" : ""
                   }`}
                 >
@@ -127,7 +127,7 @@ export function ProductPurchaseCard({
               size="lg"
               onClick={onAddToCart}
               disabled={isSyncing || productStock === 0}
-              className="w-full rounded-lg text-lg font-bold bg-[#005bff] hover:bg-[#0041c4] cursor-pointer"
+              className="w-full rounded-lg  text-lg font-bold bg-[#005bff] hover:bg-[#0041c4] cursor-pointer"
             >
               {isSyncing ? (
                 <>
@@ -158,7 +158,7 @@ export function ProductPurchaseCard({
               <h4 className="text-lg font-bold">{channelName}</h4>
             </div>
           </div>
-          <Button variant="outline" size="lg" className="w-full rounded-lg">
+          <Button variant="outline" size="lg" className="w-full cursor-pointer rounded-lg">
             {t("write_to_store")}
           </Button>
         </Card>

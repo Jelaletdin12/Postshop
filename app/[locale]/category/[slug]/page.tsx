@@ -22,7 +22,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export async function generateStaticParams() {
-  // Generate static params for popular categories
   const categories = ["electronics", "clothing", "home-garden"]
   return categories.map((slug) => ({ slug }))
 }

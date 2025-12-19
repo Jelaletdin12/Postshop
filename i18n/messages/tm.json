@@ -78,7 +78,8 @@
   "no": "Ýok",
   "yes": "Hawa",
   "cart_empty": "Siziň söwda sebediňiz boş",
-  "add_to_cart": "Söwda sebedine goşmak",
+  "add_to_cart": "Söwda sebedine üstünlikli goşuldy",
+  
   "go_to_cart": "Sebede geçmek",
   "products": "Azyk harytlary",
   "become_seller": "Satyjy bolmak",
@@ -102,6 +103,7 @@
   "empty_favorites": "Siziň saýlanan harytlaryňyz ýok",
   "removed_from_favorites": "Haryt saýlanlardan aýryldy",
   "added_to_cart": "Haryt sebede goşuldy",
+  "removed_from_cart": "Haryt sebetden aýryldy",
   "error": "Ýalňyşlyk ýüze çykdy",
   "out_of_stock": "Haryt ýok",
   "personal_info": "Şahsy maglumat",
@@ -133,7 +135,7 @@
   "product_description": "Haryt barada düşündiriş",
   "adding": "Goşulýar...",
   "added_to_cart_description": "sebede goşuldy",
-  "add_to_cart_failed": "Haryt sebede goşup bolmady",
+  "add_to_cart_failed": "Haryt sebede goşulmady",
   "cart_updated": "Sebet täzelendi",
   "update_quantity_failed": "Mukdar täzelenip bolmady",
   "logging_out": "Çykylýar...",
@@ -181,5 +183,10 @@
   "orders_empty": "Siziň sargytlaryňyz ýok",
   "orders_empty_message": "Sargyt etmäge başlaň!",
   "product": "haryt",
-  "collection_not_found": "Kolleksiýa tapylmady"
+  "collection_not_found": "Kolleksiýa tapylmady",
+  "added_to_favorites": "Haryt saýlananlara goşuldy",
+  "submit_success": "Üstünlikli ugradyldy",
+  "submit_error": "Ýalňyşlyk ýüze çykdy"
+  
+  
 }

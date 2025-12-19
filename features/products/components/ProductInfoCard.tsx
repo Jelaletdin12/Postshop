@@ -30,22 +30,7 @@ export function ProductInfoCard({
   reviewsCount,
   t,
 }: ProductInfoCardProps) {
-  const renderStars = (rating: number) => {
-    return (
-      <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((star) => (
-          <Star
-            key={star}
-            className={`h-5 w-5 transition-all ${
-              star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
-            }`}
-          />
-        ))}
-      </div>
-    );
-  };
+  
 
   return (
     <div className="flex-1 space-y-6 bg-white">

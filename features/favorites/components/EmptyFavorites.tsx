@@ -8,7 +8,7 @@ export default function EmptyFavorites() {
   const router=useRouter();
   return (
     <div className="flex min-h-[60vh] items-center justify-center px-4">
-      <div className="w-full max-w-md rounded-2xl bg-gradient-to-br from-blue-50 to-white p-8 text-center shadow-lg">
+      <div className="w-full max-w-md rounded-2xl bg-linear-to-br from-blue-50 to-white p-8 text-center shadow-lg">
         <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
           <Heart className="h-10 w-10 text-blue-600" />
         </div>
@@ -21,7 +21,7 @@ export default function EmptyFavorites() {
           {t("favorites_empty_message")}
         </p>
 
-        <Button onClick={()=>router.push("/")} className="w-full rounded-xl bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-700 active:scale-95">
+        <Button onClick={()=>router.push("/")} className="w-full rounded-lg cursor-pointer bg-blue-600 px-6 py-3 text-sm font-medium text-white transition hover:bg-blue-700 active:scale-95">
           {t("start_shopping")}
         </Button>
       </div>

@@ -207,7 +207,7 @@ export function useSubmitReview() {
     },
     (variables) => [
       reviewKeys.byProduct(variables.productId),
-      productKeys.bySlug(""), // Invalidates all slug queries
+      productKeys.bySlug(""), 
       reviewKeys.all,
     ]
   );

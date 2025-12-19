@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Search, Store, User as UserIcon } from "lucide-react";
+import { X, Search, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/public/logo.webp";
 import CategoryMenu from "./ui/CategoryMenu";
@@ -70,14 +70,14 @@ export default function Header({ locale = "ru" }: HeaderProps) {
 
             <Button
               onClick={toggleCategoryMenu}
-              className="hidden gap-2 rounded-lg font-bold lg:flex hover:bg-[#005bff] bg-[#005bff] text-white"
+              className="cursor-pointer hidden gap-2 rounded-lg font-bold lg:flex hover:bg-[#005bff] bg-[#005bff] text-white"
               size="lg"
             >
               {isCategoryOpen ? <X className="h-5 w-5" /> : <CategoryIcon />}
               {t("common.catalog")}
             </Button>
 
-            <div className="flex items-center gap-2 sm:hidden">
+            <div className="flex items-center gap-2 sm:hidden cursor-pointer">
               <Button
                 variant="ghost"
                 size="icon"

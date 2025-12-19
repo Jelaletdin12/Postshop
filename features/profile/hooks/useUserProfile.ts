@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api";
-import { userStore } from "../userStore";
+// import { userStore } from "../userStore";
 import type { ProfileResponse, UpdateProfileRequest, UpdateProfileResponse } from "@/lib/types/api";
 
 export const useUserProfile = () => {
@@ -11,7 +11,7 @@ export const useUserProfile = () => {
       const userData = response.data.data;
       
       // Store'a kaydet
-      userStore.setUser(userData);
+      // userStore.setUser(userData);
       
       return userData;
     },
@@ -29,7 +29,7 @@ export const useUpdateProfile = () => {
       return response.data.data;
     },
     onSuccess: (data) => {
-      userStore.setUser(data);
+      // userStore.setUser(data);
       queryClient.setQueryData(["user-profile"], data);
       queryClient.invalidateQueries({ queryKey: ["user-profile"] });
     },
