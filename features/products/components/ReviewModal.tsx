@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Star, Send, Loader2 } from "lucide-react";
+import { Star, Send } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -107,7 +107,7 @@ export function ReviewModal({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                
                 {t("submitting")}
               </>
             ) : (

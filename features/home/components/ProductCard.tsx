@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, MouseEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Heart, ShoppingCart, Loader2, Plus, Minus, AlertTriangle } from "lucide-react";
+import { Heart, ShoppingCart, Plus, Minus, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import {
   Carousel,
@@ -377,8 +377,8 @@ export default function ProductCard({
                 >
                   {isSyncing ? (
                     <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Adding...
+                      
+                      {t("adding")}
                     </>
                   ) : (
                     <>
@@ -400,9 +400,6 @@ export default function ProductCard({
                   </Button>
                   <div className="flex-1 text-center font-semibold text-sm border rounded-lg h-9 flex items-center justify-center bg-white relative">
                     {localQuantity}
-                    {isSyncing && (
-                      <Loader2 className="h-3 w-3 animate-spin absolute -top-1 -right-1 text-blue-500" />
-                    )}
                   </div>
                   <Button
                     variant="outline"

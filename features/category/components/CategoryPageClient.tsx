@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useMemo, useCallback } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCategories,
   useCategoryFilters,
@@ -12,6 +13,7 @@ import type { Category, Product } from "@/lib/types/api";
 import CategoryFilters from "./CategoryFilters";
 import CategoryProductsGrid from "./CategoryProductsGrid";
 import CategoryFiltersSheet from "./CategoryFiltersSheet";
+import ErrorPage from "@/components/ErrorPage";
 
 interface CategoryPageClientProps {
   params: { locale: string; slug: string };
@@ -24,8 +26,11 @@ export default function CategoryPageClient({
   const t = useTranslations();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const { data: categoriesData, isLoading: categoriesLoading } =
-    useCategories();
+  const { 
+    data: categoriesData, 
+    isLoading: categoriesLoading,
+    isError: categoriesError 
+  } = useCategories();
 
   const selectedCategory = useMemo(() => {
     if (!categoriesData || !slug) return null;
@@ -57,7 +62,11 @@ export default function CategoryPageClient({
   >(new Set());
 
   // Fetch filters
-  const { data: filtersData } = useCategoryFilters(selectedCategory?.id, {
+  const { 
+    data: filtersData,
+    isLoading: filtersLoading,
+    isError: filtersError 
+  } = useCategoryFilters(selectedCategory?.id, {
     enabled: !!selectedCategory,
   });
 
@@ -76,19 +85,18 @@ export default function CategoryPageClient({
       params.categories = Array.from(selectedFilterCategories);
     }
 
-    if (priceRange[0] > 0) {
-      params.min_price = priceRange[0];
-    }
-
-    if (priceRange[1] < 10000) {
-      params.max_price = priceRange[1];
-    }
+    params.min_price = priceRange[0];
+    params.max_price = priceRange[1];
 
     return params;
   }, [currentPage, selectedBrands, selectedFilterCategories, priceRange]);
 
   // Fetch filtered products
-  const { data: productsData, isFetching } = useFilteredCategoryProducts(
+  const { 
+    data: productsData, 
+    isFetching,
+    isError: productsError 
+  } = useFilteredCategoryProducts(
     selectedCategory?.id?.toString() || "",
     filterParams,
     { enabled: !!selectedCategory }
@@ -126,7 +134,7 @@ export default function CategoryPageClient({
         return [...prev, ...newProducts];
       });
     }
-  }, [productsData?.data, currentPage]); 
+  }, [productsData?.data, currentPage]);
 
   const hasMore = useMemo(() => {
     if (!productsData?.pagination) return false;
@@ -152,7 +160,7 @@ export default function CategoryPageClient({
   const loadMoreData = useCallback(() => {
     if (!hasMore || isFetching) return;
     setCurrentPage((prev) => prev + 1);
-  }, [hasMore, isFetching, currentPage]);
+  }, [hasMore, isFetching]);
 
   const sortedProducts = useMemo(() => {
     const products = [...allProducts];
@@ -232,9 +240,57 @@ export default function CategoryPageClient({
     [t]
   );
 
-  
-  if (!selectedCategory)
+  // ERROR STATE
+  if (categoriesError || productsError || filtersError) {
+    return <ErrorPage />;
+  }
+
+  // LOADING STATE
+  if (categoriesLoading) {
+    return (
+      <div className="flex flex-col mx-auto max-w-[1504px] px-2 md:px-4 lg:px-6 pb-12">
+        {/* Title Skeleton */}
+        <Skeleton className="h-16 w-full rounded-t-lg mb-0 bg-white" />
+
+        <div className="flex p-2 md:p-4 gap-4 bg-white rounded-b-lg mt-0">
+          {/* Desktop Filters Skeleton */}
+          <div className="hidden sm:block w-[280px] shrink-0 border-r px-4 space-y-6">
+            <Skeleton className="h-8 w-32" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </div>
+            <Skeleton className="h-8 w-32" />
+            <div className="space-y-2">
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </div>
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+
+          {/* Products Grid Skeleton */}
+          <div className="flex-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="w-full aspect-square rounded-lg" />
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-6 w-1/2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // CATEGORY NOT FOUND
+  if (!selectedCategory) {
     return <div className="text-center py-8">{t("category_not_found")}</div>;
+  }
 
   return (
     <div className="flex flex-col mx-auto max-w-[1504px] px-2 md:px-4 lg:px-6 pb-12">
@@ -246,19 +302,37 @@ export default function CategoryPageClient({
         {/* Desktop Filters Sidebar */}
         <div className="hidden sm:block w-[280px] shrink-0 border-r px-4">
           <ScrollArea className="h-auto">
-            <CategoryFilters
-              filtersData={filtersData}
-              selectedBrands={selectedBrands}
-              selectedFilterCategories={selectedFilterCategories}
-              priceSort={priceSort}
-              priceRange={priceRange}
-              onBrandToggle={handleBrandToggle}
-              onCategoryToggle={handleCategoryToggle}
-              onPriceSortChange={handlePriceSortChange}
-              onPriceChange={handlePriceChange}
-              onReset={resetFilters}
-              translations={filterTranslations}
-            />
+            {filtersLoading ? (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-6 w-24" />
+                  <Skeleton className="h-5 w-full" />
+                  <Skeleton className="h-5 w-full" />
+                </div>
+                <Skeleton className="h-32 w-full" />
+                <Skeleton className="h-10 w-full rounded-lg" />
+              </div>
+            ) : (
+              <CategoryFilters
+                filtersData={filtersData}
+                selectedBrands={selectedBrands}
+                selectedFilterCategories={selectedFilterCategories}
+                priceSort={priceSort}
+                priceRange={priceRange}
+                onBrandToggle={handleBrandToggle}
+                onCategoryToggle={handleCategoryToggle}
+                onPriceSortChange={handlePriceSortChange}
+                onPriceChange={handlePriceChange}
+                onReset={resetFilters}
+                translations={filterTranslations}
+              />
+            )}
           </ScrollArea>
         </div>
 
@@ -284,19 +358,37 @@ export default function CategoryPageClient({
         filterLabel={t("filter")}
         closeLabel={t("close")}
       >
-        <CategoryFilters
-          filtersData={filtersData}
-          selectedBrands={selectedBrands}
-          selectedFilterCategories={selectedFilterCategories}
-          priceSort={priceSort}
-          priceRange={priceRange}
-          onBrandToggle={handleBrandToggle}
-          onCategoryToggle={handleCategoryToggle}
-          onPriceSortChange={handlePriceSortChange}
-          onPriceChange={handlePriceChange}
-          onReset={resetFilters}
-          translations={filterTranslations}
-        />
+        {filtersLoading ? (
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </div>
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-5 w-full" />
+              <Skeleton className="h-5 w-full" />
+            </div>
+            <Skeleton className="h-32 w-full" />
+            <Skeleton className="h-10 w-full rounded-lg" />
+          </div>
+        ) : (
+          <CategoryFilters
+            filtersData={filtersData}
+            selectedBrands={selectedBrands}
+            selectedFilterCategories={selectedFilterCategories}
+            priceSort={priceSort}
+            priceRange={priceRange}
+            onBrandToggle={handleBrandToggle}
+            onCategoryToggle={handleCategoryToggle}
+            onPriceSortChange={handlePriceSortChange}
+            onPriceChange={handlePriceChange}
+            onReset={resetFilters}
+            translations={filterTranslations}
+          />
+        )}
       </CategoryFiltersSheet>
     </div>
   );

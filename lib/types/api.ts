@@ -16,6 +16,8 @@ export interface Carousel {
   title: string
   image:  string
   url?: string | null
+  thumbnail: string;
+  link: string;
 }
 
 export interface Review {

@@ -27,6 +27,7 @@ async function fetchAllFavorites(): Promise<Favorite[]> {
   const allFavorites: Favorite[] = [];
   let currentPage = 1;
   let hasMorePages = true;
+  let lastError: Error | null = null;
 
   while (hasMorePages) {
     try {
@@ -37,7 +38,6 @@ async function fetchAllFavorites(): Promise<Favorite[]> {
       const favorites = transformFavoritesResponse(response.data);
       allFavorites.push(...favorites);
 
-      // Check pagination
       const pagination = response.data?.pagination;
       if (pagination?.next_page_url) {
         currentPage++;
@@ -45,9 +45,20 @@ async function fetchAllFavorites(): Promise<Favorite[]> {
         hasMorePages = false;
       }
     } catch (error) {
-      // If pagination not supported, return what we have
+    
+      if (currentPage === 1) {
+        throw error;
+      }
+      
+      
+      lastError = error as Error;
       hasMorePages = false;
     }
+  }
+
+  
+  if (allFavorites.length === 0 && lastError) {
+    throw lastError;
   }
 
   return allFavorites;

@@ -77,7 +77,7 @@ export default function CategoryFilters({
         </FilterSection>
       )}
 
-      <FilterSection title={translations.sort}>
+      {/* <FilterSection title={translations.sort}>
         <RadioItem
           name="sort"
           checked={priceSort === "none"}
@@ -96,7 +96,7 @@ export default function CategoryFilters({
           onChange={() => onPriceSortChange("highToLow")}
           label={translations.price_high_to_low}
         />
-      </FilterSection>
+      </FilterSection> */}
 
       <PriceFilter
         title={translations.price}
@@ -108,7 +108,7 @@ export default function CategoryFilters({
         }}
       />
 
-      <Button variant="outline" className="w-full rounded-lg cursor-pointer" onClick={onReset}>
+      <Button variant="outline" className="w-full rounded-lg cursor-pointer mb-6" onClick={onReset}>
         {translations.reset}
       </Button>
     </div>

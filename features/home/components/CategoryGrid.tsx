@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import type { Category } from "@/lib/types/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   categories: Category[] | undefined;
@@ -34,11 +35,11 @@ export default function CategoryGrid({
     return (
       <section className="bg-white rounded-2xl shadow-sm p-6">
         <h2 className="text-xl font-semibold mb-4">{title}</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="space-y-2">
-              <div className="w-full h-36 bg-gray-200 rounded-lg animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-full animate-pulse" />
+              <Skeleton className="w-full h-36 rounded-lg" />
+              <Skeleton className="h-4 w-full" />
             </div>
           ))}
         </div>

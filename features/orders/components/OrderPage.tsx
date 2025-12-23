@@ -29,6 +29,7 @@ import { useOrders, useCancelOrder } from "@/lib/hooks";
 import { useTranslations } from "next-intl";
 import type { Order } from "@/lib/types/api";
 import EmptyOrders from "./EmptyOrders";
+import ErrorPage from "@/components/ErrorPage";
 interface OrdersPageClientProps {
   locale: string;
 }
@@ -161,30 +162,67 @@ export default function OrdersPageClient({ locale }: OrdersPageClientProps) {
 
   if (isLoading) {
     return (
-      <div className=" mx-auto p-4 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t("my_orders")}</h1>
+      <div className="mx-auto p-2 lg:p-6 md:p-4 mb-16 min-h-screen">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">
+          {t("my_orders")}
+        </h1>
+
+        {/* Tabs Skeleton */}
+        <div className="mb-4 md:mb-6">
+          <div className="flex gap-2 mb-4">
+            <Skeleton className="h-10 w-32 rounded-md" />
+            <Skeleton className="h-10 w-32 rounded-md" />
+          </div>
+        </div>
+
+        {/* Order Cards Skeleton */}
         <div className="space-y-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-lg" />
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Card key={i} className="overflow-hidden py-2 md:py-4 lg:py-6">
+              <div className="p-2 md:p-4 mx-2 md:mx-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  {/* Left side - Order info */}
+                  <div className="flex items-center gap-4 flex-1">
+                    <Skeleton className="h-5 w-5 rounded" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-5 w-32" />
+                      <Skeleton className="h-4 w-24" />
+                    </div>
+                  </div>
+
+                  {/* Right side - Status and price */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col md:flex-row gap-2 items-end">
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                      <Skeleton className="h-6 w-24" />
+                    </div>
+                    <Skeleton className="h-5 w-5 rounded" />
+                  </div>
+                </div>
+              </div>
+            </Card>
           ))}
         </div>
       </div>
     );
   }
 
+  if (isError) {
+    return <ErrorPage />;
+  }
   if (isError || !orders || orders.length === 0) {
-    return (
-    <EmptyOrders/>
-    );
+    return <EmptyOrders />;
   }
 
   return (
     <div className=" mx-auto p-2 lg:p-6 md:p-4 mb-16 min-h-screen">
-      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">{t("my_orders")}</h1>
+      <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-6">
+        {t("my_orders")}
+      </h1>
 
       <Tabs defaultValue="active" className="w-full">
         <TabsList className="mb-4 md:mb-6 w-full md:w-fit gap-2 p-0">
-          <TabsTrigger value="active" >
+          <TabsTrigger value="active">
             {t("active_orders")} ({activeOrders.length})
           </TabsTrigger>
           <TabsTrigger value="completed">
@@ -327,13 +365,12 @@ function CompactOrderCard({
 
           <div className="flex items-center gap-4">
             <div className="flex flex-col md:flex-row gap-2 items-end">
-              
-            {getStatusBadge(order.status)}
-            <div className="text-right">
-              <p className="font-bold text-lg text-green-600">
-                {total.toFixed(2)} TMT
-              </p>
-            </div>
+              {getStatusBadge(order.status)}
+              <div className="text-right">
+                <p className="font-bold text-lg text-green-600">
+                  {total.toFixed(2)} TMT
+                </p>
+              </div>
             </div>
             {isExpanded ? (
               <ChevronUp className="h-5 w-5 text-gray-400" />

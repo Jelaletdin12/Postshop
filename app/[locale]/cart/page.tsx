@@ -3,7 +3,9 @@ import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import CartItemCard from "../../../features/cart/components/CartItemCard";
+import CartItemSkeleton from "../../../features/cart/components/CartItemSkeleton";
 import OrderSummary from "../../../features/cart/components/OrderSummary";
+import OrderSummarySkeleton from "../../../features/cart/components/OrderSummarySkeleton";
 import {
   useCart,
   useCreateOrder,
@@ -14,6 +16,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import type { DeliveryType, PaymentType } from "@/lib/types/api";
 import EmptyCart from "@/features/cart/components/EmptyCart";
+import ErrorPage from "@/components/ErrorPage";
 
 export default function CartPage() {
   const [isClient, setIsClient] = useState(false);
@@ -29,12 +32,14 @@ export default function CartPage() {
   const router = useRouter();
   const t = useTranslations();
 
-  const { data: cartResponse, isLoading, isError } = useCart();
-  const { data: provinces = [] } = useRegions();
-  const { data: paymentTypes = [] } = usePaymentTypes();
+  const { data: cartResponse, isLoading: cartLoading, isError } = useCart();
+  const { data: provinces = [], isLoading: provincesLoading } = useRegions();
+  const { data: paymentTypes = [], isLoading: paymentTypesLoading } =
+    usePaymentTypes();
   const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
 
   const cartItems = cartResponse?.data || [];
+  const isLoading = cartLoading || provincesLoading || paymentTypesLoading;
 
   useEffect(() => {
     setIsClient(true);
@@ -120,12 +125,38 @@ export default function CartPage() {
 
   if (!isClient) return null;
 
-  if (isError || cartItems.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="mx-auto px-2 md:px-4 lg:px-6 mb-18">
+        <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 pt-3">
+          {t("cart")}
+        </h1>
+
+        <div className="flex flex-col md:flex-row gap-6">
+          <div className="flex-1">
+            <Card className="p-4 md:p-6 rounded-xl">
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <CartItemSkeleton key={i} />
+                ))}
+              </div>
+            </Card>
+          </div>
+          <OrderSummarySkeleton />
+        </div>
+      </div>
+    );
+  }
+  
+  if (isError ) {
+    return <ErrorPage />;
+  }
+  if (cartItems.length === 0) {
     return <EmptyCart />;
   }
 
   return (
-    <div className=" mx-auto px-2 md:px-4 lg:px-6 mb-18">
+    <div className="mx-auto px-2 md:px-4 lg:px-6 mb-18">
       <h1 className="text-xl md:text-2xl lg:text-3xl font-bold mb-4 md:mb-6 pt-3">
         {t("cart")}
       </h1>

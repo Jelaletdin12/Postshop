@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Minus, Plus, Heart, ShoppingCart, Store, Loader2 } from "lucide-react";
+import { Minus, Plus, Heart, ShoppingCart, Store } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -131,7 +131,7 @@ export function ProductPurchaseCard({
             >
               {isSyncing ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  
                   {t("adding")}
                 </>
               ) : (

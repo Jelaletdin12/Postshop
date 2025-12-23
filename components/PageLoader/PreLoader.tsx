@@ -1,9 +1,9 @@
 import React from "react";
-
+import { useTranslations } from "next-intl";
 const Preloader: React.FC = () => {
+  const t =useTranslations();
   return (
-    // bg-bg ve text-fg bizim CSS'te tanımladığımız değişkenleri kullanır.
-    // Standart Tailwind sınıflarını (flex, min-h-screen) düzen için kullanıyoruz.
+    
     <div className="flex flex-col items-center justify-center min-h-screen  text-fg font-sans transition-colors duration-300">
       <div className="text-center max-w-[20em] w-full">
         
@@ -21,15 +21,14 @@ const Preloader: React.FC = () => {
             strokeLinejoin="round"
             strokeWidth="8"
           >
-            {/* Track (Arka plan izleri) */}
+            
             <g className="stroke-track">
               <polyline points="4,4 21,4 26,22 124,22 112,64 35,64 39,80 106,80" />
               <circle cx="43" cy="111" r="13" />
               <circle cx="102" cy="111" r="13" />
             </g>
 
-            {/* Hareketli Çizgiler */}
-            {/* animate-cartLines sınıfı globals.css'ten geliyor */}
+           
             <g className="stroke-primary animate-cartLines">
               <polyline
                 className="animate-cartTop"
@@ -63,14 +62,14 @@ const Preloader: React.FC = () => {
           </g>
         </svg>
 
-        {/* Yükleniyor Yazıları */}
+       
         <div className="relative h-6">
           <p className="absolute w-full animate-msg text-lg">
-            Bringing you the goods…
+            {t('loading')}
           </p>
-          <p className="absolute w-full opacity-0 invisible animate-msgLast text-lg">
+          {/* <p className="absolute w-full opacity-0 invisible animate-msgLast text-lg">
             This is taking long. Something’s wrong.
-          </p>
+          </p> */}
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { ChevronRight } from "lucide-react";
 import ProductCard from "@/features/home/components/ProductCard";
 import { useCollectionProducts } from "@/features/collections/hooks/useCollections";
 import type { Collection } from "@/lib/types/api";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Props = {
   collection: Collection;
@@ -22,24 +23,19 @@ export default function CollectionSection({ collection, locale }: Props) {
     router.push(`/collections/${collection.slug}`);
   };
 
-  // Hide section if no products
-  if (!isLoading && (!productsData?.data || productsData.data.length === 0)) {
-    return null;
-  }
-
   if (isLoading) {
     return (
       <section className="bg-white rounded-2xl shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="h-8 w-48 bg-gray-200 rounded animate-pulse" />
-          <div className="h-6 w-6 bg-gray-200 rounded-full animate-pulse" />
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-6 w-6 rounded-full" />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {Array.from({ length: 5 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="space-y-2">
-              <div className="w-full h-[260px] bg-gray-200 rounded-xl animate-pulse" />
-              <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse mx-2" />
-              <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse mx-2" />
+              <Skeleton className="w-full h-[260px] rounded-xl" />
+              <Skeleton className="h-4 w-3/4 mx-2" />
+              <Skeleton className="h-6 w-1/2 mx-2" />
             </div>
           ))}
         </div>
@@ -48,6 +44,11 @@ export default function CollectionSection({ collection, locale }: Props) {
   }
 
   if (isError) return null;
+
+  // Hide section if no products
+  if (!productsData?.data || productsData.data.length === 0) {
+    return null;
+  }
 
   const displayProducts = productsData?.data.slice(0, 10) || [];
 

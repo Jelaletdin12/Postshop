@@ -6,33 +6,46 @@ import { useTranslations } from "next-intl";
 import ProductCard from "@/features/home/components/ProductCard";
 import type { Favorite } from "@/lib/types/api";
 import EmptyFavorites from "@/features/favorites/components/EmptyFavorites";
+import ErrorPage from "@/components/ErrorPage";
 export default function FavoritesPage() {
   const t = useTranslations();
   const { data: favorites, isLoading, isError } = useFavorites();
 
   if (isLoading) {
     return (
-      <div className=" mx-auto px-4 py-8 min-h-screen">
-        <h1 className="text-3xl font-bold mb-6">{t("favorite_products")}</h1>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+      <div className="mx-auto px-2 md:px-4 lg:px-6 pb-12 space-y-8 max-w-[1504px]">
+        <h1 className="bg-white text-3xl p-4 font-bold mb-0 pb-6">
+          {t("favorite_products")}
+        </h1>
+        <div className="bg-white grid grid-cols-2 sm:grid-cols-3 rounded-b-lg md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
           {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="w-full h-64 rounded-lg" />
+            <div key={i} className="space-y-2">
+              <Skeleton className="w-full h-[260px] rounded-xl" />
+              <Skeleton className="h-4 w-3/4 mx-2" />
+              <Skeleton className="h-6 w-1/2 mx-2" />
+            </div>
           ))}
         </div>
       </div>
     );
   }
 
-  if (isError || !favorites || favorites.length === 0) {
-    return (
-     <EmptyFavorites/>
-    );
+  if (isError) {
+    return <ErrorPage />;
+  }
+
+  if (!favorites || favorites.length === 0) {
+    return <EmptyFavorites />;
   }
 
   return (
-    <div className=" mx-auto px-2 md:px-4 lg:px-6  pb-12 space-y-8 max-w-[1504px] 
-    ">
-      <h1 className="bg-white text-3xl p-4 font-bold mb-0 pb-6">{t("favorite_products")}</h1>
+    <div
+      className=" mx-auto px-2 md:px-4 lg:px-6  pb-12 space-y-8 max-w-[1504px] 
+    "
+    >
+      <h1 className="bg-white text-3xl p-4 font-bold mb-0 pb-6">
+        {t("favorite_products")}
+      </h1>
       <div className="bg-white grid grid-cols-2 sm:grid-cols-3 rounded-b-lg md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
         {favorites.map((favorite: Favorite) => {
           const product = favorite.product;

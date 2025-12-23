@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import { Minus, Plus, Trash2, Loader2, AlertTriangle } from "lucide-react";
+import { Minus, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
@@ -387,7 +387,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
                 variant="outline"
                 size="icon"
                 onClick={handleQuantityDecrease}
-                className={` cursor-pointer rounded-xl bg-blue-50 ${
+                className={` cursor-pointer rounded-lg bg-blue-50 ${
                   isSyncing ? "opacity-70" : ""
                 }`}
               >
@@ -396,9 +396,6 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
 
               <div className="w-12 text-center font-semibold relative">
                 {localQuantity}
-                {isSyncing && (
-                  <Loader2 className="h-3 w-3 animate-spin absolute -top-1 -right-3 text-blue-500" />
-                )}
                 {syncError && (
                   <span
                     className="absolute -top-1 -right-3 h-2 w-2 bg-red-500 rounded-full"
@@ -412,7 +409,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
                 size="icon"
                 onClick={handleQuantityIncrease}
                 // disabled={localQuantity >= availableStock}
-                className={`rounded-xl cursor-pointer bg-blue-50 ${
+                className={`rounded-lg cursor-pointer bg-blue-50 ${
                   isSyncing ? "opacity-70" : ""
                 } ${
                   localQuantity >= availableStock

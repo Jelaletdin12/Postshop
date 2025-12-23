@@ -5,6 +5,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import HeroCarousel from "./Carousel";
 import CategoryGrid from "./CategoryGrid";
 import CollectionSection from "./ProductGrid";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   useCategories,
   useCarousels,
@@ -49,8 +50,12 @@ export default function HomePage() {
 
   return (
     <div className="px-2 md:px-4 lg:px-6 pt-4 pb-12 space-y-8 max-w-[1504px] mx-auto">
-      {!carouselsLoading && carouselItems.length > 0 && (
-        <HeroCarousel items={carouselItems} />
+      {carouselsLoading ? (
+        <section className=" bg-white rounded-2xl overflow-hidden">
+          <Skeleton className="w-full h-[200px] sm:h-[300px] md:h-[496px]" />
+        </section>
+      ) : (
+        carouselItems.length > 0 && <HeroCarousel items={carouselItems} />
       )}
 
       <CategoryGrid
@@ -71,13 +76,16 @@ export default function HomePage() {
         <div className="space-y-8">
           {Array.from({ length: 3 }).map((_, i) => (
             <section key={i} className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="h-8 bg-gray-200 rounded w-48 mb-4 animate-pulse" />
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {Array.from({ length: 5 }).map((_, j) => (
+              <div className="flex items-center justify-between mb-4">
+                <Skeleton className="h-8 w-48" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+                {Array.from({ length: 10 }).map((_, j) => (
                   <div key={j} className="space-y-2">
-                    <div className="w-full h-[260px] bg-gray-200 rounded-xl animate-pulse" />
-                    <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
-                    <div className="h-6 bg-gray-200 rounded w-1/2 animate-pulse" />
+                    <Skeleton className="w-full h-[260px] rounded-xl" />
+                    <Skeleton className="h-4 w-3/4 mx-2" />
+                    <Skeleton className="h-6 w-1/2 mx-2" />
                   </div>
                 ))}
               </div>

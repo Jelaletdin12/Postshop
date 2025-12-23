@@ -107,7 +107,7 @@ export default function CollectionFilters({
         }}
       />
 
-      <Button variant="outline" className="w-full rounded-lg cursor-pointer" onClick={onReset}>
+      <Button variant="outline" className="w-full rounded-lg cursor-pointer mb-6" onClick={onReset}>
         {translations.reset}
       </Button>
     </div>
