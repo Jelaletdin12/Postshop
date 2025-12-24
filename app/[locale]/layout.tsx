@@ -7,7 +7,7 @@ import "./globals.css"
 import Header from "@/components/layout/Header"
 import MobileBottomNav from "@/components/layout/MobileBar"
 import { Toaster } from "@/components/ui/sonner"
-import { Providers } from "@/context/provider"
+import { Providers } from "@/context/Provider"
 import AuthWrapper from "@/context/AuthWrapper"
 
 const geistSans = Geist({
