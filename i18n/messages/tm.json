@@ -172,6 +172,7 @@
   "share_experience": "Bu haryt barada öz teswiriňizi ýazyň",
   "rating": "Reýting",
   "your_review": "Teswiriňiz",
+  "sumbit": "Ugratmak",
   "submitting": "Ugradylýar...",
   "submit_review": "Teswiri ugrat",
   "characters": "simbol",
@@ -186,7 +187,9 @@
   "collection_not_found": "Kolleksiýa tapylmady",
   "added_to_favorites": "Haryt saýlananlara goşuldy",
   "submit_success": "Üstünlikli ugradyldy",
-  "submit_error": "Ýalňyşlyk ýüze çykdy"
-  
-  
+  "submit_error": "Ýalňyşlyk ýüze çykdy",
+  "title": "Magazin aç",
+  "enter_email": "Poçtaňyzy ýazyň",
+  "uploadPatent": "Patent goş",
+  "outOfStock": "Ammarda ýok"
 }

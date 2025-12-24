@@ -2,12 +2,10 @@
 
 2. Harytlar kem kas bolanu ucin home page doly gorkezenok
 
-3. Filter nahili isleyar
+
 
 4. Order nadip otmen etmeli.
 
 5. Review feed back yazylyan yer bamy bolmalymy
-
-6. Open Store api field ler nahili bolmaly.
 
 7. Delivery type soramaly, type lar yok

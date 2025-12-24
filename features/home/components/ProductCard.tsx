@@ -347,7 +347,7 @@ export default function ProductCard({
             {isOutOfStock && (
               <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                 <Badge variant="secondary" className="text-sm font-bold">
-                  Out of Stock
+                  {t("outOfStock")}
                 </Badge>
               </div>
             )}

@@ -176,7 +176,7 @@ export default function OpenStorePage({
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* First Name */}
             <div className="space-y-2">
-              <Label htmlFor="firstName">{t("firstName")}</Label>
+              <Label htmlFor="firstName">{t("enter_first_name")}</Label>
               <Input
                 id="firstName"
                 name="firstName"
@@ -191,7 +191,7 @@ export default function OpenStorePage({
 
             {/* Last Name */}
             <div className="space-y-2">
-              <Label htmlFor="lastName">{t("lastName")}</Label>
+              <Label htmlFor="lastName">{t("enter_last_name")}</Label>
               <Input
                 id="lastName"
                 name="lastName"
@@ -206,7 +206,7 @@ export default function OpenStorePage({
 
             {/* Email */}
             <div className="space-y-2">
-              <Label htmlFor="email">{t("email")}</Label>
+              <Label htmlFor="email">{t("enter_email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -222,7 +222,7 @@ export default function OpenStorePage({
 
             {/* Phone */}
             <div className="space-y-2">
-              <Label htmlFor="phone">{t("phone")}</Label>
+              <Label htmlFor="phone">{t("enter_phone")}</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -273,7 +273,7 @@ export default function OpenStorePage({
               className="w-full cursor-pointer bg-[#005bff] hover:bg-[#0041c4]"
               disabled={loading}
             >
-              {loading ? "Загрузка..." : t("submit")}
+              {loading ? t("submitting") : t("submit")}
             </Button>
           </form>
         </CardContent>

@@ -7,6 +7,8 @@ import ProductCard from "@/features/home/components/ProductCard";
 import type { Favorite } from "@/lib/types/api";
 import EmptyFavorites from "@/features/favorites/components/EmptyFavorites";
 import ErrorPage from "@/components/ErrorPage";
+import Placeholder from "@/public/logo.webp";
+
 export default function FavoritesPage() {
   const t = useTranslations();
   const { data: favorites, isLoading, isError } = useFavorites();
@@ -58,7 +60,7 @@ export default function FavoritesPage() {
                 media.images_400x400 ||
                 media.thumbnail
             )
-            .filter(Boolean) || ["/placeholder-product.jpg"];
+            .filter(Boolean) || [Placeholder];
 
           const formattedPrice = product.price_amount
             ? `${parseFloat(product.price_amount).toFixed(2)} TMT`

@@ -222,25 +222,16 @@ export function useLogout() {
       try {
         await apiClient.post("/auth/logout", {}, { timeout: 5000 });
       } catch (error) {
-        // Logout should succeed even if server call fails
         console.warn("[Logout] Server call failed, clearing local state anyway");
       }
     },
     onSuccess: () => {
       TokenStorage.clearTokens();
       queryClient.clear();
-
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
     },
     onError: () => {
       TokenStorage.clearTokens();
       queryClient.clear();
-      
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
-      }
     },
   });
 }

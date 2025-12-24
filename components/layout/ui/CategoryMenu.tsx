@@ -1,80 +1,149 @@
-"use client"
+// CategoryMenu.tsx
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { useCategories } from "@/lib/hooks"
-import { Skeleton } from "@/components/ui/skeleton"
-
-
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { useCategories } from "@/lib/hooks";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CategoryMenuProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function CategoryMenu({ isOpen, onClose }: CategoryMenuProps) {
-  const [hoveredCategory, setHoveredCategory] = useState<number | null>(null)
-  const { data: categories, isLoading } = useCategories()
+  const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
+  const { data: categories, isLoading } = useCategories();
+  const menuRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen) return null
+  // Click outside to close
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const categoryList = categories || []
-  const activeCategory = hoveredCategory !== null ? categoryList[hoveredCategory] : null
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+
+      
+      if (target.closest("[data-catalog-trigger]")) {
+        return;
+      }
+
+    
+      if (menuRef.current && !menuRef.current.contains(target)) {
+        onClose();
+      }
+    };
+
+    // Add listener after a small delay to prevent immediate closing
+    const timeoutId = setTimeout(() => {
+      document.addEventListener("mousedown", handleClickOutside);
+    }, 100);
+
+    return () => {
+      clearTimeout(timeoutId);
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen, onClose]);
+
+  // ESC key to close
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isOpen, onClose]);
+
+  if (!isOpen) return null;
+
+  const categoryList = categories || [];
+  const activeCategory =
+    hoveredCategory !== null ? categoryList[hoveredCategory] : null;
 
   return (
-    <div className="fixed left-0 right-0 top-15 z-40 bg-white border-b shadow-lg max-w-[1504px] mx-auto">
-      <div className=" mx-auto px-4">
-        <div className="flex">
-          <CategoryList
-            categories={categoryList}
-            isLoading={isLoading}
-            onCategoryHover={setHoveredCategory}
-            onCategoryClick={onClose}
-          />
+    <>
+      <div className="fixed inset-0 bg-black/20 z-30" onClick={onClose} />
 
-          {activeCategory?.children && <SubcategoryList category={activeCategory} onSubcategoryClick={onClose} />}
+      {/* Menu */}
+      <div
+        ref={menuRef}
+        className="fixed left-0 right-0 top-16 z-40 bg-white border-b rounded-b-lg shadow-lg max-w-[1504px] mx-auto"
+      >
+        <div className="mx-auto px-4">
+          <div className="flex">
+            <CategoryList
+              categories={categoryList}
+              isLoading={isLoading}
+              onCategoryHover={setHoveredCategory}
+              onCategoryClick={onClose}
+            />
+
+            {activeCategory?.children && (
+              <SubcategoryList
+                category={activeCategory}
+                onSubcategoryClick={onClose}
+              />
+            )}
+          </div>
         </div>
       </div>
-    </div>
-  )
+    </>
+  );
 }
 
 interface CategoryListProps {
-  categories: any[]
-  isLoading: boolean
-  onCategoryHover: (index: number) => void
-  onCategoryClick: () => void
+  categories: any[];
+  isLoading: boolean;
+  onCategoryHover: (index: number) => void;
+  onCategoryClick: () => void;
 }
 
-function CategoryList({ categories, isLoading, onCategoryHover, onCategoryClick }: CategoryListProps) {
+function CategoryList({
+  categories,
+  isLoading,
+  onCategoryHover,
+  onCategoryClick,
+}: CategoryListProps) {
   return (
     <div className="w-[280px] border-r">
       <div className="max-h-[calc(100vh-4rem)] overflow-y-auto py-2">
         {isLoading
-          ? [1, 2, 3, 4, 5].map((i) => <Skeleton key={i} className="h-10 mx-4 my-2 rounded" />)
+          ? [1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-10 mx-4 my-2 rounded" />
+            ))
           : categories.map((category, index) => (
               <Link
                 key={category.id}
                 href={`/category/${category.slug}?category_id=${category.id}`}
                 onClick={onCategoryClick}
                 onMouseEnter={() => onCategoryHover(index)}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-gray-100 hover:text-primary transition-colors"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-100 hover:text-primary transition-colors"
               >
-                {category.icon_class && <i className={`${category.icon_class} text-xl`}></i>}
+                {category.icon_class && (
+                  <i className={`${category.icon_class} text-xl`} />
+                )}
                 <span>{category.name}</span>
               </Link>
             ))}
       </div>
     </div>
-  )
+  );
 }
 
 interface SubcategoryListProps {
-  category: any
-  onSubcategoryClick: () => void
+  category: any;
+  onSubcategoryClick: () => void;
 }
 
-function SubcategoryList({ category, onSubcategoryClick }: SubcategoryListProps) {
+function SubcategoryList({
+  category,
+  onSubcategoryClick,
+}: SubcategoryListProps) {
   return (
     <div className="flex-1 p-6">
       <h3 className="text-xl font-semibold mb-4">{category.name}</h3>
@@ -91,5 +160,5 @@ function SubcategoryList({ category, onSubcategoryClick }: SubcategoryListProps)
         ))}
       </div>
     </div>
-  )
+  );
 }

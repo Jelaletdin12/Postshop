@@ -1,9 +1,10 @@
+// Header.tsx
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { X, Search, User as UserIcon } from "lucide-react";
+import { X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Logo from "@/public/logo.webp";
 import CategoryMenu from "./ui/CategoryMenu";
@@ -54,7 +55,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
   return (
     <>
       <header className="sticky top-0 z-50 w-full border-b bg-white shadow-sm">
-        <div className=" mx-auto px-4">
+        <div className="mx-auto px-4">
           <div className="flex h-16 items-center justify-between gap-3">
             <Link href="/" className="shrink-0">
               <div className="relative h-8 w-[180px]">
@@ -69,6 +70,7 @@ export default function Header({ locale = "ru" }: HeaderProps) {
             </Link>
 
             <Button
+              data-catalog-trigger
               onClick={toggleCategoryMenu}
               className="cursor-pointer hidden gap-2 rounded-lg font-bold lg:flex hover:bg-[#005bff] bg-[#005bff] text-white"
               size="lg"

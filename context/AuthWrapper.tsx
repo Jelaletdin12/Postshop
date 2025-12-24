@@ -3,7 +3,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuthStatus, useGetGuestToken } from "@/lib/hooks/useAuth";
 import { useUserProfile } from "@/features/profile/hooks/useUserProfile";
 import Preloader from "@/components/PageLoader/PreLoader";
@@ -23,14 +23,12 @@ export default function AuthWrapper({
   locale,
 }: AuthWrapperProps) {
   const router = useRouter();
-  const pathname = usePathname();
   const { isAuthenticated, isLoading } = useAuthStatus();
-  const { mutate: getGuestToken, isPending: isGettingGuestToken } = useGetGuestToken();
-  
-  // Fetch user profile only if authenticated
+  const { mutate: getGuestToken, isPending: isGettingGuestToken } =
+    useGetGuestToken();
+
   useUserProfile();
 
-  // Initialize guest token if needed
   useEffect(() => {
     if (isLoading) return;
 
@@ -39,23 +37,20 @@ export default function AuthWrapper({
     }
   }, [isLoading, getGuestToken, isGettingGuestToken]);
 
-  // Handle redirects
   useEffect(() => {
     if (isLoading || isGettingGuestToken) return;
-
-    // Redirect to login if auth required but not authenticated
     if (requireAuth && !isAuthenticated) {
-      const redirect = redirectTo || `/${locale}/login`;
-      const returnUrl = pathname !== redirect ? `?returnUrl=${encodeURIComponent(pathname)}` : "";
-      router.push(`${redirect}${returnUrl}`);
+      router.push(`/${locale}`);
       return;
     }
-
-    if (isAuthenticated && (pathname.includes("/login") || pathname.includes("/register"))) {
-      router.push(`/${locale}`);
-    }
-  }, [isAuthenticated, isLoading, requireAuth, pathname, router, locale, redirectTo, isGettingGuestToken]);
-
+  }, [
+    isAuthenticated,
+    isLoading,
+    requireAuth,
+    router,
+    locale,
+    isGettingGuestToken,
+  ]);
   if (isLoading || (requireAuth && !isAuthenticated)) {
     return <Preloader />;
   }

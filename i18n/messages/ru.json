@@ -171,6 +171,7 @@
   "share_experience": "Поделитесь опытом с этим товаром",
   "rating": "Рейтинг",
   "your_review": "Ваш отзыв",
+  "submit": "Отправить",
   "submitting": "Отправляется...",
   "submit_review": "Отправить отзыв",
   "characters": "символы",
@@ -185,7 +186,11 @@
   "collection_not_found": "Коллекция не найдена",
   "added_to_favorites": "Товар добавлен в избранное",
   "submit_success": "Отзыв отправлен",
-  "submit_error": "Произошла ошибка"
-  
-  
+  "submit_error": "Произошла ошибка",
+  "title": "Открыть магазин",
+  "enter_email": "Введите email",
+  "uploadPatent": "Загрузить патент",
+  "outOfStock": "Нет в наличии"
 }
+  
+  

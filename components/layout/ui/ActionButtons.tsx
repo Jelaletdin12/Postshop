@@ -67,8 +67,13 @@ const cartCount = useCartCount()
     return Array.isArray(ordersData) ? ordersData.length : 0;
   }, [ordersData]);
 
-  const handleLogout = () => {
-    logout();
+ const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        router.push(`/${locale}`);
+        router.refresh(); 
+      }
+    });
   };
 
   const buttons: ActionButtonData[] = useMemo(
