@@ -195,7 +195,6 @@ export default function ProductCard({
           productId: id,
           quantity: localQuantity,
         });
-        await refetchCart();
         toast.success(t("added_to_cart"), {
           description: `${name} ${t("added_to_cart_description")}`,
         });
@@ -206,7 +205,7 @@ export default function ProductCard({
         setIsSyncing(false);
       }
     },
-    [id, name, localQuantity, availableStock, addToCartMutation, refetchCart]
+    [id, name, localQuantity, availableStock, addToCartMutation]
   );
 
   const handleQuantityChange = useCallback(

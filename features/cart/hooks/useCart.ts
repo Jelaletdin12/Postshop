@@ -463,7 +463,7 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: async (payload: {
       customer_name?: string;
-      customer_phone: string;
+      customer_phone: number;
       customer_address: string;
       shipping_method: string;
       payment_type_id: number;
@@ -475,7 +475,11 @@ export function useCreateOrder() {
       const response = await apiClient.post("/orders", payload);
       return response.data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      if (data && data.payment_url) {
+        window.open(data.payment_url, '_blank')?.focus();
+      }
+
       pendingUpdates.clear();
       queryClient.setQueryData<CartResponse>(["cart"], (old) => {
         if (!old) return old;

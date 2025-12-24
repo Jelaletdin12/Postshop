@@ -326,7 +326,7 @@ export default function CartItemCard({ item, onUpdate }: CartItemCardProps) {
       <Card className="p-4 shadow-none border">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex gap-4 flex-1">
-            <div className="relative w-[88px] h-[117px] rounded-xl border overflow-hidden flex-shrink-0">
+            <div className="relative w-[88px] h-[117px] rounded-xl border overflow-hidden shrink-0">
               <Image
                 src={getImageSrc()}
                 alt={item.product.name}

@@ -26,7 +26,7 @@ export default function CartPage() {
   const [selectedRegion, setSelectedRegion] = useState<string>("");
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
   const [note, setNote] = useState<string>("");
-  const [phone, setPhone] = useState<string>("");
+  const [phone, setPhone] = useState<string>("+993 "); 
   const [name, setName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const router = useRouter();
@@ -88,40 +88,44 @@ export default function CartPage() {
     setSelectedProvince(null);
   };
 
-  const handleCompleteOrder = () => {
-    if (
-      !selectedRegion ||
-      !selectedProvince ||
-      !paymentType ||
-      !phone ||
-      !name
-    ) {
-      console.warn("Missing required fields for order");
-      return;
-    }
-
-    const selectedProvinceData = provinces.find(
-      (p) => p.id === selectedProvince
-    );
-    if (!selectedProvinceData) return;
-
-    createOrder(
-      {
-        customer_name: name,
-        customer_phone: phone,
-        customer_address: selectedProvinceData.name,
-        shipping_method: "standart",
-        payment_type_id: paymentType.id,
-        region: selectedRegion,
-        note: note || undefined,
-      },
-      {
-        onSuccess: () => {
-          router.push(`/orders`);
-        },
-      }
-    );
+ 
+  const formatPhoneForBackend = (phoneNumber: string): string => {
+   
+    return phoneNumber.replace(/^\+993\s*/, "").replace(/\s+/g, "");
   };
+
+  const handleCompleteOrder = () => {
+  if (!selectedRegion || !selectedProvince || !paymentType || !phone || !name) {
+    console.warn("Missing required fields for order");
+    return;
+  }
+
+  const phoneDigits = formatPhoneForBackend(phone);
+  if (phoneDigits.length !== 8) {
+    console.warn("Phone number must be exactly 8 digits");
+    return;
+  }
+
+  const selectedProvinceData = provinces.find((p) => p.id === selectedProvince);
+  if (!selectedProvinceData) return;
+
+  createOrder(
+    {
+      customer_name: `${name} ${lastName}`.trim(),
+      customer_phone: parseInt(phoneDigits, 10), 
+      customer_address: selectedProvinceData.name,
+      shipping_method: "standart",
+      payment_type_id: paymentType.id,
+      region: selectedRegion,
+      note: note || undefined,
+    },
+    {
+      onSuccess: () => {
+        router.push(`/orders`);
+      },
+    }
+  );
+};
 
   if (!isClient) return null;
 

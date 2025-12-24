@@ -4,7 +4,12 @@ import { useState, useCallback } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import Logo from "@/public/logo.webp";
 import { useLogin, useVerifyToken } from "@/lib/hooks/useAuth";
@@ -16,10 +21,9 @@ interface AuthDialogProps {
 }
 
 export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
-  const [phone, setPhone] = useState("993");
+  const [phone, setPhone] = useState("+993 ");
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
-  const [rawPhone, setRawPhone] = useState("");
   const t = useTranslations();
 
   const { mutate: login, isPending: isLoginLoading } = useLogin();
@@ -27,25 +31,55 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
 
   const resetDialog = useCallback(() => {
     setOtpSent(false);
-    setPhone("993");
+    setPhone("+993 ");
     setOtp("");
-    setRawPhone("");
     onClose();
   }, [onClose]);
 
+  const formatPhoneForBackend = (phoneNumber: string): string => {
+    return phoneNumber.replace(/^\+993\s*/, "").replace(/\s+/g, "");
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    const prefix = "+993 ";
+
+    if (input.length < prefix.length) {
+      setPhone(prefix);
+      return;
+    }
+
+    const digitsOnly = input.substring(prefix.length).replace(/\D/g, "");
+
+    const limitedDigits = digitsOnly.substring(0, 8);
+
+    let formattedPhone = prefix;
+    if (limitedDigits.length > 0) {
+      formattedPhone += limitedDigits.substring(0, 2);
+
+      if (limitedDigits.length > 2) {
+        formattedPhone += " " + limitedDigits.substring(2);
+      }
+    }
+
+    setPhone(formattedPhone);
+  };
+
+  const isPhoneValid = (): boolean => {
+    const phoneDigits = formatPhoneForBackend(phone);
+    return phoneDigits.length === 8;
+  };
+
   const handleSendOtp = useCallback(() => {
-    const cleanPhone = phone.replace(/\D/g, "");
-    
-    if (cleanPhone.length !== 11 || !cleanPhone.startsWith("993")) {
+    if (!isPhoneValid()) {
       toast.error(t("invalid_phone"));
       return;
     }
 
-    const phoneNumber = cleanPhone.substring(3);
-    setRawPhone(phoneNumber);
+    const phoneNumber = formatPhoneForBackend(phone);
 
     login(
-      { phone_number: phoneNumber },
+      { phone_number: parseInt(phoneNumber, 10) },
       {
         onSuccess: () => {
           toast.success(t("code_sent"));
@@ -64,10 +98,12 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
       return;
     }
 
+    const phoneNumber = formatPhoneForBackend(phone);
+
     verifyToken(
       {
-        phone_number: rawPhone,
-        code: otp,
+        phone_number: parseInt(phoneNumber, 10),
+        code: parseInt(otp, 10),
       },
       {
         onSuccess: () => {
@@ -80,21 +116,16 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
         },
       }
     );
-  }, [otp, rawPhone, verifyToken, resetDialog, t]);
+  }, [otp, phone, verifyToken, resetDialog, t]);
 
-  const handleKeyPress = useCallback((e: React.KeyboardEvent, action: () => void) => {
-    if (e.key === "Enter") {
-      action();
-    }
-  }, []);
-
-  const formatPhoneInput = useCallback((value: string) => {
-    const cleaned = value.replace(/\D/g, "");
-    if (!cleaned.startsWith("993")) {
-      return "993";
-    }
-    return cleaned.substring(0, 11);
-  }, []);
+  const handleKeyPress = useCallback(
+    (e: React.KeyboardEvent, action: () => void) => {
+      if (e.key === "Enter") {
+        action();
+      }
+    },
+    []
+  );
 
   return (
     <Dialog open={isOpen} onOpenChange={resetDialog}>
@@ -105,21 +136,24 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
               <Image src={Logo} alt="Logo" fill className="object-contain" />
             </div>
           </div>
-          <DialogTitle className="text-2xl text-center">{t("common.enterPhone")}</DialogTitle>
-          <p className="text-center text-sm text-gray-600">{t("common.weWillSendCode")}</p>
+          <DialogTitle className="text-2xl text-center">
+            {t("common.enterPhone")}
+          </DialogTitle>
+          <p className="text-center text-sm text-gray-600">
+            {t("common.weWillSendCode")}
+          </p>
         </DialogHeader>
 
         <div className="space-y-4 mt-4">
           <div>
             <Input
               type="tel"
-              placeholder={t("common.phone")}
+              placeholder="+993 61 097651"
               value={phone}
-              onChange={(e) => setPhone(formatPhoneInput(e.target.value))}
+              onChange={handlePhoneChange}
               className="h-12 rounded-xl"
               onKeyDown={(e) => handleKeyPress(e, handleSendOtp)}
               disabled={otpSent || isLoginLoading}
-              maxLength={11}
             />
             <p className="text-xs text-gray-500 mt-1">{t("phone_format")}</p>
           </div>
@@ -129,7 +163,9 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
               type="text"
               placeholder={t("common.code")}
               value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").substring(0, 6))}
+              onChange={(e) =>
+                setOtp(e.target.value.replace(/\D/g, "").substring(0, 6))
+              }
               className="h-12 rounded-xl"
               onKeyDown={(e) => handleKeyPress(e, handleLogin)}
               disabled={isVerifyLoading}
@@ -142,15 +178,17 @@ export default function AuthDialog({ isOpen, onClose }: AuthDialogProps) {
             onClick={otpSent ? handleLogin : handleSendOtp}
             className="w-full cursor-pointer h-12 rounded-xl font-bold text-base bg-[#005bff] hover:bg-[#0041c4]"
             size="lg"
-            disabled={isLoginLoading || isVerifyLoading}
+            disabled={
+              isLoginLoading || isVerifyLoading || (!otpSent && !isPhoneValid())
+            }
           >
             {isLoginLoading
               ? t("sending")
               : isVerifyLoading
-                ? t("verifying")
-                : otpSent
-                  ? t("verify")
-                  : t("common.send")}
+              ? t("verifying")
+              : otpSent
+              ? t("verify")
+              : t("common.send")}
           </Button>
         </div>
       </DialogContent>

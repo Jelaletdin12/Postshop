@@ -13,7 +13,7 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "shop.post.tm",
-        port: "8080",
+        // port: "8080",
       },
     ],
   },

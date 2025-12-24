@@ -120,16 +120,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
   );
 
   useEffect(() => {
-    const unsubscribe = cartEvents.subscribe(() => {
-      refetchCart();
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [refetchCart]);
-
-  useEffect(() => {
     if (!product?.id || isInitialized) return;
 
     if (cartItem?.product_quantity) {
@@ -246,7 +236,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
           });
         }
 
-        await refetchCart();
         retryCountRef.current = 0;
         clearPendingUpdate();
 
@@ -274,7 +263,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
       addToCartMutation,
       removeFromCartMutation,
       cartItem,
-      refetchCart,
       clearPendingUpdate,
       t,
     ]
@@ -332,7 +320,6 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
 
       setTimeout(() => {
         shouldSyncFromCartRef.current = true;
-        refetchCart();
       }, 150);
 
       setIsSyncing(false);
@@ -348,14 +335,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
         description: t("add_to_cart_failed"),
       });
     }
-  }, [
-    product,
-    localQuantity,
-    availableStock,
-    addToCartMutation,
-    refetchCart,
-    t,
-  ]);
+  }, [product, localQuantity, availableStock, addToCartMutation, t]);
 
   const handleQuantityIncrease = useCallback(() => {
     if (localQuantity >= availableStock) {

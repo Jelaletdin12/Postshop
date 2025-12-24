@@ -8,7 +8,7 @@ import { AxiosError } from "axios";
 
 // ==================== TYPES ====================
 interface LoginCredentials {
-  phone_number: string;
+  phone_number: number;
   password?: string;
 }
 
@@ -19,8 +19,8 @@ interface RegisterData {
 }
 
 interface VerifyTokenData {
-  phone_number: string;
-  code: string;
+  phone_number: number;
+  code: number;
 }
 
 interface AuthResponse {
