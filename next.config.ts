@@ -5,7 +5,7 @@ const withNextIntl = createNextIntlPlugin("./i18n/i18n.ts")
 
 const nextConfig: NextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   images: {
     unoptimized: true,

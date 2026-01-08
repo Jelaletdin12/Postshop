@@ -78,7 +78,7 @@ export default function ClientProfilePage(props: ProfilePageProps) {
 
   const handleSave = useCallback(async () => {
     if (!formData.name.trim()) {
-      toast.error(t("name_required") || "Name is required");
+      toast.error(t("requiredField") || "Name is required");
       return;
     }
 

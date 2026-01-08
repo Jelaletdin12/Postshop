@@ -54,10 +54,7 @@ interface FormErrors {
   file?: string;
 }
 
-export default function OpenStorePage({
-  locale = "ru",
-  translations,
-}: OpenStorePageProps) {
+export default function OpenStorePage({}: OpenStorePageProps) {
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -76,21 +73,21 @@ export default function OpenStorePage({
     const newErrors: FormErrors = {};
 
     if (!formData.firstName.trim()) {
-      newErrors.firstName = t("firstNameRequired");
+      newErrors.firstName = t("requiredField");
     }
 
     if (!formData.lastName.trim()) {
-      newErrors.lastName = t("lastNameRequired");
+      newErrors.lastName = t("requiredField");
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      newErrors.email = t("emailInvalid");
+      newErrors.email = t("requiredField");
     }
 
     const phoneRegex = /^\+?[0-9]{6,15}$/;
     if (!phoneRegex.test(formData.phone)) {
-      newErrors.phone = t("phoneInvalid");
+      newErrors.phone = t("requiredField");
     }
 
     if (!formData.file) {

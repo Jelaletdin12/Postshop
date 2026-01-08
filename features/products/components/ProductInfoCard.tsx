@@ -111,7 +111,7 @@ export function ProductInfoCard({
       </Card>
 
       {description && (
-        <Card className="p-4 rounded-xl border-gray-200">
+        <Card className="p-4 rounded-xl border-gray-200 gap-2">
           <h3 className="text-xl font-semibold mb-3">
             {t("product_description")}
           </h3>

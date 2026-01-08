@@ -119,6 +119,24 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     [product]
   );
 
+  const transformedRelatedProducts = useMemo(() => {
+    if (!relatedProducts) return [];
+    return relatedProducts.map((p) => ({
+      id: p.id,
+      slug: p.slug,
+      name: p.name,
+      price_amount: p.price_amount,
+      old_price_amount: p.old_price_amount ?? undefined,
+      struct_price_text: `${p.price_amount} TMT`,
+      discount: null,
+      discount_text: null,
+      stock: p.stock,
+      media: p.media,
+      labels: [],
+      price_color: undefined,
+    }));
+  }, [relatedProducts]);
+
   useEffect(() => {
     if (!product?.id || isInitialized) return;
 
@@ -246,7 +264,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
         }
       } catch (error) {
         setLocalQuantity(cartItem?.product_quantity || 1);
-        toast.error("Failed to update quantity", {
+        toast.error(t("failed_to_update_quantity"), {
           description: "Please try again",
         });
 
@@ -438,10 +456,10 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
           />
 
           <ProductInfoCard
-            brandName={product.brand?.name}
+            brandName={product.brand?.name ?? undefined}
             stock={product.stock}
             barcode={product.barcode}
-            colour={product.colour}
+            colour={product.colour ?? undefined}
             properties={product.properties}
             description={product.description}
             averageRating={averageRating}
@@ -451,7 +469,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
 
           <ProductPurchaseCard
             price={product.price_amount}
-            oldPrice={product.old_price_amount}
+            oldPrice={product.old_price_amount ?? undefined}
             isInCart={isInCart}
             localQuantity={localQuantity}
             availableStock={availableStock}
@@ -475,7 +493,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
           onWriteReview={() => setShowReviewModal(true)}
         />
 
-        <RelatedProductsSection products={relatedProducts || []} />
+        <RelatedProductsSection products={transformedRelatedProducts} />
       </div>
 
       <StockLimitModal

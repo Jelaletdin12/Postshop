@@ -155,7 +155,7 @@ export default function OrderSummary({
               }`}
             />
             {showValidation && name.trim() === "" && (
-              <p className="text-xs text-red-500 mt-1">Bu alan zorunludur</p>
+              <p className="text-xs text-red-500 mt-1">{t("requiredField")}</p>
             )}
           </div>
           <div>
@@ -172,7 +172,7 @@ export default function OrderSummary({
               }`}
             />
             {showValidation && lastName.trim() === "" && (
-              <p className="text-xs text-red-500 mt-1">Bu alan zorunludur</p>
+              <p className="text-xs text-red-500 mt-1">{t("requiredField")}</p>
             )}
           </div>
           <div>
@@ -190,7 +190,7 @@ export default function OrderSummary({
             />
             {showValidation && !isPhoneValid && (
               <p className="text-xs text-red-500 mt-1">
-                Telefon 8 rakamdan oluşmalıdır
+                {t("requiredField")}
               </p>
             )}
           </div>
@@ -226,7 +226,7 @@ export default function OrderSummary({
           ))}
         </div>
         {showValidation && !paymentType && (
-          <p className="text-xs text-red-500 mt-1">Ödeme türü seçiniz</p>
+          <p className="text-xs text-red-500 mt-1">{t("requiredField")}</p>
         )}
       </div>
 
@@ -264,7 +264,7 @@ export default function OrderSummary({
           ))}
         </RadioGroup>
         {showValidation && !selectedRegion && (
-          <p className="text-xs text-red-500 mt-1">Bölge seçiniz</p>
+          <p className="text-xs text-red-500 mt-1">{t("requiredField")}</p>
         )}
       </div>
 
@@ -294,7 +294,7 @@ export default function OrderSummary({
             </SelectContent>
           </Select>
           {showValidation && !selectedProvince && (
-            <p className="text-xs text-red-500 mt-1">Adres seçiniz</p>
+            <p className="text-xs text-red-500 mt-1">{t("requiredField")}</p>
           )}
         </div>
       )}

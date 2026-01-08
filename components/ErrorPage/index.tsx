@@ -46,11 +46,10 @@ export default function ErrorPage() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-start  overflow-hidden font-['Encode_Sans_Semi_Condensed',_sans-serif]">
-      {/* CSS Animasyonlarını buraya gömüyoruz */}
       <style dangerouslySetInnerHTML={{ __html: fontImport }} />
 
       <h1
-        className={`text-[10rem] leading-[10rem] font-extralight text-black transition-all duration-500 ease-linear
+        className={`text-[10rem] leading-40 font-extralight text-black transition-all duration-500 ease-linear
           ${isLoading ? "mt-0 opacity-0" : "mt-[100px] opacity-100"}`}
       >
         500
@@ -110,7 +109,6 @@ export default function ErrorPage() {
   );
 }
 
-// Dişli çubukları için yardımcı bileşen
 function GearBars() {
   return (
     <>

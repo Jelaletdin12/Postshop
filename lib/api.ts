@@ -19,6 +19,7 @@ class APIClient {
 
   constructor() {
     this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://api.example.com";
+    console.log("API URL:", this.baseUrl);
 
     this.client = axios.create({
       baseURL: `${this.baseUrl}/api/v1`,
@@ -42,7 +43,7 @@ class APIClient {
         }
 
         // Add language parameter
-        let lang = "tk";
+        let lang = "tm";
         
         if (typeof window !== "undefined") {
           if ((window as any).i18n?.language) {

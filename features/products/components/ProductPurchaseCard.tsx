@@ -45,9 +45,7 @@ export function ProductPurchaseCard({
         <div className="flex justify-between items-start mb-6">
           <span className="text-lg text-gray-500">{t("price")}:</span>
           <div className="flex flex-col items-end">
-            <span className="text-3xl font-bold text-primary">
-              {price} TMT
-            </span>
+            <span className="text-3xl font-bold text-primary">{price} TMT</span>
             {oldPrice && parseFloat(oldPrice) > 0 && (
               <span className="text-lg text-gray-400 line-through">
                 {oldPrice} TMT
@@ -102,6 +100,7 @@ export function ProductPurchaseCard({
                   <Plus className="h-5 w-5" />
                 </Button>
 
+                
                 <Button
                   variant="outline"
                   size="icon"
@@ -123,24 +122,43 @@ export function ProductPurchaseCard({
               </div>
             </>
           ) : (
-            <Button
-              size="lg"
-              onClick={onAddToCart}
-              disabled={isSyncing || productStock === 0}
-              className="w-full rounded-lg  text-lg font-bold bg-[#005bff] hover:bg-[#0041c4] cursor-pointer"
-            >
-              {isSyncing ? (
-                <>
-                  
-                  {t("adding")}
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="mr-2 h-5 w-5" />
-                  {productStock === 0 ? t("out_of_stock") : t("add_to_cart")}
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                size="lg"
+                onClick={onAddToCart}
+                disabled={isSyncing || productStock === 0}
+                className="flex-1 rounded-lg text-lg font-bold bg-[#005bff] hover:bg-[#0041c4] cursor-pointer"
+              >
+                {isSyncing ? (
+                  <>{t("adding")}</>
+                ) : (
+                  <>
+                    <ShoppingCart className="mr-2 h-5 w-5" />
+                    {productStock === 0 ? t("out_of_stock") : t("add_to_cart")}
+                  </>
+                )}
+              </Button>
+
+           
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onToggleFavorite}
+                className={`rounded-lg h-12 w-12 transition-all border cursor-pointer ${
+                  isFavorite
+                    ? "bg-[#F0F8FF] border-blue-300 hover:bg-blue-100"
+                    : "hover:bg-gray-50"
+                }`}
+              >
+                <Heart
+                  className={`h-6! w-6! transition-all ${
+                    isFavorite
+                      ? "fill-[#005bff] text-[#005bff]"
+                      : "text-[#005bff]"
+                  }`}
+                />
+              </Button>
+            </div>
           )}
         </div>
       </Card>
@@ -158,7 +176,11 @@ export function ProductPurchaseCard({
               <h4 className="text-lg font-bold">{channelName}</h4>
             </div>
           </div>
-          <Button variant="outline" size="lg" className="w-full cursor-pointer rounded-lg">
+          <Button
+            variant="outline"
+            size="lg"
+            className="w-full cursor-pointer rounded-lg"
+          >
             {t("write_to_store")}
           </Button>
         </Card>

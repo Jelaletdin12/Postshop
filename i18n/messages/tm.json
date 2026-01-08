@@ -33,9 +33,6 @@
   "address_search": "Adres gözleg",
   "address": "Adres",
   "first_name": "Ady",
-  "building": "Jaý",
-  "floor": "Gat",
-  "apartment": "Otag",
   "save": "Ýatda sakla",
   "enter_phone": "Telefon belgisini giriziň",
   "code_will_be_sent": "Biz size kod ugradarys",
@@ -78,7 +75,7 @@
   "no": "Ýok",
   "yes": "Hawa",
   "cart_empty": "Siziň söwda sebediňiz boş",
-  "add_to_cart": "Söwda sebedine üstünlikli goşuldy",
+  "add_to_cart": "Sebede goş",
   
   "go_to_cart": "Sebede geçmek",
   "products": "Azyk harytlary",
@@ -103,6 +100,7 @@
   "empty_favorites": "Siziň saýlanan harytlaryňyz ýok",
   "removed_from_favorites": "Haryt saýlanlardan aýryldy",
   "added_to_cart": "Haryt sebede goşuldy",
+  "failed_to_update_quantity": "Mukdar täzelenip bolmady",
   "removed_from_cart": "Haryt sebetden aýryldy",
   "error": "Ýalňyşlyk ýüze çykdy",
   "out_of_stock": "Haryt ýok",
@@ -191,5 +189,7 @@
   "title": "Magazin aç",
   "enter_email": "Poçtaňyzy ýazyň",
   "uploadPatent": "Patent goş",
-  "outOfStock": "Ammarda ýok"
+  "outOfStock": "Ammarda ýok",
+  "requiredField": "Zerur maglumat",
+  "fileRequired": "Fayl goş"
 }

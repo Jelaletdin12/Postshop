@@ -382,7 +382,7 @@ export default function ProductCard({
                   ) : (
                     <>
                       <ShoppingCart className="h-4 w-4" />
-                      {t("checkout")}
+                      {t("add_to_cart")}
                     </>
                   )}
                 </Button>

@@ -33,9 +33,6 @@
   "address_search": "Поиск адреса",
   "address": "Адрес",
   "first_name": "Имя",
-  "building": "Дом",
-  "floor": "Этаж",
-  "apartment": "Кв",
   "save": "Сохранить",
   "enter_phone": "Введите свой номер телефона",
   "code_will_be_sent": "Мы вышлем вам код",
@@ -102,6 +99,7 @@
   "empty_favorites": "У вас пока нет избранных товаров",
   "removed_from_favorites": "Товар удален из избранного",
   "added_to_cart": "Товар добавлен в корзину",
+  "failed_to_update_quantity": "Количество не удалось обновить",
   "removed_from_cart": "Товар удален из корзины",
   "error": "Произошла ошибка",
   "out_of_stock": "Нет в наличии",
@@ -190,7 +188,9 @@
   "title": "Открыть магазин",
   "enter_email": "Введите email",
   "uploadPatent": "Загрузить патент",
-  "outOfStock": "Нет в наличии"
+  "outOfStock": "Нет в наличии",
+   "requiredField": "Обязательное поле",
+   "fileRequired": "Файл загрузить"
 }
   
   
