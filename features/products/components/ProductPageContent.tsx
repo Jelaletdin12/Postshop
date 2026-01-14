@@ -23,7 +23,10 @@ import { ProductReviewsSection } from "./ProductReviewsSection";
 import { RelatedProductsSection } from "./RelatedProductsSection";
 import { ReviewModal } from "./ReviewModal";
 import { StockLimitModal } from "./StockLimitModal";
-
+import {
+  useIsFavorite,
+  useToggleFavorite,
+} from "@/features/favorites/hooks/useFavorites";
 interface ProductDetailProps {
   slug: string;
 }
@@ -43,7 +46,7 @@ interface PendingUpdate {
 
 export default function ProductPageContent({ slug }: ProductDetailProps) {
   const [localQuantity, setLocalQuantity] = useState(1);
-  const [isFavorite, setIsFavorite] = useState(false);
+
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncError, setSyncError] = useState(false);
   const [showStockModal, setShowStockModal] = useState(false);
@@ -68,7 +71,9 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     error,
     refetch: refetchProduct,
   } = useProductsBySlug(slug);
-
+  const { isFavorite, isLoading: isFavLoading } = useIsFavorite(
+    product?.id || 0
+  );
   const cartOptions = useMemo(
     () => ({
       refetchOnMount: true,
@@ -77,7 +82,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     }),
     []
   );
-
+  const { mutate: toggleFavoriteMutation } = useToggleFavorite();
   const {
     data: cartData,
     refetch: refetchCart,
@@ -374,9 +379,41 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
     });
   }, [localQuantity]);
 
-  const handleToggleFavorite = useCallback(() => {
-    setIsFavorite(!isFavorite);
-  }, [isFavorite]);
+  const handleToggleFavorite = useCallback(
+    (e?: React.MouseEvent<HTMLButtonElement>) => {
+      e?.preventDefault();
+      e?.stopPropagation();
+
+      if (!product?.id) {
+        toast.error(t("error"), {
+          description: "Product ID not found",
+        });
+        return;
+      }
+
+      toggleFavoriteMutation(
+        {
+          productId: product.id,
+          isFavorite,
+        },
+        {
+          onSuccess: (data) => {
+            toast.success(
+              data?.wasAdded
+                ? t("added_to_favorites")
+                : t("removed_from_favorites")
+            );
+          },
+          onError: () => {
+            toast.error(t("error"), {
+              description: "Try again later",
+            });
+          },
+        }
+      );
+    },
+    [product?.id, isFavorite, toggleFavoriteMutation, t]
+  );
 
   const handleSubmitReview = useCallback(
     async (rating: number, text: string) => {
@@ -456,6 +493,7 @@ export default function ProductPageContent({ slug }: ProductDetailProps) {
           />
 
           <ProductInfoCard
+            name={product.name}
             brandName={product.brand?.name ?? undefined}
             stock={product.stock}
             barcode={product.barcode}

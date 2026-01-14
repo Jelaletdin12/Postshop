@@ -8,6 +8,7 @@ interface ProductProperty {
 }
 
 interface ProductInfoCardProps {
+  name: string;
   brandName?: string;
   stock?: number;
   barcode?: string;
@@ -20,6 +21,7 @@ interface ProductInfoCardProps {
 }
 
 export function ProductInfoCard({
+  name,
   brandName,
   stock,
   barcode,
@@ -30,12 +32,10 @@ export function ProductInfoCard({
   reviewsCount,
   t,
 }: ProductInfoCardProps) {
-  
-
   return (
     <div className="flex-1 space-y-6 bg-white">
       <Card className="p-4 rounded-xl border-gray-200">
-        <h3 className="text-xl font-semibold mb-4">{t("about_product")}</h3>
+        <h3 className="text-xl font-semibold mb-4">{name}</h3>
         <div className="space-y-3">
           {brandName && (
             <>
