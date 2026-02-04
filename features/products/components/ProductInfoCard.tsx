@@ -47,7 +47,7 @@ export function ProductInfoCard({
             </>
           )}
 
-          {stock !== undefined && (
+          {/* {stock !== undefined && (
             <>
               <div className="flex justify-between items-center py-2">
                 <span className="text-gray-500">{t("stock")}</span>
@@ -79,7 +79,7 @@ export function ProductInfoCard({
               </div>
               <Separator />
             </>
-          )}
+          )} */}
 
           {colour && (
             <>
